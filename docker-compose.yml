@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: todo-mongodb-tdd
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: todoapp
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - todo-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: todo-mysql-tdd
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: todoapp
+      MYSQL_USER: todouser
+      MYSQL_PASSWORD: todopassword
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - todo-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  adminer:
+    image: adminer:latest
+    container_name: todo-adminer-tdd
+    ports:
+      - "8080:8080"
+    networks:
+      - todo-network
+    depends_on:
+      - mysql
+
+volumes:
+  mongodb_data:
+    driver: local
+  mysql_data:
+    driver: local
+
+networks:
+  todo-network:
+    driver: bridge
