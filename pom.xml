@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.todoapp</groupId>
-    <artifactId>todo-manager</artifactId>
+    <artifactId>todo-manager-tdd</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
@@ -28,6 +28,8 @@
         <mongodb.version>4.9.1</mongodb.version>
         <mysql.version>8.0.33</mysql.version>
         <hibernate.version>6.2.2.Final</hibernate.version>
+        
+        <!-- SonarCloud configuration -->
         <jacoco.version>0.8.8</jacoco.version>
         <sonar.organization>irfancpv99</sonar.organization>
         <pitest.version>1.14.1</pitest.version>
@@ -199,11 +201,31 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>1.00</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
-            <!-- PIT Mutation Testing -->
-            <plugin>
+
+             <plugin>
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
                 <version>${pitest.version}</version>
@@ -227,7 +249,15 @@
                         <outputFormat>HTML</outputFormat>
                         <outputFormat>XML</outputFormat>
                     </outputFormats>
+                    <mutationThreshold>100</mutationThreshold>
                 </configuration>
+            </plugin>
+
+            <!-- SonarQube -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.9.1.2184</version>
             </plugin>
         </plugins>
     </build>
