@@ -132,7 +132,7 @@ jobs:
           mvn jacoco:check -Djacoco.minimum.coverage=0.80 || echo "⚠️ Coverage below 80% - aim higher as project matures"
           
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: target/site/jacoco/jacoco.xml
           flags: tdd-tests
@@ -208,7 +208,7 @@ jobs:
           JAVA_OPTS: "-Djava.awt.headless=true"
 
       - name: Upload Mutation Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: tdd-mutation-results
@@ -234,7 +234,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build TDD Application
@@ -243,7 +243,7 @@ jobs:
           mvn clean package -DskipTests
           
       - name: Upload Application Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tdd-todo-manager
           path: target/*.jar
