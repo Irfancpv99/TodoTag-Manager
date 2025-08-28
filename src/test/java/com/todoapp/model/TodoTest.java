@@ -18,7 +18,6 @@ class TodoTest {
     @Test
     void shouldHaveNullIdWhenCreated() {
         Todo todo = new Todo("Test task");
-        
         assertNull(todo.getId());
     }
     

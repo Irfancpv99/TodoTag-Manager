@@ -43,6 +43,8 @@ public class Tag {
             return Objects.equals(id, tag.id);
         }
         
+        
+        
        if (id == null && tag.id == null) {
             return false;
         }

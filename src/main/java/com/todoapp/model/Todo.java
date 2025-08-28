@@ -8,6 +8,8 @@ public class Todo {
     private String description;
     private boolean done;
     
+    
+    
     public Todo(String description) {
         if (description == null) {
             throw new IllegalArgumentException("Description cannot be null");
