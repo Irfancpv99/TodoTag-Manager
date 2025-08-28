@@ -1,5 +1,6 @@
 package com.todoapp.model;
 
+
 public class Todo {
     
     private Long id;
@@ -8,7 +9,7 @@ public class Todo {
     
     public Todo(String description) {
         this.description = description;
-        this.done = false; 
+        this.done = false; // Default to not done
     }
     
     public Long getId() {
