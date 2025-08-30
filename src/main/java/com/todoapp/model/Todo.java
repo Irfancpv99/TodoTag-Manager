@@ -16,6 +16,14 @@ public class Todo {
         this.done = false;
     }
     
+    public Todo(String description, boolean done) {
+        if (description == null) {
+            throw new IllegalArgumentException("Description cannot be null");
+        }
+        this.description = description;
+        this.done = done;
+    }
+    
     public Long getId() {
         return id;
     }
@@ -49,12 +57,8 @@ public class Todo {
         if (obj == null || getClass() != obj.getClass()) return false;
         Todo todo = (Todo) obj;
         
-         if (id != null && todo.id != null) {
+        if (id != null && todo.id != null) {
             return Objects.equals(id, todo.id);
-        }
-        
-         if (id == null && todo.id == null) {
-            return false;
         }
         
         return false;
@@ -62,6 +66,7 @@ public class Todo {
     
     @Override
     public int hashCode() {
+        // Use identity-based hashCode for consistency with equals
         return id != null ? Objects.hash(id) : System.identityHashCode(this);
     }
     
