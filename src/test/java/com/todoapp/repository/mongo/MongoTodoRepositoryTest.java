@@ -19,16 +19,17 @@ import java.util.logging.Level;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
 
-public class MongoTodoRepository implements TodoRepository {
+
+public class MongoTodoRepositoryTest implements TodoRepository {
     
-    private static final Logger LOGGER = Logger.getLogger(MongoTodoRepository.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MongoTodoRepositoryTest.class.getName());
     private static final String COLLECTION_NAME = "todos";
     
     private final MongoCollection<Document> collection;
     private final MongoTagRepository tagRepository;
     private Long nextId = 1L;
 
-    public MongoTodoRepository(MongoClient mongoClient, String databaseName, MongoTagRepository tagRepository) {
+    public MongoTodoRepositoryTest(MongoClient mongoClient, String databaseName, MongoTagRepository tagRepository) {
         this.tagRepository = tagRepository;
         
         if (mongoClient != null && databaseName != null) {
@@ -100,8 +101,7 @@ public class MongoTodoRepository implements TodoRepository {
         validateTodo(todo);
         
         if (!isConnectionAvailable()) {
-            // Testing mode - just set ID and return
-            if (todo.getId() == null) {
+           if (todo.getId() == null) {
                 todo.setId(nextId++);
             }
             return todo;
@@ -229,7 +229,6 @@ public class MongoTodoRepository implements TodoRepository {
             todo.setId(doc.getLong("_id"));
             todo.setDone(doc.getBoolean("done", false));
 
-            // Load tags if tagRepository is available
             if (tagRepository != null) {
                 Set<Tag> tags = new HashSet<>();
                 List<Long> tagIds = doc.getList("tagIds", Long.class);
@@ -239,7 +238,8 @@ public class MongoTodoRepository implements TodoRepository {
                             tagRepository.findById(tagId).ifPresent(tags::add);
                         } catch (Exception e) {
                             LOGGER.log(Level.WARNING, "Failed to load tag with ID: " + tagId, e);
-                             }
+                            // Continue loading other tags
+                        }
                     }
                 }
                 todo.setTags(tags);

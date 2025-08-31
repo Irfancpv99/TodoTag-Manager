@@ -16,12 +16,6 @@ import java.util.logging.Level;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
 
-/**
- * MongoDB implementation of TagRepository - REFACTORED
- * 
- * REFACTOR PHASE: Improved error handling, logging, and code organization
- * All existing tests must still pass - no behavior changes
- */
 public class MongoTagRepositoryTest implements TagRepository {
     
     private static final Logger LOGGER = Logger.getLogger(MongoTagRepository.class.getName());
@@ -100,8 +94,7 @@ public class MongoTagRepositoryTest implements TagRepository {
         validateTag(tag);
         
         if (!isConnectionAvailable()) {
-            // Testing mode - just set ID and return
-            if (tag.getId() == null) {
+             if (tag.getId() == null) {
                 tag.setId(nextId++);
             }
             return tag;
@@ -181,8 +174,6 @@ public class MongoTagRepositoryTest implements TagRepository {
         return tags;
     }
 
-    // Private helper methods
-    
     private boolean isConnectionAvailable() {
         return collection != null;
     }
