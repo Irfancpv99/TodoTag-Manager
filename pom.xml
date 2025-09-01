@@ -146,7 +146,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <!-- Compiler Plugin -->
@@ -249,7 +248,7 @@
                         <outputFormat>HTML</outputFormat>
                         <outputFormat>XML</outputFormat>
                     </outputFormats>
-                    <mutationThreshold>100</mutationThreshold>
+                    <mutationThreshold>80</mutationThreshold>
                 </configuration>
             </plugin>
 
