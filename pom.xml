@@ -248,7 +248,7 @@
                         <outputFormat>HTML</outputFormat>
                         <outputFormat>XML</outputFormat>
                     </outputFormats>
-                    <mutationThreshold>80</mutationThreshold>
+                    <mutationThreshold>100</mutationThreshold>
                 </configuration>
             </plugin>
 
