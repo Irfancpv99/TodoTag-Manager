@@ -4,23 +4,32 @@ import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
 class MongoTodoRepositoryTest {
+
+    @SuppressWarnings("resource")
+	@Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0")
+            .withExposedPorts(27017);
 
     private MongoTodoRepository todoRepository;
     private MongoTagRepository tagRepository;
-    private static final String CONNECTION = "mongodb://localhost:27017";
-    private static final String TEST_DB = "test_db_" + System.currentTimeMillis();
+    private final String TEST_DB = "test_db_" + System.currentTimeMillis();
     
     @BeforeEach
     void setUp() {
-        tagRepository = new MongoTagRepository(CONNECTION, TEST_DB);
-        todoRepository = new MongoTodoRepository(CONNECTION, TEST_DB, tagRepository);
+        String connectionString = mongoDBContainer.getConnectionString();
+        tagRepository = new MongoTagRepository(connectionString, TEST_DB);
+        todoRepository = new MongoTodoRepository(connectionString, TEST_DB, tagRepository);
         todoRepository.deleteAll();
         tagRepository.deleteAll();
     }
@@ -122,7 +131,8 @@ class MongoTodoRepositoryTest {
         todoRepository.save(new Todo("First"));
         todoRepository.save(new Todo("Second"));
         
-        MongoTodoRepository newRepo = new MongoTodoRepository(CONNECTION, TEST_DB, tagRepository);
+        String connectionString = mongoDBContainer.getConnectionString();
+        MongoTodoRepository newRepo = new MongoTodoRepository(connectionString, TEST_DB, tagRepository);
         
         Todo newTodo = newRepo.save(new Todo("Third"));
         assertEquals(3L, newTodo.getId());
@@ -138,7 +148,8 @@ class MongoTodoRepositoryTest {
         
         assertThrows(Exception.class, () -> todoRepository.save(new Todo("after-close")));
         
-        MongoTodoRepository testRepo = new MongoTodoRepository(CONNECTION, "temp_db", tagRepository);
+        String connectionString = mongoDBContainer.getConnectionString();
+        MongoTodoRepository testRepo = new MongoTodoRepository(connectionString, "temp_db", tagRepository);
         testRepo.close();
         
         assertDoesNotThrow(() -> testRepo.close());

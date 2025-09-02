@@ -3,21 +3,30 @@ package com.todoapp.repository.mongo;
 import com.todoapp.model.Tag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
 class MongoTagRepositoryTest {
 
+    @SuppressWarnings("resource")
+	@Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0")
+            .withExposedPorts(27017);
+
     private MongoTagRepository repository;
-    private static final String CONNECTION = "mongodb://localhost:27017";
-    private static final String TEST_DB = "test_db_" + System.currentTimeMillis();
+    private final String TEST_DB = "test_db_" + System.currentTimeMillis();
     
     @BeforeEach
     void setUp() {
-        repository = new MongoTagRepository(CONNECTION, TEST_DB);
+        String connectionString = mongoDBContainer.getConnectionString();
+        repository = new MongoTagRepository(connectionString, TEST_DB);
         repository.deleteAll();
     }
     
@@ -92,7 +101,8 @@ class MongoTagRepositoryTest {
         repository.save(new Tag("first"));
         repository.save(new Tag("second"));
         
-        MongoTagRepository newRepo = new MongoTagRepository(CONNECTION, TEST_DB);
+        String connectionString = mongoDBContainer.getConnectionString();
+        MongoTagRepository newRepo = new MongoTagRepository(connectionString, TEST_DB);
        
         Tag newTag = newRepo.save(new Tag("third"));
         assertEquals(3L, newTag.getId());
@@ -108,10 +118,10 @@ class MongoTagRepositoryTest {
         
         assertThrows(Exception.class, () -> repository.save(new Tag("after-close")));
         
-        MongoTagRepository testRepo = new MongoTagRepository(CONNECTION, "temp_db");
+        String connectionString = mongoDBContainer.getConnectionString();
+        MongoTagRepository testRepo = new MongoTagRepository(connectionString, "temp_db");
         testRepo.close();
         
         assertDoesNotThrow(() -> testRepo.close());
     }
-    
 }
