@@ -11,13 +11,11 @@ class AppConfigTest {
 
     @BeforeEach
     void setUp() {
-        // RED: This will fail - AppConfig class doesn't exist yet
         config = AppConfig.getInstance();
     }
 
     @Test
     void shouldBeSingleton() {
-        // RED: This will fail - AppConfig doesn't exist yet
         AppConfig instance1 = AppConfig.getInstance();
         AppConfig instance2 = AppConfig.getInstance();
         
@@ -26,7 +24,6 @@ class AppConfigTest {
 
     @Test
     void shouldHaveDefaultDatabaseType() {
-        // RED: This will fail - DatabaseType enum doesn't exist yet
         DatabaseType dbType = config.getDatabaseType();
         
         assertNotNull(dbType);
@@ -36,7 +33,6 @@ class AppConfigTest {
 
     @Test
     void shouldAllowChangingDatabaseType() {
-        // RED: This will fail - methods don't exist yet
         config.setDatabaseType(DatabaseType.MYSQL);
         assertEquals(DatabaseType.MYSQL, config.getDatabaseType());
         
@@ -46,7 +42,6 @@ class AppConfigTest {
 
     @Test
     void shouldProvideMongoDbConfiguration() {
-        // RED: This will fail - methods don't exist yet
         assertEquals("localhost", config.getMongoDbHost());
         assertEquals(27017, config.getMongoDbPort());
         assertEquals("todoapp", config.getMongoDbDatabase());
@@ -54,7 +49,6 @@ class AppConfigTest {
 
     @Test
     void shouldProvideMySqlConfiguration() {
-        // RED: This will fail - methods don't exist yet
         assertNotNull(config.getMySqlUrl());
         assertNotNull(config.getMySqlUsername());
         assertNotNull(config.getMySqlPassword());

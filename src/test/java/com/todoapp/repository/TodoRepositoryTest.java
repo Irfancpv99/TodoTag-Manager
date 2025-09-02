@@ -13,12 +13,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * TDD Test for TodoRepository interface
- * 
- * RED PHASE: These tests will fail because TodoRepository interface doesn't exist yet.
- * Following TDD: define repository contract through tests first
- */
 @ExtendWith(MockitoExtension.class)
 class TodoRepositoryTest {
 
@@ -27,7 +21,6 @@ class TodoRepositoryTest {
 
     @Test
     void shouldFindAllTodos() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         List<Todo> expectedTodos = Arrays.asList(
             new Todo("Task 1"),
             new Todo("Task 2")
@@ -43,7 +36,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldFindTodoById() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         Todo expectedTodo = new Todo("Test task");
         expectedTodo.setId(1L);
         
@@ -58,7 +50,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldReturnEmptyWhenTodoNotFound() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         when(todoRepository.findById(999L)).thenReturn(Optional.empty());
         
         Optional<Todo> actualTodo = todoRepository.findById(999L);
@@ -69,7 +60,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldSaveTodo() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         Todo todoToSave = new Todo("New task");
         Todo savedTodo = new Todo("New task");
         savedTodo.setId(1L);
@@ -84,7 +74,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldDeleteTodoById() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         Long todoId = 1L;
         
         doNothing().when(todoRepository).deleteById(todoId);
@@ -96,7 +85,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldDeleteTodo() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         Todo todo = new Todo("Test task");
         todo.setId(1L);
         
@@ -109,7 +97,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldFindTodosByDoneStatus() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         List<Todo> completedTodos = Arrays.asList(
             new Todo("Completed task 1", true),
             new Todo("Completed task 2", true)
@@ -125,7 +112,6 @@ class TodoRepositoryTest {
     
     @Test
     void shouldFindTodosByDescriptionContaining() {
-        // RED: This will fail - TodoRepository interface doesn't exist yet
         List<Todo> searchResults = Arrays.asList(
             new Todo("Important task")
         );

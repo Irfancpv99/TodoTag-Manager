@@ -12,13 +12,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-/**
- * TDD Test for TagRepository interface
- * 
- * RED PHASE: These tests will fail because TagRepository interface doesn't exist yet.
- * Following TDD: define repository contract through tests first
- */
 @ExtendWith(MockitoExtension.class)
 class TagRepositoryTest {
 
@@ -27,7 +20,6 @@ class TagRepositoryTest {
 
     @Test
     void shouldFindAllTags() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         List<Tag> expectedTags = Arrays.asList(
             new Tag("work"),
             new Tag("urgent")
@@ -43,7 +35,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldFindTagById() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         Tag expectedTag = new Tag("work");
         expectedTag.setId(1L);
         
@@ -58,7 +49,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldReturnEmptyWhenTagNotFound() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         when(tagRepository.findById(999L)).thenReturn(Optional.empty());
         
         Optional<Tag> actualTag = tagRepository.findById(999L);
@@ -69,7 +59,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldSaveTag() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         Tag tagToSave = new Tag("personal");
         Tag savedTag = new Tag("personal");
         savedTag.setId(1L);
@@ -84,7 +73,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldDeleteTagById() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         Long tagId = 1L;
         
         doNothing().when(tagRepository).deleteById(tagId);
@@ -96,7 +84,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldDeleteTag() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         Tag tag = new Tag("work");
         tag.setId(1L);
         
@@ -109,7 +96,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldFindTagByName() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         Tag expectedTag = new Tag("urgent");
         expectedTag.setId(1L);
         
@@ -124,7 +110,6 @@ class TagRepositoryTest {
     
     @Test
     void shouldFindTagsByNameContaining() {
-        // RED: This will fail - TagRepository interface doesn't exist yet
         List<Tag> searchResults = Arrays.asList(
             new Tag("important")
         );
