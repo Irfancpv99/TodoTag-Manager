@@ -1,9 +1,5 @@
 package com.todoapp.model;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +9,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "todos")
@@ -34,10 +34,10 @@ public class Todo {
     )
     private Set<Tag> tags = new HashSet<>();
     
+
     public Todo() {
-        this.done = false;
     }
-    
+
     public Todo(String description) {
         if (description == null) {
             throw new IllegalArgumentException("Description cannot be null");
@@ -45,7 +45,6 @@ public class Todo {
         this.description = description;
         this.done = false;
     }
-   
     public Todo(String description, boolean done) {
         if (description == null) {
             throw new IllegalArgumentException("Description cannot be null");
@@ -85,6 +84,7 @@ public class Todo {
         return new HashSet<>(tags);
     }
     
+
     public void setTags(Set<Tag> tags) {
         this.tags = tags != null ? new HashSet<>(tags) : new HashSet<>();
     }
@@ -127,3 +127,5 @@ public class Todo {
                 '}';
     }
 }
+
+

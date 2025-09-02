@@ -1,15 +1,15 @@
 package com.todoapp.model;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "tags")
@@ -23,10 +23,10 @@ public class Tag {
     
     @ManyToMany(mappedBy = "tags")
     private Set<Todo> todos = new HashSet<>();
-    
+   
     public Tag() {
     }
-    
+   
     public Tag(String name) {
         if (name == null) {
             throw new IllegalArgumentException("Name cannot be null");
@@ -52,11 +52,12 @@ public class Tag {
         }
         this.name = name;
     }
-    
+   
     public Set<Todo> getTodos() {
         return new HashSet<>(todos);
     }
     
+   
     Set<Todo> getTodosInternal() {
         return todos;
     }
