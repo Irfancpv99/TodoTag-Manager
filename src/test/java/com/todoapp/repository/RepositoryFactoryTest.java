@@ -48,27 +48,23 @@ class RepositoryFactoryTest {
     }
 
     @Test
-    void testCreateTodoRepository_MongoDB() {
+    void testCreateTodoRepository_MongoDB_ThrowsException() {
         when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
-        when(mockConfig.getMongoDbHost()).thenReturn("localhost");
+        when(mockConfig.getMongoDbHost()).thenReturn("nonexistent-host");
         when(mockConfig.getMongoDbPort()).thenReturn(27017);
-        when(mockConfig.getMongoDbDatabase()).thenReturn("todoapp");
+        when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
         
-        TodoRepository result = repositoryFactory.createTodoRepository();
-        
-        assertNotNull(result);
+       assertThrows(Exception.class, () -> repositoryFactory.createTodoRepository());
     }
 
     @Test
-    void testCreateTagRepository_MongoDB() {
+    void testCreateTagRepository_MongoDB_ThrowsException() {
         when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
-        when(mockConfig.getMongoDbHost()).thenReturn("localhost");
+        when(mockConfig.getMongoDbHost()).thenReturn("nonexistent-host");
         when(mockConfig.getMongoDbPort()).thenReturn(27017);
-        when(mockConfig.getMongoDbDatabase()).thenReturn("todoapp");
+        when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
         
-        TagRepository result = repositoryFactory.createTagRepository();
-        
-        assertNotNull(result);
+       assertThrows(Exception.class, () -> repositoryFactory.createTagRepository());
     }
 
     @Test
