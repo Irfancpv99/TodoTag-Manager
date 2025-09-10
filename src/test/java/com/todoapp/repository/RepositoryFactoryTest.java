@@ -7,14 +7,12 @@ import com.todoapp.repository.mongo.MongoTodoRepository;
 import com.todoapp.repository.mysql.MySqlTagRepository;
 import com.todoapp.repository.mysql.MySqlTodoRepository;
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
-
-import java.lang.reflect.Field;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,31 +26,11 @@ class RepositoryFactoryTest {
     private EntityManager mockEntityManager;
     
     private RepositoryFactory repositoryFactory;
-    private AutoCloseable mocks;
 
     @BeforeEach
     void setUp() {
-        mocks = MockitoAnnotations.openMocks(this);
+        MockitoAnnotations.openMocks(this);
         repositoryFactory = new RepositoryFactory(mockConfig, mockEntityManager);
-        resetSingletonInstance();
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        if (mocks != null) {
-            mocks.close();
-        }
-        resetSingletonInstance();
-    }
-
-    private void resetSingletonInstance() {
-        try {
-            Field instanceField = RepositoryFactory.class.getDeclaredField("instance");
-            instanceField.setAccessible(true);
-            instanceField.set(null, null);
-        } catch (Exception e) {
-            // Ignore reflection errors in tests
-        }
     }
 
     @Test
@@ -99,10 +77,19 @@ class RepositoryFactoryTest {
         when(mockConfig.getMongoDbPort()).thenReturn(27017);
         when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
         
-        TodoRepository result = repositoryFactory.createTodoRepository();
         
-        assertNotNull(result);
-        assertInstanceOf(MongoTodoRepository.class, result);
+        try (MockedConstruction<MongoTagRepository> mockedTagRepo = mockConstruction(MongoTagRepository.class);
+             MockedConstruction<MongoTodoRepository> mockedTodoRepo = mockConstruction(MongoTodoRepository.class)) {
+            
+            TodoRepository result = repositoryFactory.createTodoRepository();
+            
+            assertNotNull(result);
+            assertInstanceOf(MongoTodoRepository.class, result);
+            
+            // Verify that the constructors were called with correct parameters
+            assertEquals(1, mockedTagRepo.constructed().size());
+            assertEquals(1, mockedTodoRepo.constructed().size());
+        }
     }
 
     @Test
@@ -146,10 +133,15 @@ class RepositoryFactoryTest {
         when(mockConfig.getMongoDbPort()).thenReturn(27017);
         when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
         
-        TagRepository result = repositoryFactory.createTagRepository();
-        
-        assertNotNull(result);
-        assertInstanceOf(MongoTagRepository.class, result);
+       try (MockedConstruction<MongoTagRepository> mockedTagRepo = mockConstruction(MongoTagRepository.class)) {
+            
+            TagRepository result = repositoryFactory.createTagRepository();
+            
+            assertNotNull(result);
+            assertInstanceOf(MongoTagRepository.class, result);
+            
+            assertEquals(1, mockedTagRepo.constructed().size());
+        }
     }
 
     @Test
@@ -181,7 +173,6 @@ class RepositoryFactoryTest {
 
     @Test
     void testClose() {
-        
         assertDoesNotThrow(() -> repositoryFactory.close());
     }
 
@@ -194,21 +185,23 @@ class RepositoryFactoryTest {
         
         assertTrue(mysqlTodo instanceof MySqlTodoRepository);
         assertTrue(mysqlTag instanceof MySqlTagRepository);
-        assertFalse(mysqlTodo instanceof MongoTodoRepository);
-        assertFalse(mysqlTag instanceof MongoTagRepository);
         
-        // Test MongoDB branch  
+        // Test MongoDB branch 
         when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
         when(mockConfig.getMongoDbHost()).thenReturn("localhost");
         when(mockConfig.getMongoDbPort()).thenReturn(27017);
         when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
         
-        TodoRepository mongoTodo = repositoryFactory.createTodoRepository();
-        TagRepository mongoTag = repositoryFactory.createTagRepository();
-        
-        assertTrue(mongoTodo instanceof MongoTodoRepository);
-        assertTrue(mongoTag instanceof MongoTagRepository);
-        assertFalse(mongoTodo instanceof MySqlTodoRepository);
-        assertFalse(mongoTag instanceof MySqlTagRepository);
+        try (MockedConstruction<MongoTagRepository> mockedTagRepo = mockConstruction(MongoTagRepository.class);
+             MockedConstruction<MongoTodoRepository> mockedTodoRepo = mockConstruction(MongoTodoRepository.class)) {
+            
+            TodoRepository mongoTodo = repositoryFactory.createTodoRepository();
+            TagRepository mongoTag = repositoryFactory.createTagRepository();
+            
+            assertTrue(mongoTodo instanceof MongoTodoRepository);
+            assertTrue(mongoTag instanceof MongoTagRepository);
+            assertFalse(mongoTodo instanceof MySqlTodoRepository);
+            assertFalse(mongoTag instanceof MySqlTagRepository);
+        }
     }
 }
