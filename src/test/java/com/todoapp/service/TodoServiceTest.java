@@ -138,6 +138,9 @@ class TodoServiceTest {
         when(todoRepository.save(any())).thenReturn(todo);
 
         assertFalse(todoService.markTodoIncomplete(1L).isDone());
+        
+        when(todoRepository.findById(2L)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> todoService.markTodoIncomplete(2L));
     }
 
     @Test
@@ -149,12 +152,25 @@ class TodoServiceTest {
 
         when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
         when(tagRepository.findById(2L)).thenReturn(Optional.of(tag));
-        when(todoRepository.save(any())).thenReturn(todo);
+        
+        Todo savedTodo = new Todo("task");
+        savedTodo.setId(1L);
+        savedTodo.addTag(tag);
+        
+        when(todoRepository.save(any())).thenReturn(savedTodo);
 
-        todoService.addTagToTodo(1L, 2L);
+         Todo result = todoService.addTagToTodo(1L, 2L);
+        assertNotNull(result);
         assertTrue(todo.getTags().contains(tag));
 
-        todoService.removeTagFromTodo(1L, 2L);
+        todo.addTag(tag); 
+        Todo savedTodoAfterRemove = new Todo("task");
+        savedTodoAfterRemove.setId(1L);
+        
+        when(todoRepository.save(any())).thenReturn(savedTodoAfterRemove);
+        
+        Todo removeResult = todoService.removeTagFromTodo(1L, 2L);
+        assertNotNull(removeResult);
         assertFalse(todo.getTags().contains(tag));
 
         when(todoRepository.findById(3L)).thenReturn(Optional.empty());
