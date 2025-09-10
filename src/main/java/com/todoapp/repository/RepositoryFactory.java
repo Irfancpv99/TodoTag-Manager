@@ -10,18 +10,35 @@ import jakarta.persistence.EntityManager;
 
 public class RepositoryFactory {
     
+    private static RepositoryFactory instance;
     private final AppConfig config;
     private final EntityManager entityManager;
 
+    private RepositoryFactory() {
+        this.config = AppConfig.getInstance();
+        this.entityManager = null; 
+    }
+
+   
     public RepositoryFactory(AppConfig config, EntityManager entityManager) {
         this.config = config;
         this.entityManager = entityManager;
+    }
+
+    public static synchronized RepositoryFactory getInstance() {
+        if (instance == null) {
+            instance = new RepositoryFactory();
+        }
+        return instance;
     }
 
     public TodoRepository createTodoRepository() {
         DatabaseType dbType = config.getDatabaseType();
         
         if (dbType == DatabaseType.MYSQL) {
+            if (entityManager == null) {
+                throw new IllegalStateException("EntityManager not initialized for MySQL");
+            }
             return new MySqlTodoRepository(entityManager);
         } else if (dbType == DatabaseType.MONGODB) {
             String connectionString = String.format("mongodb://%s:%d", 
@@ -39,6 +56,9 @@ public class RepositoryFactory {
         DatabaseType dbType = config.getDatabaseType();
         
         if (dbType == DatabaseType.MYSQL) {
+            if (entityManager == null) {
+                throw new IllegalStateException("EntityManager not initialized for MySQL");
+            }
             return new MySqlTagRepository(entityManager);
         } else if (dbType == DatabaseType.MONGODB) {
             String connectionString = String.format("mongodb://%s:%d", 
@@ -47,5 +67,14 @@ public class RepositoryFactory {
         } else {
             throw new IllegalArgumentException("Unsupported database type: " + dbType);
         }
+    }
+
+    public EntityManager getEntityManager() {
+        return entityManager;
+    }
+
+    
+    public void close() {
+        
     }
 }
