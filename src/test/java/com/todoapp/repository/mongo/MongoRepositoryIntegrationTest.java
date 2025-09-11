@@ -16,8 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class MongoRepositoryIntegrationTest {
 
-    @SuppressWarnings("resource")
-	@Container
+    @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0")
             .withExposedPorts(27017);
 
