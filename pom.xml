@@ -23,7 +23,7 @@
         <javafx.version>11.0.2</javafx.version>
         <javafx.platform>win</javafx.platform>
         <junit.version>5.9.3</junit.version>
-        <mockito.version>5.3.1</mockito.version>
+        <mockito.version>4.11.0</mockito.version>
         <testfx.version>4.0.16-alpha</testfx.version>
         <mongodb.version>4.9.1</mongodb.version>
         <mysql.version>8.0.33</mysql.version>
@@ -101,6 +101,12 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>${mockito.version}</version>
             <scope>test</scope>
@@ -146,11 +152,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-    	<groupId>org.slf4j</groupId>
-    	<artifactId>slf4j-simple</artifactId>
-    	<version>2.0.13</version>
-	</dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.13</version>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <!-- Compiler Plugin -->
@@ -170,9 +177,10 @@
                 <version>3.0.0</version>
                 <configuration>
                     <systemPropertyVariables>
-                        <java.awt.headless>true</java.awt.headless>
                         <testfx.robot>glass</testfx.robot>
                         <testfx.headless>true</testfx.headless>
+                        <prism.order>sw</prism.order>
+                        <prism.text>t2k</prism.text>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -228,8 +236,8 @@
                 </executions>
             </plugin>
 
-
-             <plugin>
+            <!-- PITest Mutation Testing -->
+            <plugin>
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
                 <version>${pitest.version}</version>
