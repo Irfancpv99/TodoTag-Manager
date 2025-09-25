@@ -73,7 +73,7 @@ jobs:
         run: |
           echo "Installing Xvfb and dependencies for JavaFX..."
           sudo apt-get update
-          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6 libgl1-mesa-glx
+          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
 
       - name: Wait for services
         run: |
