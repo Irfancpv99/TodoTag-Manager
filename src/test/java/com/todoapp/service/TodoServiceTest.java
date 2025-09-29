@@ -177,4 +177,24 @@ class TodoServiceTest {
         assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(3L, 2L));
         assertThrows(IllegalArgumentException.class, () -> todoService.removeTagFromTodo(3L, 2L));
     }
+    @Test
+    void testTransactionRollbackOnError() {
+        RepositoryFactory mockFactory = mock(RepositoryFactory.class);
+        
+        try (MockedStatic<RepositoryFactory> mockedStatic = mockStatic(RepositoryFactory.class)) {
+            mockedStatic.when(RepositoryFactory::getInstance).thenReturn(mockFactory);
+            when(mockFactory.createTodoRepository()).thenReturn(todoRepository);
+            when(mockFactory.createTagRepository()).thenReturn(tagRepository);
+            
+            when(todoRepository.save(any(Todo.class))).thenThrow(new RuntimeException("Database error"));
+            
+            TodoService serviceWithFactory = new TodoService();
+            
+            assertThrows(RuntimeException.class, () -> serviceWithFactory.createTodo("test"));
+            
+            verify(mockFactory).beginTransaction();
+            verify(mockFactory).rollbackTransaction();
+            verify(mockFactory, never()).commitTransaction();
+        }
+    }
 }
