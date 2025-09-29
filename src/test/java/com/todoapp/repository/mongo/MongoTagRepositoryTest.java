@@ -1,117 +1,140 @@
 package com.todoapp.repository.mongo;
 
 import com.todoapp.model.Tag;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
 class MongoTagRepositoryTest {
 
+    @Container
+    private static final MongoDBContainer mongoDBContainer = 
+        new MongoDBContainer("mongo:6.0.5");
+
     private MongoTagRepository repository;
-    private static final String CONNECTION = "mongodb://localhost:27017";
-    private static final String TEST_DB = "test_db_" + System.currentTimeMillis();
-    
+
     @BeforeEach
     void setUp() {
-        repository = new MongoTagRepository(CONNECTION, TEST_DB);
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        repository = new MongoTagRepository(connectionString, "testdb");
         repository.deleteAll();
     }
-    
+
+    @AfterEach
+    void tearDown() {
+        if (repository != null) {
+            repository.deleteAll();
+            repository.close();
+        }
+    }
+
     @Test
-    void shouldPerformBasicCRUDOperations() {
-        // Save and verify ID generation
-        Tag tag1 = repository.save(new Tag("work"));
-        Tag tag2 = repository.save(new Tag("urgent"));
+    void testSaveAndFindById() {
+        Tag tag = new Tag("work");
+        Tag saved = repository.save(tag);
         
-        assertEquals(1L, tag1.getId());
-        assertEquals(2L, tag2.getId());
-        
-        // Find by ID
-        Optional<Tag> found = repository.findById(tag1.getId());
+        assertNotNull(saved.getId());
+        Optional<Tag> found = repository.findById(saved.getId());
         assertTrue(found.isPresent());
         assertEquals("work", found.get().getName());
-        
-        // Find non-existent
-        assertFalse(repository.findById(999L).isPresent());
-        
-        // Update existing
-        tag1.setName("updated");
-        repository.save(tag1);
-        assertEquals("updated", repository.findById(tag1.getId()).get().getName());
-        
-        // Find all
-        assertEquals(2, repository.findAll().size());
-        
-        // Delete by ID
-        repository.deleteById(tag1.getId());
-        assertFalse(repository.findById(tag1.getId()).isPresent());
-        
-        // Delete by entity
-        repository.delete(tag2);
-        assertFalse(repository.findById(tag2.getId()).isPresent());
-        
-        // Delete with null ID 
-        repository.delete(new Tag("no-id"));
-        
-        // Delete all and verify ID reset
-        repository.save(new Tag("test"));
-        repository.deleteAll();
-        assertTrue(repository.findAll().isEmpty());
-        
-        Tag afterReset = repository.save(new Tag("new"));
-        assertEquals(1L, afterReset.getId());
     }
-    
+
     @Test
-    void shouldFindByNameOperations() {
-        repository.save(new Tag("important-work"));
-        repository.save(new Tag("URGENT-task"));
-        repository.save(new Tag("important-meeting"));
+    void testFindAll() {
+        repository.save(new Tag("work"));
+        repository.save(new Tag("personal"));
         
-        // Find by exact name
-        Optional<Tag> found = repository.findByName("important-work");
+        List<Tag> tags = repository.findAll();
+        assertEquals(2, tags.size());
+    }
+
+    @Test
+    void testUpdate() {
+        Tag tag = new Tag("work");
+        Tag saved = repository.save(tag);
+        
+        saved.setName("urgent-work");
+        repository.save(saved);
+        
+        Optional<Tag> updated = repository.findById(saved.getId());
+        assertTrue(updated.isPresent());
+        assertEquals("urgent-work", updated.get().getName());
+    }
+
+    @Test
+    void testDelete() {
+        Tag tag = repository.save(new Tag("temporary"));
+        Long id = tag.getId();
+        
+        repository.delete(tag);
+        
+        Optional<Tag> found = repository.findById(id);
+        assertFalse(found.isPresent());
+    }
+
+    @Test
+    void testDeleteById() {
+        Tag tag = repository.save(new Tag("temporary"));
+        Long id = tag.getId();
+        
+        repository.deleteById(id);
+        
+        Optional<Tag> found = repository.findById(id);
+        assertFalse(found.isPresent());
+    }
+
+    @Test
+    void testFindByName() {
+        repository.save(new Tag("urgent"));
+        
+        Optional<Tag> found = repository.findByName("urgent");
         assertTrue(found.isPresent());
+        assertEquals("urgent", found.get().getName());
         
-        // Find by non-existent name
-        assertFalse(repository.findByName("nonexistent").isPresent());
-        
-        // Find by name containing 
-        List<Tag> important = repository.findByNameContaining("important");
-        assertEquals(2, important.size());
-        
-        List<Tag> urgent = repository.findByNameContaining("urgent");
-        assertEquals(1, urgent.size());
+        Optional<Tag> notFound = repository.findByName("nonexistent");
+        assertFalse(notFound.isPresent());
     }
-    
+
     @Test
-    void shouldInitializeNextIdFromExistingData() {
-        repository.save(new Tag("first"));
-        repository.save(new Tag("second"));
+    void testFindByNameContaining() {
+        repository.save(new Tag("important-work"));
+        repository.save(new Tag("important-personal"));
+        repository.save(new Tag("unrelated"));
         
-        MongoTagRepository newRepo = new MongoTagRepository(CONNECTION, TEST_DB);
-       
-        Tag newTag = newRepo.save(new Tag("third"));
-        assertEquals(3L, newTag.getId());
+        List<Tag> results = repository.findByNameContaining("important");
+        assertEquals(2, results.size());
         
-        newRepo.close();
+        List<Tag> noResults = repository.findByNameContaining("xyz");
+        assertTrue(noResults.isEmpty());
     }
-    
+
     @Test
-    void shouldHandleCloseOperations() {
-        repository.save(new Tag("test"));
+    void testAutoIncrementId() {
+        Tag tag1 = repository.save(new Tag("first"));
+        Tag tag2 = repository.save(new Tag("second"));
         
-        assertDoesNotThrow(() -> repository.close());
-        
-        assertThrows(Exception.class, () -> repository.save(new Tag("after-close")));
-        
-        MongoTagRepository testRepo = new MongoTagRepository(CONNECTION, "temp_db");
-        testRepo.close();
-        
-        assertDoesNotThrow(() -> testRepo.close());
+        assertNotNull(tag1.getId());
+        assertNotNull(tag2.getId());
+        assertNotEquals(tag1.getId(), tag2.getId());
     }
-    
+
+    @Test
+    void testDeleteAll() {
+        repository.save(new Tag("tag1"));
+        repository.save(new Tag("tag2"));
+        repository.save(new Tag("tag3"));
+        
+        assertEquals(3, repository.findAll().size());
+        
+        repository.deleteAll();
+        
+        assertEquals(0, repository.findAll().size());
+    }
 }

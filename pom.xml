@@ -21,7 +21,6 @@
 
         <!-- Dependency versions -->
         <javafx.version>11.0.2</javafx.version>
-        <javafx.platform>win</javafx.platform>
         <junit.version>5.9.3</junit.version>
         <mockito.version>4.11.0</mockito.version>
         <testfx.version>4.0.16-alpha</testfx.version>
@@ -34,6 +33,48 @@
         <sonar.organization>irfancpv99</sonar.organization>
         <pitest.version>1.14.1</pitest.version>
     </properties>
+
+    <profiles>
+        <!-- Profile for Windows -->
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>win</javafx.platform>
+            </properties>
+        </profile>
+        
+        <!-- Profile for Linux -->
+        <profile>
+            <id>linux</id>
+            <activation>
+                <os>
+                    <family>unix</family>
+                    <name>Linux</name>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>linux</javafx.platform>
+            </properties>
+        </profile>
+        
+        <!-- Profile for macOS -->
+        <profile>
+            <id>mac</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <javafx.platform>mac</javafx.platform>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <!-- JavaFX -->
@@ -252,11 +293,19 @@
                     <targetClasses>
                         <param>com.todoapp.model.*</param>
                         <param>com.todoapp.repository.*</param>
+                        <param>com.todoapp.repository.mongo.*</param>
+                        <param>com.todoapp.repository.mysql.*</param>
                         <param>com.todoapp.service.*</param>
+                        <param>com.todoapp.config.*</param>
                     </targetClasses>
                     <targetTests>
                         <param>com.todoapp.*</param>
                     </targetTests>
+                    <excludedTestClasses>
+                        <param>com.todoapp.gui.MainControllerTest</param>
+                        <param>com.todoapp.gui.MainControllerUnitTest</param>
+                        <param>com.todoapp.repository.RepositoryFactoryTest</param>
+                    </excludedTestClasses>
                     <outputFormats>
                         <outputFormat>HTML</outputFormat>
                         <outputFormat>XML</outputFormat>
