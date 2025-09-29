@@ -177,24 +177,68 @@ class TodoServiceTest {
         assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(3L, 2L));
         assertThrows(IllegalArgumentException.class, () -> todoService.removeTagFromTodo(3L, 2L));
     }
+    
     @Test
     void testTransactionRollbackOnError() {
+        // Create fresh mocks
+        TodoRepository mockTodoRepo = mock(TodoRepository.class);
+        TagRepository mockTagRepo = mock(TagRepository.class);
         RepositoryFactory mockFactory = mock(RepositoryFactory.class);
         
         try (MockedStatic<RepositoryFactory> mockedStatic = mockStatic(RepositoryFactory.class)) {
             mockedStatic.when(RepositoryFactory::getInstance).thenReturn(mockFactory);
-            when(mockFactory.createTodoRepository()).thenReturn(todoRepository);
-            when(mockFactory.createTagRepository()).thenReturn(tagRepository);
             
-            when(todoRepository.save(any(Todo.class))).thenThrow(new RuntimeException("Database error"));
+            // Set up the factory
+            when(mockFactory.createTodoRepository()).thenReturn(mockTodoRepo);
+            when(mockFactory.createTagRepository()).thenReturn(mockTagRepo);
             
+            // Make save throw an error
+            when(mockTodoRepo.save(any(Todo.class))).thenThrow(new RuntimeException("Database error"));
+            
+            // Create service - this will use the mocked factory
             TodoService serviceWithFactory = new TodoService();
             
+            // Try to create a todo - this should trigger transaction rollback
             assertThrows(RuntimeException.class, () -> serviceWithFactory.createTodo("test"));
             
+            // Verify transaction methods were called
             verify(mockFactory).beginTransaction();
             verify(mockFactory).rollbackTransaction();
             verify(mockFactory, never()).commitTransaction();
+        }
+    }
+    
+    @Test
+    void testTransactionCommitOnSuccess() {
+        // Create fresh mocks
+        TodoRepository mockTodoRepo = mock(TodoRepository.class);
+        TagRepository mockTagRepo = mock(TagRepository.class);
+        RepositoryFactory mockFactory = mock(RepositoryFactory.class);
+        
+        try (MockedStatic<RepositoryFactory> mockedStatic = mockStatic(RepositoryFactory.class)) {
+            mockedStatic.when(RepositoryFactory::getInstance).thenReturn(mockFactory);
+            
+            when(mockFactory.createTodoRepository()).thenReturn(mockTodoRepo);
+            when(mockFactory.createTagRepository()).thenReturn(mockTagRepo);
+            
+            // Set up successful save
+            Todo savedTodo = new Todo("test");
+            savedTodo.setId(1L);
+            when(mockTodoRepo.save(any(Todo.class))).thenReturn(savedTodo);
+            
+            // Create service
+            TodoService serviceWithFactory = new TodoService();
+            
+            // Create todo - should trigger transaction commit
+            Todo result = serviceWithFactory.createTodo("test");
+            
+            assertNotNull(result);
+            assertEquals("test", result.getDescription());
+            
+            // Verify transaction methods were called
+            verify(mockFactory).beginTransaction();
+            verify(mockFactory).commitTransaction();
+            verify(mockFactory, never()).rollbackTransaction();
         }
     }
 }

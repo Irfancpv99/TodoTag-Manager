@@ -30,9 +30,13 @@ class MongoTagRepositoryTest {
     @AfterEach
     void tearDown() {
         if (repository != null) {
-            repository.deleteAll();
-            repository.close();
+            try {
+                repository.deleteAll();
+            } catch (Exception e) {
+                // Ignore cleanup errors
+            }
         }
+        // Don't close - let Testcontainers handle the lifecycle
     }
 
     @Test

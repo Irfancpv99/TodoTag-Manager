@@ -28,19 +28,34 @@ class MongoTodoRepositoryTest {
         tagRepository = new MongoTagRepository(connectionString, "testdb");
         todoRepository = new MongoTodoRepository(connectionString, "testdb", tagRepository);
         
-        tagRepository.deleteAll();
-        todoRepository.deleteAll();
+        // Clean database before each test
+        try {
+            tagRepository.deleteAll();
+            todoRepository.deleteAll();
+        } catch (Exception e) {
+            // Ignore cleanup errors during setup
+        }
     }
 
     @AfterEach
     void tearDown() {
+        // Only clean up if repositories weren't closed by the test
         if (todoRepository != null) {
-            todoRepository.deleteAll();
-            todoRepository.close();
+            try {
+                // Test if connection is still open by attempting an operation
+                todoRepository.findAll();
+                todoRepository.deleteAll();
+            } catch (Exception e) {
+                // Repository was closed or error occurred - ignore
+            }
         }
         if (tagRepository != null) {
-            tagRepository.deleteAll();
-            tagRepository.close();
+            try {
+                tagRepository.findAll();
+                tagRepository.deleteAll();
+            } catch (Exception e) {
+                // Repository was closed or error occurred - ignore
+            }
         }
     }
     
@@ -152,17 +167,20 @@ class MongoTodoRepositoryTest {
     
     @Test
     void shouldHandleCloseOperations() {
-        todoRepository.save(new Todo("test"));
-        
-        assertDoesNotThrow(() -> todoRepository.close());
-        
-        assertThrows(Exception.class, () -> todoRepository.save(new Todo("after-close")));
-        
         String connectionString = mongoDBContainer.getReplicaSetUrl();
-        MongoTodoRepository testRepo = new MongoTodoRepository(connectionString, "temp_db", tagRepository);
-        testRepo.close();
+        MongoTagRepository tempTagRepo = new MongoTagRepository(connectionString, "temp_close_test");
+        MongoTodoRepository testRepo = new MongoTodoRepository(connectionString, "temp_close_test", tempTagRepo);
+        
+        testRepo.save(new Todo("test"));
         
         assertDoesNotThrow(() -> testRepo.close());
+        
+        assertThrows(Exception.class, () -> testRepo.save(new Todo("after-close")));
+        
+        // Second close should not throw
+        assertDoesNotThrow(() -> testRepo.close());
+        
+        tempTagRepo.close();
     }
     
     @Test
