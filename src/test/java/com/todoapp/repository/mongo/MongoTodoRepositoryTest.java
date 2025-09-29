@@ -2,27 +2,46 @@ package com.todoapp.repository.mongo;
 
 import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
 class MongoTodoRepositoryTest {
+
+    @Container
+    private static final MongoDBContainer mongoDBContainer = 
+        new MongoDBContainer("mongo:6.0.5");
 
     private MongoTodoRepository todoRepository;
     private MongoTagRepository tagRepository;
-    private static final String CONNECTION = "mongodb://localhost:27017";
-    private static final String TEST_DB = "test_db_" + System.currentTimeMillis();
-    
+
     @BeforeEach
     void setUp() {
-        tagRepository = new MongoTagRepository(CONNECTION, TEST_DB);
-        todoRepository = new MongoTodoRepository(CONNECTION, TEST_DB, tagRepository);
-        todoRepository.deleteAll();
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        tagRepository = new MongoTagRepository(connectionString, "testdb");
+        todoRepository = new MongoTodoRepository(connectionString, "testdb", tagRepository);
+        
         tagRepository.deleteAll();
+        todoRepository.deleteAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (todoRepository != null) {
+            todoRepository.deleteAll();
+            todoRepository.close();
+        }
+        if (tagRepository != null) {
+            tagRepository.deleteAll();
+            tagRepository.close();
+        }
     }
     
     @Test
@@ -122,7 +141,8 @@ class MongoTodoRepositoryTest {
         todoRepository.save(new Todo("First"));
         todoRepository.save(new Todo("Second"));
         
-        MongoTodoRepository newRepo = new MongoTodoRepository(CONNECTION, TEST_DB, tagRepository);
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        MongoTodoRepository newRepo = new MongoTodoRepository(connectionString, "testdb", tagRepository);
         
         Todo newTodo = newRepo.save(new Todo("Third"));
         assertEquals(3L, newTodo.getId());
@@ -138,7 +158,8 @@ class MongoTodoRepositoryTest {
         
         assertThrows(Exception.class, () -> todoRepository.save(new Todo("after-close")));
         
-        MongoTodoRepository testRepo = new MongoTodoRepository(CONNECTION, "temp_db", tagRepository);
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        MongoTodoRepository testRepo = new MongoTodoRepository(connectionString, "temp_db", tagRepository);
         testRepo.close();
         
         assertDoesNotThrow(() -> testRepo.close());
