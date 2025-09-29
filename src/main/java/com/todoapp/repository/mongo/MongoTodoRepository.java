@@ -18,12 +18,7 @@ import java.util.Set;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
 
-/**
- * MongoDB implementation of TodoRepository
- * 
- * GREEN PHASE: Minimal implementation to make tests pass
- * Following TDD: just enough functionality to satisfy integration tests
- */
+
 public class MongoTodoRepository implements TodoRepository {
     
     private final MongoCollection<Document> collection;

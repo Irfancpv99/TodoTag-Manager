@@ -1,6 +1,7 @@
 package com.todoapp.repository;
 
 import com.todoapp.config.AppConfig;
+import com.todoapp.config.DatabaseManager;
 import com.todoapp.config.DatabaseType;
 import com.todoapp.repository.mongo.MongoTagRepository;
 import com.todoapp.repository.mongo.MongoTodoRepository;
@@ -12,17 +13,19 @@ public class RepositoryFactory {
     
     private static RepositoryFactory instance;
     private final AppConfig config;
-    private final EntityManager entityManager;
+    private final DatabaseManager databaseManager;
 
     private RepositoryFactory() {
         this.config = AppConfig.getInstance();
-        this.entityManager = null; 
+        this.databaseManager = DatabaseManager.getInstance();
     }
 
-   
+    /**
+     * Constructor for testing with specific config and entity manager
+     */
     public RepositoryFactory(AppConfig config, EntityManager entityManager) {
         this.config = config;
-        this.entityManager = entityManager;
+        this.databaseManager = null; // For testing
     }
 
     public static synchronized RepositoryFactory getInstance() {
@@ -36,6 +39,7 @@ public class RepositoryFactory {
         DatabaseType dbType = config.getDatabaseType();
         
         if (dbType == DatabaseType.MYSQL) {
+            EntityManager entityManager = getEntityManager();
             if (entityManager == null) {
                 throw new IllegalStateException("EntityManager not initialized for MySQL");
             }
@@ -56,6 +60,7 @@ public class RepositoryFactory {
         DatabaseType dbType = config.getDatabaseType();
         
         if (dbType == DatabaseType.MYSQL) {
+            EntityManager entityManager = getEntityManager();
             if (entityManager == null) {
                 throw new IllegalStateException("EntityManager not initialized for MySQL");
             }
@@ -70,11 +75,30 @@ public class RepositoryFactory {
     }
 
     public EntityManager getEntityManager() {
-        return entityManager;
+        return databaseManager != null ? databaseManager.getEntityManager() : null;
     }
 
-    
+    public void beginTransaction() {
+        if (databaseManager != null) {
+            databaseManager.beginTransaction();
+        }
+    }
+
+    public void commitTransaction() {
+        if (databaseManager != null) {
+            databaseManager.commitTransaction();
+        }
+    }
+
+    public void rollbackTransaction() {
+        if (databaseManager != null) {
+            databaseManager.rollbackTransaction();
+        }
+    }
+
     public void close() {
-        
+        if (databaseManager != null) {
+            databaseManager.close();
+        }
     }
 }

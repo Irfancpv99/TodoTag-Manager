@@ -15,12 +15,6 @@ import java.util.Optional;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
 
-/**
- * MongoDB implementation of TagRepository
- * 
- * GREEN PHASE: Minimal implementation to make tests pass
- * Following TDD: just enough functionality to satisfy integration tests
- */
 public class MongoTagRepository implements TagRepository {
     
     private final MongoCollection<Document> collection;
