@@ -69,12 +69,6 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Install Xvfb for JavaFX GUI Testing
-        run: |
-          echo "Installing Xvfb and dependencies for JavaFX..."
-          sudo apt-get update
-          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
-
       - name: Wait for services
         run: |
           echo "Waiting for database services..."
@@ -89,38 +83,30 @@ jobs:
           echo "MySQL ready"
           echo "All services ready for TDD tests"
 
-      - name: Run Unit Tests with Xvfb (TDD Red-Green-Refactor)
+      - name: Run Unit Tests (TDD Red-Green-Refactor)
         run: |
-          echo "Running TDD Unit Tests with virtual display..."
-          xvfb-run -a mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
-        env:
-          TESTFX_HEADLESS: true
-          TESTFX_ROBOT: glass
-          JAVA_OPTS: "-Djava.awt.headless=false"
+          echo "Running TDD Unit Tests..."
+          mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
 
-      - name: Run Integration Tests with Xvfb (TDD Integration Layer)
+      - name: Run Integration Tests (TDD Integration Layer)
         run: |
           echo "Running TDD Integration Tests..."
           if find src/test/java -name "*IntegrationTest.java" 2>/dev/null | grep -q .; then
             echo "Found integration tests - executing..."
-            xvfb-run -a mvn test -Dtest="**/*IntegrationTest.java"
+            mvn test -Dtest="**/*IntegrationTest.java"
           else
             echo "No integration tests found - skipping"
           fi
-        env:
-          TESTFX_HEADLESS: true
 
-      - name: Run E2E Tests with Xvfb (TDD Complete Workflows)
+      - name: Run E2E Tests (TDD Complete Workflows)
         run: |
           echo "Running TDD End-to-End Tests..."
           if find src/test/java -name "*E2ETest.java" 2>/dev/null | grep -q .; then
             echo "Found E2E tests - executing..."
-            xvfb-run -a mvn test -Dtest="**/*E2ETest.java"
+            mvn test -Dtest="**/*E2ETest.java"
           else
             echo "No E2E tests found - skipping"
           fi
-        env:
-          TESTFX_HEADLESS: true
 
       - name: Generate Code Coverage Report
         run: |
@@ -195,19 +181,10 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Install Xvfb for Mutation Testing
+      - name: Run PIT Mutation Testing
         run: |
-          echo "Installing Xvfb for mutation testing..."
-          sudo apt-get update
-          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
-
-      - name: Run PIT Mutation Testing with Xvfb
-        run: |
-          echo "Running TDD Mutation Testing with virtual display..."
-          xvfb-run -a mvn clean test org.pitest:pitest-maven:mutationCoverage
-        env:
-          TESTFX_HEADLESS: true
-          JAVA_OPTS: "-Djava.awt.headless=false"
+          echo "Running TDD Mutation Testing..."
+          mvn clean test org.pitest:pitest-maven:mutationCoverage
 
       - name: Upload Mutation Test Results
         uses: actions/upload-artifact@v4
@@ -262,12 +239,11 @@ jobs:
         run: |
           echo "TDD Development Quality Summary"
           echo "================================"
-          echo "Unit Tests: Completed with Xvfb"
+          echo "Unit Tests: Completed"
           echo "Integration Tests: As needed"
           echo "E2E Tests: As needed"
           echo "Code Coverage: Targeting 100%"
-          echo "Mutation Testing: Enabled with Xvfb"
+          echo "Mutation Testing: Enabled"
           echo "SonarCloud Analysis: Configured"
           echo ""
-          echo "JavaFX GUI Tests: Running with virtual display (Xvfb)"
           echo "Quality Gate: FULL COVERAGE ENABLED"
