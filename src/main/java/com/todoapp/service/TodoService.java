@@ -13,14 +13,15 @@ public class TodoService {
     
     private final TodoRepository todoRepository;
     private final TagRepository tagRepository;
+    private final RepositoryFactory repositoryFactory;
 
     /**
      * Constructor for production use
      */
     public TodoService() {
-        RepositoryFactory factory = RepositoryFactory.getInstance();
-        this.todoRepository = factory.createTodoRepository();
-        this.tagRepository = factory.createTagRepository();
+        this.repositoryFactory = RepositoryFactory.getInstance();
+        this.todoRepository = repositoryFactory.createTodoRepository();
+        this.tagRepository = repositoryFactory.createTagRepository();
     }
 
     /**
@@ -29,6 +30,7 @@ public class TodoService {
     public TodoService(TodoRepository todoRepository, TagRepository tagRepository) {
         this.todoRepository = todoRepository;
         this.tagRepository = tagRepository;
+        this.repositoryFactory = null; // For testing
     }
 
     // Todo CRUD Operations
@@ -42,7 +44,7 @@ public class TodoService {
     }
 
     public Todo saveTodo(Todo todo) {
-        return todoRepository.save(todo);
+        return executeWithTransaction(() -> todoRepository.save(todo));
     }
 
     public Todo createTodo(String description) {
@@ -53,32 +55,39 @@ public class TodoService {
             throw new IllegalArgumentException("Todo description cannot be empty");
         }
         
-        Todo todo = new Todo(description);
+        Todo todo = new Todo(description.trim());
         return saveTodo(todo);
     }
 
     public void deleteTodo(Long id) {
-        todoRepository.deleteById(id);
+        executeWithTransaction(() -> {
+            todoRepository.deleteById(id);
+            return null;
+        });
     }
 
     public Todo markTodoComplete(Long id) {
-        Optional<Todo> todoOpt = todoRepository.findById(id);
-        if (todoOpt.isPresent()) {
-            Todo todo = todoOpt.get();
-            todo.setDone(true);
-            return todoRepository.save(todo);
-        }
-        throw new IllegalArgumentException("Todo not found with id: " + id);
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(id);
+            if (todoOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                todo.setDone(true);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo not found with id: " + id);
+        });
     }
 
     public Todo markTodoIncomplete(Long id) {
-        Optional<Todo> todoOpt = todoRepository.findById(id);
-        if (todoOpt.isPresent()) {
-            Todo todo = todoOpt.get();
-            todo.setDone(false);
-            return todoRepository.save(todo);
-        }
-        throw new IllegalArgumentException("Todo not found with id: " + id);
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(id);
+            if (todoOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                todo.setDone(false);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo not found with id: " + id);
+        });
     }
 
     public List<Todo> getCompletedTodos() {
@@ -107,7 +116,7 @@ public class TodoService {
     }
 
     public Tag saveTag(Tag tag) {
-        return tagRepository.save(tag);
+        return executeWithTransaction(() -> tagRepository.save(tag));
     }
 
     public Tag createTag(String name) {
@@ -118,12 +127,15 @@ public class TodoService {
             throw new IllegalArgumentException("Tag name cannot be empty");
         }
         
-        Tag tag = new Tag(name);
+        Tag tag = new Tag(name.trim());
         return saveTag(tag);
     }
 
     public void deleteTag(Long id) {
-        tagRepository.deleteById(id);
+        executeWithTransaction(() -> {
+            tagRepository.deleteById(id);
+            return null;
+        });
     }
 
     public Optional<Tag> findTagByName(String name) {
@@ -140,28 +152,57 @@ public class TodoService {
     // Todo-Tag Relationship Management
 
     public Todo addTagToTodo(Long todoId, Long tagId) {
-        Optional<Todo> todoOpt = todoRepository.findById(todoId);
-        Optional<Tag> tagOpt = tagRepository.findById(tagId);
-        
-        if (todoOpt.isPresent() && tagOpt.isPresent()) {
-            Todo todo = todoOpt.get();
-            Tag tag = tagOpt.get();
-            todo.addTag(tag);
-            return todoRepository.save(todo);
-        }
-        throw new IllegalArgumentException("Todo or Tag not found");
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(todoId);
+            Optional<Tag> tagOpt = tagRepository.findById(tagId);
+            
+            if (todoOpt.isPresent() && tagOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                Tag tag = tagOpt.get();
+                todo.addTag(tag);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo or Tag not found");
+        });
     }
 
     public Todo removeTagFromTodo(Long todoId, Long tagId) {
-        Optional<Todo> todoOpt = todoRepository.findById(todoId);
-        Optional<Tag> tagOpt = tagRepository.findById(tagId);
-        
-        if (todoOpt.isPresent() && tagOpt.isPresent()) {
-            Todo todo = todoOpt.get();
-            Tag tag = tagOpt.get();
-            todo.removeTag(tag);
-            return todoRepository.save(todo);
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(todoId);
+            Optional<Tag> tagOpt = tagRepository.findById(tagId);
+            
+            if (todoOpt.isPresent() && tagOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                Tag tag = tagOpt.get();
+                todo.removeTag(tag);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo or Tag not found");
+        });
+    }
+
+    /**
+     * Execute an operation within a transaction (for MySQL) or directly (for MongoDB)
+     */
+    private <T> T executeWithTransaction(TransactionOperation<T> operation) {
+        if (repositoryFactory != null) {
+            try {
+                repositoryFactory.beginTransaction();
+                T result = operation.execute();
+                repositoryFactory.commitTransaction();
+                return result;
+            } catch (Exception e) {
+                repositoryFactory.rollbackTransaction();
+                throw e;
+            }
+        } else {
+            // For testing or when no transaction management needed
+            return operation.execute();
         }
-        throw new IllegalArgumentException("Todo or Tag not found");
+    }
+
+    @FunctionalInterface
+    private interface TransactionOperation<T> {
+        T execute();
     }
 }
