@@ -14,13 +14,12 @@ jobs:
   validate-tdd:
     name: Validate TDD Approach
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Validate TDD commit messages
         run: |
           echo "Validating TDD commit pattern..."
@@ -30,7 +29,6 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
-    
     services:
       mongodb:
         image: mongo:6.0
@@ -38,7 +36,7 @@ jobs:
           - 27017:27017
         env:
           MONGO_INITDB_DATABASE: todoapp_test
-          
+
       mysql:
         image: mysql:8.0
         ports:
@@ -72,52 +70,35 @@ jobs:
       - name: Wait for services
         run: |
           echo "Waiting for database services..."
-          while ! nc -z localhost 27017; do
-            sleep 2
-          done
+          while ! nc -z localhost 27017; do sleep 2; done
           echo "MongoDB ready"
-          
-          while ! nc -z localhost 3306; do
-            sleep 2
-          done
+          while ! nc -z localhost 3306; do sleep 2; done
           echo "MySQL ready"
           echo "All services ready for TDD tests"
 
       - name: Run Unit Tests (TDD Red-Green-Refactor)
-        run: |
-          echo "Running TDD Unit Tests..."
-          mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
+        run: mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
 
       - name: Run Integration Tests (TDD Integration Layer)
         run: |
-          echo "Running TDD Integration Tests..."
           if find src/test/java -name "*IntegrationTest.java" 2>/dev/null | grep -q .; then
-            echo "Found integration tests - executing..."
             mvn test -Dtest="**/*IntegrationTest.java"
           else
             echo "No integration tests found - skipping"
-          fi
 
       - name: Run E2E Tests (TDD Complete Workflows)
         run: |
-          echo "Running TDD End-to-End Tests..."
           if find src/test/java -name "*E2ETest.java" 2>/dev/null | grep -q .; then
-            echo "Found E2E tests - executing..."
             mvn test -Dtest="**/*E2ETest.java"
           else
             echo "No E2E tests found - skipping"
-          fi
 
       - name: Generate Code Coverage Report
-        run: |
-          echo "Generating TDD Coverage Report..."
-          mvn jacoco:report
-          
+        run: mvn jacoco:report
+
       - name: Enforce Code Coverage (TDD Best Practice)
-        run: |
-          echo "Checking TDD Code Coverage..."
-          mvn jacoco:check || echo "Coverage enforcement - project building towards 100%"
-          
+        run: mvn jacoco:check || echo "Coverage enforcement - project building towards 100%"
+
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -138,7 +119,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           if [ -n "${{ secrets.SONAR_TOKEN }}" ]; then
-            echo "Running TDD SonarCloud Analysis..."
             mvn sonar:sonar \
               -Dsonar.projectKey=irfancpv99_TodoTag-Manager \
               -Dsonar.organization=irfancpv99 \
@@ -146,7 +126,6 @@ jobs:
               -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           else
             echo "SonarCloud token not configured, skipping analysis"
-          fi
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -163,7 +142,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -182,9 +160,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Run PIT Mutation Testing
-        run: |
-          echo "Running TDD Mutation Testing..."
-          mvn clean test org.pitest:pitest-maven:mutationCoverage
+        run: mvn clean test org.pitest:pitest-maven:mutationCoverage
 
       - name: Upload Mutation Test Results
         uses: actions/upload-artifact@v4
@@ -198,7 +174,6 @@ jobs:
     name: Build TDD Application
     runs-on: ubuntu-latest
     needs: test
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -217,10 +192,8 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Build TDD Application
-        run: |
-          echo "Building TDD Application..."
-          mvn clean package -DskipTests
-          
+        run: mvn clean package -DskipTests
+
       - name: Upload Application Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -233,7 +206,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, mutation-testing]
     if: always()
-    
     steps:
       - name: TDD Quality Summary
         run: |
