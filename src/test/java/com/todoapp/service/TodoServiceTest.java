@@ -62,7 +62,6 @@ class TodoServiceTest {
         assertFalse(todoService.getIncompleteTodos().isEmpty());
         assertFalse(todoService.searchTodos("key").isEmpty());
 
-        // Call delete  
         todoService.deleteTodo(1L);
         verify(todoRepository).deleteById(1L);
     }
@@ -81,7 +80,6 @@ class TodoServiceTest {
         assertTrue(todoService.findTagByName("urgent").isPresent());
         assertFalse(todoService.searchTags("imp").isEmpty());
 
-        // Call delete 
         todoService.deleteTag(1L);
         verify(tagRepository).deleteById(1L);
     }
@@ -96,6 +94,7 @@ class TodoServiceTest {
         assertEquals("test", todoService.createTodo("test").getDescription());
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null));
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(""));
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   "));
     }
 
     @Test
@@ -108,6 +107,7 @@ class TodoServiceTest {
         assertEquals("work", todoService.createTag("work").getName());
         assertThrows(IllegalArgumentException.class, () -> todoService.createTag(null));
         assertThrows(IllegalArgumentException.class, () -> todoService.createTag(""));
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTag("   "));
     }
 
     @Test
@@ -159,7 +159,7 @@ class TodoServiceTest {
         
         when(todoRepository.save(any())).thenReturn(savedTodo);
 
-         Todo result = todoService.addTagToTodo(1L, 2L);
+        Todo result = todoService.addTagToTodo(1L, 2L);
         assertNotNull(result);
         assertTrue(todo.getTags().contains(tag));
 
@@ -179,24 +179,51 @@ class TodoServiceTest {
     }
     
     @Test
-    void testServiceWithFactoryHandlesErrors() {
-        // Test that service properly handles repository errors
-        when(todoRepository.save(any(Todo.class))).thenThrow(new RuntimeException("Database error"));
-        
-        assertThrows(RuntimeException.class, () -> todoService.createTodo("test"));
+    void testTransactionManagementSuccess() {
+        try (MockedStatic<RepositoryFactory> mockedFactory = mockStatic(RepositoryFactory.class)) {
+            RepositoryFactory mockFactory = mock(RepositoryFactory.class);
+            
+            when(mockFactory.createTodoRepository()).thenReturn(todoRepository);
+            when(mockFactory.createTagRepository()).thenReturn(tagRepository);
+            mockedFactory.when(RepositoryFactory::getInstance).thenReturn(mockFactory);
+            
+            TodoService productionService = new TodoService();
+            
+            Todo savedTodo = new Todo("test transaction");
+            savedTodo.setId(1L);
+            when(todoRepository.save(any(Todo.class))).thenReturn(savedTodo);
+            
+            Todo result = productionService.createTodo("test transaction");
+            
+            verify(mockFactory).beginTransaction();
+            verify(mockFactory).commitTransaction();
+            verify(mockFactory, never()).rollbackTransaction();
+            
+            assertNotNull(result);
+            assertEquals("test transaction", result.getDescription());
+        }
     }
     
     @Test
-    void testServiceWithFactorySuccess() {
-        // Test that service properly saves data
-        Todo savedTodo = new Todo("test");
-        savedTodo.setId(1L);
-        when(todoRepository.save(any(Todo.class))).thenReturn(savedTodo);
-        
-        Todo result = todoService.createTodo("test");
-        
-        assertNotNull(result);
-        assertEquals("test", result.getDescription());
-        verify(todoRepository).save(any(Todo.class));
+    void testTransactionManagementRollback() {
+        try (MockedStatic<RepositoryFactory> mockedFactory = mockStatic(RepositoryFactory.class)) {
+            RepositoryFactory mockFactory = mock(RepositoryFactory.class);
+            
+            when(mockFactory.createTodoRepository()).thenReturn(todoRepository);
+            when(mockFactory.createTagRepository()).thenReturn(tagRepository);
+            mockedFactory.when(RepositoryFactory::getInstance).thenReturn(mockFactory);
+            
+            TodoService productionService = new TodoService();
+            
+            when(todoRepository.save(any(Todo.class)))
+                .thenThrow(new RuntimeException("Database error"));
+            
+            assertThrows(RuntimeException.class, 
+                () -> productionService.createTodo("test rollback"));
+            
+            verify(mockFactory).beginTransaction();
+            verify(mockFactory).rollbackTransaction();
+            verify(mockFactory, never()).commitTransaction();
+        }
     }
 }
