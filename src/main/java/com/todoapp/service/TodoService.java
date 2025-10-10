@@ -1,0 +1,208 @@
+package com.todoapp.service;
+
+import com.todoapp.model.Tag;
+import com.todoapp.model.Todo;
+import com.todoapp.repository.RepositoryFactory;
+import com.todoapp.repository.TagRepository;
+import com.todoapp.repository.TodoRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public class TodoService {
+    
+    private final TodoRepository todoRepository;
+    private final TagRepository tagRepository;
+    private final RepositoryFactory repositoryFactory;
+
+    /**
+     * Constructor for production use
+     */
+    public TodoService() {
+        this.repositoryFactory = RepositoryFactory.getInstance();
+        this.todoRepository = repositoryFactory.createTodoRepository();
+        this.tagRepository = repositoryFactory.createTagRepository();
+    }
+
+    /**
+     * Constructor for testing with specific repositories
+     */
+    public TodoService(TodoRepository todoRepository, TagRepository tagRepository) {
+        this.todoRepository = todoRepository;
+        this.tagRepository = tagRepository;
+        this.repositoryFactory = null; // For testing
+    }
+
+    // Todo CRUD Operations
+
+    public List<Todo> getAllTodos() {
+        return todoRepository.findAll();
+    }
+
+    public Optional<Todo> getTodoById(Long id) {
+        return todoRepository.findById(id);
+    }
+
+    public Todo saveTodo(Todo todo) {
+        return executeWithTransaction(() -> todoRepository.save(todo));
+    }
+
+    public Todo createTodo(String description) {
+        if (description == null) {
+            throw new IllegalArgumentException("Todo description cannot be null");
+        }
+        if (description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Todo description cannot be empty");
+        }
+        
+        Todo todo = new Todo(description.trim());
+        return saveTodo(todo);
+    }
+
+    public void deleteTodo(Long id) {
+        executeWithTransaction(() -> {
+            todoRepository.deleteById(id);
+            return null;
+        });
+    }
+
+    public Todo markTodoComplete(Long id) {
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(id);
+            if (todoOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                todo.setDone(true);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo not found with id: " + id);
+        });
+    }
+
+    public Todo markTodoIncomplete(Long id) {
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(id);
+            if (todoOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                todo.setDone(false);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo not found with id: " + id);
+        });
+    }
+
+    public List<Todo> getCompletedTodos() {
+        return todoRepository.findByDone(true);
+    }
+
+    public List<Todo> getIncompleteTodos() {
+        return todoRepository.findByDone(false);
+    }
+
+    public List<Todo> searchTodos(String keyword) {
+        if (keyword == null) {
+            throw new IllegalArgumentException("Search keyword cannot be null");
+        }
+        return todoRepository.findByDescriptionContaining(keyword);
+    }
+
+    // Tag CRUD Operations
+
+    public List<Tag> getAllTags() {
+        return tagRepository.findAll();
+    }
+
+    public Optional<Tag> getTagById(Long id) {
+        return tagRepository.findById(id);
+    }
+
+    public Tag saveTag(Tag tag) {
+        return executeWithTransaction(() -> tagRepository.save(tag));
+    }
+
+    public Tag createTag(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Tag name cannot be null");
+        }
+        if (name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tag name cannot be empty");
+        }
+        
+        Tag tag = new Tag(name.trim());
+        return saveTag(tag);
+    }
+
+    public void deleteTag(Long id) {
+        executeWithTransaction(() -> {
+            tagRepository.deleteById(id);
+            return null;
+        });
+    }
+
+    public Optional<Tag> findTagByName(String name) {
+        return tagRepository.findByName(name);
+    }
+
+    public List<Tag> searchTags(String keyword) {
+        if (keyword == null) {
+            throw new IllegalArgumentException("Search keyword cannot be null");
+        }
+        return tagRepository.findByNameContaining(keyword);
+    }
+
+    // Todo-Tag Relationship Management
+
+    public Todo addTagToTodo(Long todoId, Long tagId) {
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(todoId);
+            Optional<Tag> tagOpt = tagRepository.findById(tagId);
+            
+            if (todoOpt.isPresent() && tagOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                Tag tag = tagOpt.get();
+                todo.addTag(tag);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo or Tag not found");
+        });
+    }
+
+    public Todo removeTagFromTodo(Long todoId, Long tagId) {
+        return executeWithTransaction(() -> {
+            Optional<Todo> todoOpt = todoRepository.findById(todoId);
+            Optional<Tag> tagOpt = tagRepository.findById(tagId);
+            
+            if (todoOpt.isPresent() && tagOpt.isPresent()) {
+                Todo todo = todoOpt.get();
+                Tag tag = tagOpt.get();
+                todo.removeTag(tag);
+                return todoRepository.save(todo);
+            }
+            throw new IllegalArgumentException("Todo or Tag not found");
+        });
+    }
+
+    /**
+     * Execute an operation within a transaction (for MySQL) or directly (for MongoDB)
+     */
+    private <T> T executeWithTransaction(TransactionOperation<T> operation) {
+        if (repositoryFactory != null) {
+            try {
+                repositoryFactory.beginTransaction();
+                T result = operation.execute();
+                repositoryFactory.commitTransaction();
+                return result;
+            } catch (Exception e) {
+                repositoryFactory.rollbackTransaction();
+                throw e;
+            }
+        } else {
+            // For testing or when no transaction management needed
+            return operation.execute();
+        }
+    }
+
+    @FunctionalInterface
+    private interface TransactionOperation<T> {
+        T execute();
+    }
+}
