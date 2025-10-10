@@ -8,7 +8,7 @@ on:
 
 env:
   JAVA_VERSION: 17
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Djava.awt.headless=true"
 
 jobs:
   validate-tdd:
@@ -77,21 +77,23 @@ jobs:
           echo "All services ready for TDD tests"
 
       - name: Run Unit Tests (TDD Red-Green-Refactor)
-        run: mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
+        run: mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false -Djava.awt.headless=true
 
       - name: Run Integration Tests (TDD Integration Layer)
         run: |
           if find src/test/java -name "*IntegrationTest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*IntegrationTest.java"
+            mvn test -Dtest="**/*IntegrationTest.java" -Djava.awt.headless=true
           else
             echo "No integration tests found - skipping"
+          fi
 
       - name: Run E2E Tests (TDD Complete Workflows)
         run: |
           if find src/test/java -name "*E2ETest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*E2ETest.java"
+            mvn test -Dtest="**/*E2ETest.java" -Djava.awt.headless=true
           else
             echo "No E2E tests found - skipping"
+          fi
 
       - name: Generate Code Coverage Report
         run: mvn jacoco:report
@@ -126,6 +128,7 @@ jobs:
               -Dsonar.login=${{ secrets.SONAR_TOKEN }}
           else
             echo "SonarCloud token not configured, skipping analysis"
+          fi
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -160,7 +163,7 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
 
       - name: Run PIT Mutation Testing
-        run: mvn clean test org.pitest:pitest-maven:mutationCoverage
+        run: mvn clean test org.pitest:pitest-maven:mutationCoverage -Djava.awt.headless=true
 
       - name: Upload Mutation Test Results
         uses: actions/upload-artifact@v4
