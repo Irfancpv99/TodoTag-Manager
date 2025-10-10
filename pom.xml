@@ -19,90 +19,17 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- Dependency versions -->
-        <javafx.version>11.0.2</javafx.version>
         <junit.version>5.9.3</junit.version>
         <mockito.version>4.11.0</mockito.version>
-        <testfx.version>4.0.16-alpha</testfx.version>
         <mongodb.version>4.9.1</mongodb.version>
         <mysql.version>8.0.33</mysql.version>
         <hibernate.version>6.2.2.Final</hibernate.version>
-        
-        <!-- SonarCloud configuration -->
+
         <jacoco.version>0.8.8</jacoco.version>
-        <sonar.organization>irfancpv99</sonar.organization>
         <pitest.version>1.14.1</pitest.version>
     </properties>
 
-    <profiles>
-        <!-- Profile for Windows -->
-        <profile>
-            <id>windows</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>win</javafx.platform>
-            </properties>
-        </profile>
-        
-        <!-- Profile for Linux -->
-        <profile>
-            <id>linux</id>
-            <activation>
-                <os>
-                    <family>unix</family>
-                    <name>Linux</name>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>linux</javafx.platform>
-            </properties>
-        </profile>
-        
-        <!-- Profile for macOS -->
-        <profile>
-            <id>mac</id>
-            <activation>
-                <os>
-                    <family>mac</family>
-                </os>
-            </activation>
-            <properties>
-                <javafx.platform>mac</javafx.platform>
-            </properties>
-        </profile>
-    </profiles>
-
     <dependencies>
-        <!-- JavaFX -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-base</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>${javafx.platform}</classifier>
-        </dependency>
-
         <!-- MongoDB -->
         <dependency>
             <groupId>org.mongodb</groupId>
@@ -152,26 +79,6 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-core</artifactId>
-            <version>${testfx.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-junit5</artifactId>
-            <version>${testfx.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Monocle for headless TestFX -->
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>openjfx-monocle</artifactId>
-            <version>jdk-11+26</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- Testcontainers for Docker -->
         <dependency>
@@ -211,29 +118,11 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire for Tests -->
+            <!-- Surefire for Unit & Integration Tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <testfx.robot>glass</testfx.robot>
-                        <testfx.headless>true</testfx.headless>
-                        <prism.order>sw</prism.order>
-                        <prism.text>t2k</prism.text>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-
-            <!-- JavaFX Plugin -->
-            <plugin>
-                <groupId>org.openjfx</groupId>
-                <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.8</version>
-                <configuration>
-                    <mainClass>com.todoapp.TodoApplication</mainClass>
-                </configuration>
             </plugin>
 
             <!-- JaCoCo Coverage -->
@@ -302,9 +191,7 @@
                         <param>com.todoapp.*</param>
                     </targetTests>
                     <excludedTestClasses>
-                        <param>com.todoapp.gui.MainControllerTest</param>
-                        <param>com.todoapp.gui.MainControllerUnitTest</param>
-                        <param>com.todoapp.repository.RepositoryFactoryTest</param>
+                        <param>com.todoapp.gui.*</param>
                     </excludedTestClasses>
                     <outputFormats>
                         <outputFormat>HTML</outputFormat>
@@ -314,12 +201,6 @@
                 </configuration>
             </plugin>
 
-            <!-- SonarQube -->
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.9.1.2184</version>
-            </plugin>
         </plugins>
     </build>
 </project>

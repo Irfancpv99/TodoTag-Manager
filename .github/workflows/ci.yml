@@ -11,23 +11,8 @@ env:
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
 
 jobs:
-  validate-tdd:
-    name: Validate TDD Approach
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Validate TDD commit messages
-        run: |
-          echo "Validating TDD commit pattern..."
-          git log --oneline -10 | grep -E "(RED:|GREEN:|REFACTOR:)" || echo "TDD commit pattern validation"
-          echo "TDD validation completed"
-
   test:
-    name: Test Suite
+    name: Run Tests
     runs-on: ubuntu-latest
     services:
       mongodb:
@@ -36,7 +21,6 @@ jobs:
           - 27017:27017
         env:
           MONGO_INITDB_DATABASE: todoapp_test
-
       mysql:
         image: mysql:8.0
         ports:
@@ -51,14 +35,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -69,79 +51,36 @@ jobs:
 
       - name: Wait for services
         run: |
-          echo "Waiting for database services..."
+          echo "Waiting for MongoDB..."
           while ! nc -z localhost 27017; do sleep 2; done
-          echo "MongoDB ready"
+          echo "Waiting for MySQL..."
           while ! nc -z localhost 3306; do sleep 2; done
-          echo "MySQL ready"
-          echo "All services ready for TDD tests"
+          echo "Database services ready."
 
-      - name: Run Unit Tests (TDD Red-Green-Refactor)
-        run: mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
+      - name: Run Unit & Integration Tests
+        run: mvn clean test -Dtest="**/*Test.java,**/*IntegrationTest.java" -Dmaven.test.failure.ignore=false
 
-      - name: Run Integration Tests (TDD Integration Layer)
-        run: |
-          if find src/test/java -name "*IntegrationTest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*IntegrationTest.java"
-          else
-            echo "No integration tests found - skipping"
-
-      - name: Run E2E Tests (TDD Complete Workflows)
-        run: |
-          if find src/test/java -name "*E2ETest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*E2ETest.java"
-          else
-            echo "No E2E tests found - skipping"
-
-      - name: Generate Code Coverage Report
+      - name: Generate JaCoCo Coverage
         run: mvn jacoco:report
 
-      - name: Enforce Code Coverage (TDD Best Practice)
-        run: mvn jacoco:check || echo "Coverage enforcement - project building towards 100%"
+      - name: Enforce Code Coverage
+        run: mvn jacoco:check
 
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: target/site/jacoco/jacoco.xml
-          flags: tdd-tests
-          name: TDD-Coverage-Report
-
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Run SonarCloud Analysis (TDD Quality Gate)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -n "${{ secrets.SONAR_TOKEN }}" ]; then
-            mvn sonar:sonar \
-              -Dsonar.projectKey=irfancpv99_TodoTag-Manager \
-              -Dsonar.organization=irfancpv99 \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-          else
-            echo "SonarCloud token not configured, skipping analysis"
-
-      - name: Upload Test Results
+      - name: Upload Test & Coverage Artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tdd-test-results
+          name: test-results
           path: |
             target/surefire-reports/
             target/site/jacoco/
           retention-days: 30
 
   mutation-testing:
-    name: Mutation Testing (TDD Quality)
+    name: Mutation Testing (PIT)
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -150,7 +89,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -162,16 +101,16 @@ jobs:
       - name: Run PIT Mutation Testing
         run: mvn clean test org.pitest:pitest-maven:mutationCoverage
 
-      - name: Upload Mutation Test Results
+      - name: Upload PIT Reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tdd-mutation-results
+          name: pit-reports
           path: target/pit-reports/
           retention-days: 30
 
   build-application:
-    name: Build TDD Application
+    name: Build Application
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -182,7 +121,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
+          distribution: temurin
 
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -191,31 +130,12 @@ jobs:
           key: ${{ runner.os }}-m2
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build TDD Application
+      - name: Build Application
         run: mvn clean package -DskipTests
 
-      - name: Upload Application Artifact
+      - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tdd-todo-manager
           path: target/*.jar
           retention-days: 30
-
-  validate-tdd-quality:
-    name: TDD Quality Gate
-    runs-on: ubuntu-latest
-    needs: [test, mutation-testing]
-    if: always()
-    steps:
-      - name: TDD Quality Summary
-        run: |
-          echo "TDD Development Quality Summary"
-          echo "================================"
-          echo "Unit Tests: Completed"
-          echo "Integration Tests: As needed"
-          echo "E2E Tests: As needed"
-          echo "Code Coverage: Targeting 100%"
-          echo "Mutation Testing: Enabled"
-          echo "SonarCloud Analysis: Configured"
-          echo ""
-          echo "Quality Gate: FULL COVERAGE ENABLED"
