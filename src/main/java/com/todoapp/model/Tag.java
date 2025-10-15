@@ -75,6 +75,7 @@ public class Tag {
         return id != null && tag.id != null && Objects.equals(id, tag.id);
     }
     
+    
     @Override
     public int hashCode() {
         return name != null ? Objects.hash(name) : 0;
