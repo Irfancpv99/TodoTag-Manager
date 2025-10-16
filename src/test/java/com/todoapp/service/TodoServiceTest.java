@@ -68,4 +68,11 @@ class TodoServiceTest {
         assertNotNull(todoService.createTodo("  Task 1  "));
         verify(todoRepository).save(any(Todo.class));
     }
+    
+    @Test
+    void shouldDeleteTodo() {
+        assertDoesNotThrow(() -> todoService.deleteTodo(1L));
+        verify(todoRepository).deleteById(1L);
+    }
 }
+
