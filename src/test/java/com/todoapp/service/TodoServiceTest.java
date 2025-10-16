@@ -59,8 +59,7 @@ class TodoServiceTest {
     @Test
     void shouldThrowExceptionWhenCreatingTodoWithEmptyDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   "));
-    }
-    
+    }  
     @Test
     void shouldCreateTodo() {
         Todo todo = new Todo("Task 1");
