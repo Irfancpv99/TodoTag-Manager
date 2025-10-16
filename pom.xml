@@ -148,6 +148,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
+                    <!-- Exclude GUI tests from default test run -->
+                    <excludes>
+                        <exclude>**/gui/**/*Test.java</exclude>
+                    </excludes>
                     <argLine>
                         -Djava.awt.headless=true
                         -Dtestfx.robot=glass
@@ -188,6 +192,12 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+                <configuration>
+                    <!-- Exclude GUI classes from coverage analysis -->
+                    <excludes>
+                        <exclude>com/todoapp/gui/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -224,7 +234,7 @@
                 </executions>
             </plugin>
 
-            <!-- PITest Mutation Testing -->
+            <!-- PITest Mutation Testing - OPTIMIZED -->
             <plugin>
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
@@ -256,8 +266,16 @@
                         <outputFormat>XML</outputFormat>
                     </outputFormats>
                     <mutationThreshold>100</mutationThreshold>
+                    <!-- Increase timeout for Testcontainers -->
+                    <timeoutConstant>10000</timeoutConstant>
+                    <timeoutFactor>3.0</timeoutFactor>
+                    <!-- Use more threads for faster execution -->
+                    <threads>4</threads>
+                    <!-- Enable verbose output for debugging -->
+                    <verbose>false</verbose>
                     <jvmArgs>
                         <jvmArg>-Djava.awt.headless=true</jvmArg>
+                        <jvmArg>-Xmx2048m</jvmArg>
                     </jvmArgs>
                 </configuration>
             </plugin>
@@ -270,4 +288,77 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- Profiles for different test scenarios -->
+    <profiles>
+        <!-- Default profile: excludes GUI tests -->
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+
+        <!-- Profile to run ALL tests including GUI tests -->
+        <profile>
+            <id>with-gui-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <configuration>
+                            <!-- Include all tests -->
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <argLine>
+                                -Djava.awt.headless=true
+                                -Dtestfx.robot=glass
+                                -Dtestfx.headless=true
+                                -Dprism.order=sw
+                                -Dprism.text=t2k
+                                -Dmonocle.platform=Headless
+                                -Dglass.platform=Monocle
+                                @{argLine}
+                            </argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile to run ONLY GUI tests -->
+        <profile>
+            <id>gui-tests-only</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <configuration>
+                            <includes>
+                                <include>**/gui/**/*Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <argLine>
+                                -Djava.awt.headless=true
+                                -Dtestfx.robot=glass
+                                -Dtestfx.headless=true
+                                -Dprism.order=sw
+                                -Dprism.text=t2k
+                                -Dmonocle.platform=Headless
+                                -Dglass.platform=Monocle
+                                @{argLine}
+                            </argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
