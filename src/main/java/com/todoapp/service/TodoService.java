@@ -39,4 +39,16 @@ public class TodoService {
     public void deleteTodo(Long id) {
         todoRepository.deleteById(id);
     }
+    public Todo markTodoComplete(Long id) {
+        return updateTodoStatus(id, true);
+    }
+
+    private Todo updateTodoStatus(Long id, boolean done) {
+        Todo todo = todoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Todo not found with id: " + id));
+        todo.setDone(done);
+        return todoRepository.save(todo);
+    }
+    
+    
 }
