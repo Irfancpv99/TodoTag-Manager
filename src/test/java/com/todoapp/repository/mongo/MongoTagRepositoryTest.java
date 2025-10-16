@@ -16,15 +16,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class MongoTagRepositoryTest {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0"))
-            .withExposedPorts(27017);
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0"));
 
     private MongoTagRepository repository;
+    private String testDb;
 
     @BeforeEach
     void setUp() {
         String connectionString = mongoDBContainer.getReplicaSetUrl();
-        repository = new MongoTagRepository(connectionString, "testdb");
+        testDb = "testdb_" + System.currentTimeMillis();
+        repository = new MongoTagRepository(connectionString, testDb);
         repository.deleteAll();
     }
 
@@ -41,10 +42,13 @@ class MongoTagRepositoryTest {
         Tag tag = new Tag("Work");
         Tag saved = repository.save(tag);
 
+        assertNotNull(saved);
         assertNotNull(saved.getId());
+        assertEquals(1L, saved.getId());
         
         Optional<Tag> found = repository.findById(saved.getId());
         assertTrue(found.isPresent());
+        assertEquals(1L, found.get().getId());
         assertEquals("Work", found.get().getName());
     }
 
@@ -54,6 +58,7 @@ class MongoTagRepositoryTest {
         repository.save(new Tag("Personal"));
 
         List<Tag> tags = repository.findAll();
+        assertNotNull(tags);
         assertEquals(2, tags.size());
     }
 
@@ -79,6 +84,7 @@ class MongoTagRepositoryTest {
         repository.save(new Tag("Home"));
 
         List<Tag> found = repository.findByNameContaining("Work");
+        assertNotNull(found);
         assertEquals(2, found.size());
     }
 
@@ -115,5 +121,55 @@ class MongoTagRepositoryTest {
         Optional<Tag> found = repository.findById(id);
         assertTrue(found.isPresent());
         assertEquals("Updated", found.get().getName());
+    }
+
+    @Test
+    void testMultipleSavesIncrementId() {
+        Tag tag1 = repository.save(new Tag("First"));
+        Tag tag2 = repository.save(new Tag("Second"));
+        Tag tag3 = repository.save(new Tag("Third"));
+
+        assertEquals(1L, tag1.getId());
+        assertEquals(2L, tag2.getId());
+        assertEquals(3L, tag3.getId());
+    }
+
+    @Test
+    void testInitializeNextIdFromExistingData() {
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        
+        repository.save(new Tag("First"));
+        repository.save(new Tag("Second"));
+        
+        Long firstId = repository.findByName("First").get().getId();
+        Long secondId = repository.findByName("Second").get().getId();
+        assertEquals(1L, firstId);
+        assertEquals(2L, secondId);
+        
+        repository.close();
+        repository = null;
+        
+        MongoTagRepository newRepo = new MongoTagRepository(connectionString, testDb);
+        Tag newTag = newRepo.save(new Tag("Third"));
+        
+        assertEquals(3L, newTag.getId());
+        
+        newRepo.deleteAll();
+        newRepo.close();
+    }
+
+    @Test
+    void testCloseOperations() {
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        String tempDb = "temp_close_test_" + System.currentTimeMillis();
+        
+        MongoTagRepository testRepo = new MongoTagRepository(connectionString, tempDb);
+        testRepo.save(new Tag("test"));
+        
+        assertDoesNotThrow(() -> testRepo.close());
+        
+        assertThrows(Exception.class, () -> testRepo.save(new Tag("after-close")));
+        
+        assertDoesNotThrow(() -> testRepo.close());
     }
 }

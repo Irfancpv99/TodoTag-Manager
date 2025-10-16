@@ -27,7 +27,6 @@ class MongoTodoRepositoryTest {
     void setUp() {
         String connectionString = mongoDBContainer.getReplicaSetUrl();
         testDb = "test_db_" + System.currentTimeMillis();
-        
         tagRepository = new MongoTagRepository(connectionString, testDb);
         todoRepository = new MongoTodoRepository(connectionString, testDb, tagRepository);
         todoRepository.deleteAll();
@@ -52,20 +51,19 @@ class MongoTodoRepositoryTest {
         Todo saved1 = todoRepository.save(todo1);
         Todo saved2 = todoRepository.save(todo2);
         
+        assertNotNull(saved1);
+        assertNotNull(saved2);
         assertEquals(1L, saved1.getId());
         assertEquals(2L, saved2.getId());
         assertEquals(saved1.getId(), todo1.getId());
         
-        // Find by ID
         Optional<Todo> found = todoRepository.findById(saved1.getId());
         assertTrue(found.isPresent());
         assertEquals("Task 1", found.get().getDescription());
         assertFalse(found.get().isDone());
         
-        // Find non-existent
         assertFalse(todoRepository.findById(999L).isPresent());
         
-        // Update existing
         todo1.setDescription("Updated");
         todo1.setDone(true);
         todoRepository.save(todo1);
@@ -74,21 +72,18 @@ class MongoTodoRepositoryTest {
         assertEquals("Updated", updated.getDescription());
         assertTrue(updated.isDone());
         
-        // Find all
-        assertEquals(2, todoRepository.findAll().size());
+        List<Todo> all = todoRepository.findAll();
+        assertNotNull(all);
+        assertEquals(2, all.size());
         
-        // Delete by ID
         todoRepository.deleteById(todo1.getId());
         assertFalse(todoRepository.findById(todo1.getId()).isPresent());
         
-        // Delete by entity
         todoRepository.delete(todo2);
         assertFalse(todoRepository.findById(todo2.getId()).isPresent());
         
-        // Delete with null ID (should not crash)
         todoRepository.delete(new Todo("no-id"));
         
-        // Delete all and verify ID reset
         todoRepository.save(new Todo("test"));
         todoRepository.deleteAll();
         assertTrue(todoRepository.findAll().isEmpty());
@@ -104,17 +99,18 @@ class MongoTodoRepositoryTest {
         todoRepository.save(new Todo("Important meeting", false));
         todoRepository.save(new Todo("Another important item", false));
         
-        // Find by done status
         List<Todo> done = todoRepository.findByDone(true);
         List<Todo> pending = todoRepository.findByDone(false);
         
+        assertNotNull(done);
+        assertNotNull(pending);
         assertEquals(1, done.size());
         assertEquals(3, pending.size());
         assertTrue(done.get(0).isDone());
         assertFalse(pending.get(0).isDone());
         
-        // Find by description containing (case insensitive)
         List<Todo> important = todoRepository.findByDescriptionContaining("important");
+        assertNotNull(important);
         assertEquals(2, important.size());
     }
     
@@ -143,6 +139,7 @@ class MongoTodoRepositoryTest {
         todoRepository.save(new Todo("First"));
         todoRepository.save(new Todo("Second"));
         
+        todoRepository.close();
         MongoTodoRepository newRepo = new MongoTodoRepository(connectionString, testDb, tagRepository);
         
         Todo newTodo = newRepo.save(new Todo("Third"));
@@ -176,7 +173,7 @@ class MongoTodoRepositoryTest {
 
         Optional<Todo> fetched = todoRepository.findById(123L);
 
-        assertTrue(fetched.isPresent(), "Todo should be found");
-        assertEquals(123L, fetched.get().getId(), "Todo id should be set correctly");
+        assertTrue(fetched.isPresent());
+        assertEquals(123L, fetched.get().getId());
     }
 }
