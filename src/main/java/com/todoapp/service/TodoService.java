@@ -50,5 +50,7 @@ public class TodoService {
         return todoRepository.save(todo);
     }
     
-    
+    public Todo markTodoIncomplete(Long id) {
+        return updateTodoStatus(id, false);
+    }
 }
