@@ -91,5 +91,12 @@ class TodoServiceTest {
         assertTrue(todoService.markTodoComplete(1L).isDone());
         verify(todoRepository).save(todo);
     }
+    
+    @Test
+    void shouldThrowExceptionWhenMarkingNonExistentTodoIncomplete() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> todoService.markTodoIncomplete(1L));
+    }
 }
 
