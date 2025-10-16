@@ -56,4 +56,17 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenCreatingTodoWithNullDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null));
     }
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithEmptyDescription() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   "));
+    }
+    
+    @Test
+    void shouldCreateTodo() {
+        Todo todo = new Todo("Task 1");
+        when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+
+        assertNotNull(todoService.createTodo("  Task 1  "));
+        verify(todoRepository).save(any(Todo.class));
+    }
 }
