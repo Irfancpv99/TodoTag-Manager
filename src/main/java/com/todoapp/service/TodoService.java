@@ -23,4 +23,18 @@ public class TodoService {
     public Todo saveTodo(Todo todo) {
         return todoRepository.save(todo);
     }
+    
+    
+    public Todo createTodo(String description) {
+        validateNotNull(description, "Todo description");
+        return saveTodo(new Todo(description.trim()));
+    }
+
+    private void validateNotNull(Object value, String fieldName) {
+        if (value == null) {
+            throw new IllegalArgumentException(fieldName + " cannot be null");
+        }
+    }
+    
+    
 }
