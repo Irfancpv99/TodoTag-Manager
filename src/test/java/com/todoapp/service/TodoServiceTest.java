@@ -93,6 +93,17 @@ class TodoServiceTest {
     }
     
     @Test
+    void shouldMarkTodoIncomplete() {
+        Todo todo = new Todo("Task 1");
+        todo.setDone(true);
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(todoRepository.save(todo)).thenReturn(todo);
+
+        assertFalse(todoService.markTodoIncomplete(1L).isDone());
+        verify(todoRepository).save(todo);
+    }
+    
+    @Test
     void shouldThrowExceptionWhenMarkingNonExistentTodoIncomplete() {
         when(todoRepository.findById(1L)).thenReturn(Optional.empty());
 
