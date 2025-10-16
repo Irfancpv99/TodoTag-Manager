@@ -1,10 +1,8 @@
 package com.todoapp.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -53,5 +51,9 @@ class TodoServiceTest {
 
         assertEquals(todo, todoService.saveTodo(todo));
         verify(todoRepository).save(todo);
+    }
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithNullDescription() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null));
     }
 }
