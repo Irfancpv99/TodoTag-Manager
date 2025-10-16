@@ -3,6 +3,7 @@ package com.todoapp.service;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -44,5 +45,13 @@ class TodoServiceTest {
 
         assertTrue(result.isPresent());
         assertEquals(todo, result.get());
+    }
+    @Test
+    void shouldSaveTodo() {
+        Todo todo = new Todo("Task 1");
+        when(todoRepository.save(todo)).thenReturn(todo);
+
+        assertEquals(todo, todoService.saveTodo(todo));
+        verify(todoRepository).save(todo);
     }
 }
