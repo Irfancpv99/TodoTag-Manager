@@ -1,4 +1,6 @@
 package com.todoapp.service;
+import java.util.List;
+
 import com.todoapp.repository.TagRepository;
 import com.todoapp.repository.TodoRepository;
 
@@ -9,5 +11,8 @@ public class TodoService {
     public TodoService(TodoRepository todoRepository, TagRepository tagRepository) {
         this.todoRepository = todoRepository;
         this.tagRepository = tagRepository;
+    }
+    public List getAllTodos() {
+        return todoRepository.findAll();
     }
 }
