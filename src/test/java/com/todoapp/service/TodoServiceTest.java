@@ -81,5 +81,15 @@ class TodoServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> todoService.markTodoComplete(1L));
     }
+    
+    @Test
+    void shouldMarkTodoComplete() {
+        Todo todo = new Todo("Task 1");
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(todoRepository.save(todo)).thenReturn(todo);
+
+        assertTrue(todoService.markTodoComplete(1L).isDone());
+        verify(todoRepository).save(todo);
+    }
 }
 
