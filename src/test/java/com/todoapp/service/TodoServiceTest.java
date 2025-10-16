@@ -74,5 +74,12 @@ class TodoServiceTest {
         assertDoesNotThrow(() -> todoService.deleteTodo(1L));
         verify(todoRepository).deleteById(1L);
     }
+    
+    @Test
+    void shouldThrowExceptionWhenMarkingNonExistentTodoComplete() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> todoService.markTodoComplete(1L));
+    }
 }
 
