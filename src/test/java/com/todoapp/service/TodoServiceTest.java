@@ -1,5 +1,6 @@
-import static org.mockito.Mockito.mock;
+package com.todoapp.service;
 
+import static org.mockito.Mockito.mock;
 import org.junit.jupiter.api.BeforeEach;
 
 import com.todoapp.repository.TagRepository;
