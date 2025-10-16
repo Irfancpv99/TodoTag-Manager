@@ -56,4 +56,47 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenCreatingTodoWithNullDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null));
     }
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithEmptyDescription() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   "));
+    }  
+    @Test
+    void shouldCreateTodo() {
+        Todo todo = new Todo("Task 1");
+        when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+
+        assertNotNull(todoService.createTodo("  Task 1  "));
+        verify(todoRepository).save(any(Todo.class));
+    }
+    
+    @Test
+    void shouldDeleteTodo() {
+        assertDoesNotThrow(() -> todoService.deleteTodo(1L));
+        verify(todoRepository).deleteById(1L);
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenMarkingNonExistentTodoComplete() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> todoService.markTodoComplete(1L));
+    }
+    
+    @Test
+    void shouldMarkTodoComplete() {
+        Todo todo = new Todo("Task 1");
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(todoRepository.save(todo)).thenReturn(todo);
+
+        assertTrue(todoService.markTodoComplete(1L).isDone());
+        verify(todoRepository).save(todo);
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenMarkingNonExistentTodoIncomplete() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> todoService.markTodoIncomplete(1L));
+    }
 }
+
