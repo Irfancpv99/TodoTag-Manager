@@ -225,6 +225,21 @@ class TodoServiceTest {
 //						TODO-TAG Relationships
     
     @Test
+    void shouldAddTagToTodo() {
+        Todo todo = new Todo("Task 1");
+        Tag tag = new Tag("Work");
+        tag.setId(1L);
+        
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(tagRepository.findById(1L)).thenReturn(Optional.of(tag));
+        when(todoRepository.save(todo)).thenReturn(todo);
+
+        assertTrue(todoService.addTagToTodo(1L, 1L).getTags().contains(tag));
+        verify(todoRepository).save(todo);
+    }
+    
+    
+    @Test
     void shouldThrowExceptionWhenAddingTagToNonExistentTodo() {
         when(todoRepository.findById(1L)).thenReturn(Optional.empty());
         when(tagRepository.findById(1L)).thenReturn(Optional.of(new Tag("Work")));
