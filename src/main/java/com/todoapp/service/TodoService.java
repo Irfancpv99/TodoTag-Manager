@@ -53,4 +53,10 @@ public class TodoService {
     public Todo markTodoIncomplete(Long id) {
         return updateTodoStatus(id, false);
     }
+    public List getCompletedTodos() {
+        return todoRepository.findByDone(true);
+    }
+    public List getIncompleteTodos() {
+        return todoRepository.findByDone(false);
+    }
 }

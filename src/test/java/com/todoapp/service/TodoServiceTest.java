@@ -3,17 +3,19 @@ package com.todoapp.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 
 import com.todoapp.model.Todo;
 import com.todoapp.repository.TagRepository;
 import com.todoapp.repository.TodoRepository;
 
+@ExtendWith(MockitoExtension.class)
 class TodoServiceTest {
     private TodoRepository todoRepository;
     private TagRepository tagRepository;
@@ -117,4 +119,25 @@ class TodoServiceTest {
 
         assertEquals(todos, todoService.getCompletedTodos());
     }
+    
+    @Test
+    void shouldGetIncompleteTodos() {
+        List todos = List.of(new Todo("Task 1"));
+        when(todoRepository.findByDone(false)).thenReturn(todos);
+
+        assertEquals(todos, todoService.getIncompleteTodos());
+    }
+    
+    @Test
+    void shouldSearchTodos() {
+        List todos = List.of(new Todo("Task 1"));
+        when(todoRepository.findByDescriptionContaining("Task")).thenReturn(todos);
+
+        assertEquals(todos, todoService.searchTodos("Task"));
+    }
+    @Test
+    void shouldThrowExceptionWhenSearchingTodosWithNull() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.searchTodos(null));
+    }
+    
 }
