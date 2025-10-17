@@ -15,6 +15,9 @@ public class TodoService {
         this.todoRepository = todoRepository;
         this.tagRepository = tagRepository;
     }
+    
+//    			TODO SECTION
+    
     public List getAllTodos() {
         return todoRepository.findAll();
     }

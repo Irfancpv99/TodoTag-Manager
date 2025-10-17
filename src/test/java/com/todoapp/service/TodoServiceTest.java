@@ -30,7 +30,7 @@ class TodoServiceTest {
     }
     
     
-//    			TODO TEST 
+//    			TODO OPERATION
     
     @Test
     void shouldGetAllTodos() {
@@ -144,7 +144,7 @@ class TodoServiceTest {
         assertThrows(IllegalArgumentException.class, () -> todoService.searchTodos(null));
     }
     
-//    					TAG TEST
+//    					TAG OPERATION
     
     @Test
     void shouldGetAllTags() {
@@ -222,5 +222,13 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenSearchingTagsWithNull() {
         assertThrows(IllegalArgumentException.class, () -> todoService.searchTags(null));
     }
+//						TODO-TAG Relationships
+    
+    @Test
+    void shouldThrowExceptionWhenAddingTagToNonExistentTodo() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
+        when(tagRepository.findById(1L)).thenReturn(Optional.of(new Tag("Work")));
 
+        assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(1L, 1L));
+    }
 }
