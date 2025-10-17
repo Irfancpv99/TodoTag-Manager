@@ -88,4 +88,9 @@ public class TodoService {
     public Optional findTagByName(String name) {
         return tagRepository.findByName(name);
     }
+    
+    public List searchTags(String keyword) {
+        validateNotEmpty(keyword, "Search keyword");
+        return tagRepository.findByNameContaining(keyword);
+    }
 }
