@@ -74,4 +74,7 @@ public class TodoService {
     public Optional getTagById(Long id) {
         return tagRepository.findById(id);
     }
+    public Tag saveTag(Tag tag) {
+        return tagRepository.save(tag);
+    }
 }
