@@ -291,24 +291,24 @@ class TodoServiceTest {
     
 //    					Transaction
     
-//    @Test
-//    void shouldExecuteWithTransactionOnSuccess() {
-//        try (MockedStatic<RepositoryFactory> mockedFactory = mockStatic(RepositoryFactory.class)) {
-//            RepositoryFactory factory = mock(RepositoryFactory.class);
-//            when(factory.createTodoRepository()).thenReturn(todoRepository);
-//            when(factory.createTagRepository()).thenReturn(tagRepository);
-//            mockedFactory.when(RepositoryFactory::getInstance).thenReturn(factory);
-//            
-//            Todo todo = new Todo("Task 1");
-//            when(todoRepository.save(any(Todo.class))).thenReturn(todo);
-//            
-//            TodoService service = new TodoService();
-//            Todo result = service.saveTodo(todo);
-//            
-//            assertNotNull(result);
-//            verify(factory).beginTransaction();
-//            verify(factory).commitTransaction();
-//            verify(factory, never()).rollbackTransaction();
-//        }
-//    }
+    @Test
+    void shouldExecuteWithTransactionOnSuccess() {
+        try (MockedStatic<RepositoryFactory> mockedFactory = mockStatic(RepositoryFactory.class)) {
+            RepositoryFactory factory = mock(RepositoryFactory.class);
+            when(factory.createTodoRepository()).thenReturn(todoRepository);
+            when(factory.createTagRepository()).thenReturn(tagRepository);
+            mockedFactory.when(RepositoryFactory::getInstance).thenReturn(factory);
+            
+            Todo todo = new Todo("Task 1");
+            when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+            
+            TodoService service = new TodoService();
+            Todo result = service.saveTodo(todo);
+            
+            assertNotNull(result);
+            verify(factory).beginTransaction();
+            verify(factory).commitTransaction();
+            verify(factory, never()).rollbackTransaction();
+        }
+    }
 }
