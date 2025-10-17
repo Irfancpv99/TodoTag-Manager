@@ -259,6 +259,21 @@ class TodoServiceTest {
     }
     
     @Test
+    void shouldRemoveTagFromTodo() {
+        Todo todo = new Todo("Task 1");
+        Tag tag = new Tag("Work");
+        tag.setId(1L);
+        todo.addTag(tag);
+        
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(todo));
+        when(tagRepository.findById(1L)).thenReturn(Optional.of(tag));
+        when(todoRepository.save(todo)).thenReturn(todo);
+
+        assertFalse(todoService.removeTagFromTodo(1L, 1L).getTags().contains(tag));
+        verify(todoRepository).save(todo);
+    }
+    
+    @Test
     void shouldThrowExceptionWhenRemovingTagFromNonExistentTodo() {
         when(todoRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> todoService.removeTagFromTodo(1L, 1L));
