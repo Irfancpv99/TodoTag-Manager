@@ -29,6 +29,9 @@ class TodoServiceTest {
         todoService = new TodoService(todoRepository, tagRepository);
     }
     
+    
+//    			TODO TEST 
+    
     @Test
     void shouldGetAllTodos() {
         List todos = List.of(new Todo("Task 1"));
@@ -140,11 +143,25 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenSearchingTodosWithNull() {
         assertThrows(IllegalArgumentException.class, () -> todoService.searchTodos(null));
     }
+    
+//    					TAG TEST
+    
     @Test
     void shouldGetAllTags() {
         List tags = List.of(new Tag("Work"));
         when(tagRepository.findAll()).thenReturn(tags);
 
         assertEquals(tags, todoService.getAllTags());
+    }
+    
+    @Test
+    void shouldGetTagById() {
+        Tag tag = new Tag("Work");
+        when(tagRepository.findById(1L)).thenReturn(Optional.of(tag));
+
+        Optional result = todoService.getTagById(1L);
+
+        assertTrue(result.isPresent());
+        assertEquals(tag, result.get());
     }
 }
