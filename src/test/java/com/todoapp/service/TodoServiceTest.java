@@ -173,4 +173,9 @@ class TodoServiceTest {
         assertEquals(tag, todoService.saveTag(tag));
         verify(tagRepository).save(tag);
     }
+    
+    @Test
+    void shouldThrowExceptionWhenCreatingTagWithNullName() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTag(null));
+    }
 }
