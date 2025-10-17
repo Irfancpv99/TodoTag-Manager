@@ -231,4 +231,12 @@ class TodoServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(1L, 1L));
     }
+    
+    @Test
+    void shouldThrowExceptionWhenAddingNonExistentTagToTodo() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.of(new Todo("Task 1")));
+        when(tagRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(1L, 1L));
+    }
 }
