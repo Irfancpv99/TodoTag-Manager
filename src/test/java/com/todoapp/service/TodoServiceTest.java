@@ -139,5 +139,11 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenSearchingTodosWithNull() {
         assertThrows(IllegalArgumentException.class, () -> todoService.searchTodos(null));
     }
-    
+    @Test
+    void shouldGetAllTags() {
+        List tags = List.of(new Tag("Work"));
+        when(tagRepository.findAll()).thenReturn(tags);
+
+        assertEquals(tags, todoService.getAllTags());
+    }
 }
