@@ -28,7 +28,7 @@ public class TodoService {
         this.repositoryFactory = null; // 
     }
 
-    // 					TODO Section
+    // 				TODO Section
     public List<Todo> getAllTodos() {
         return todoRepository.findAll();
     }
@@ -198,4 +198,5 @@ public class TodoService {
     private interface TransactionOperation<T> {
         T execute();
     }
+    
 }
