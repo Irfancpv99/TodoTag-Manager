@@ -211,6 +211,14 @@ class TodoServiceTest {
     }
     
     @Test
+    void shouldSearchTags() {
+        List tags = List.of(new Tag("Work"));
+        when(tagRepository.findByNameContaining("Work")).thenReturn(tags);
+
+        assertEquals(tags, todoService.searchTags("Work"));
+    }
+    
+    @Test
     void shouldThrowExceptionWhenSearchingTagsWithNull() {
         assertThrows(IllegalArgumentException.class, () -> todoService.searchTags(null));
     }
