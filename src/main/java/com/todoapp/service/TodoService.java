@@ -71,4 +71,7 @@ public class TodoService {
     public List getAllTags() {
         return tagRepository.findAll();
     }	
+    public Optional getTagById(Long id) {
+        return tagRepository.findById(id);
+    }
 }
