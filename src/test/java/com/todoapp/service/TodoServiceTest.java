@@ -117,4 +117,12 @@ class TodoServiceTest {
 
         assertEquals(todos, todoService.getCompletedTodos());
     }
+    
+    @Test
+    void shouldGetIncompleteTodos() {
+        List todos = List.of(new Todo("Task 1"));
+        when(todoRepository.findByDone(false)).thenReturn(todos);
+
+        assertEquals(todos, todoService.getIncompleteTodos());
+    }
 }
