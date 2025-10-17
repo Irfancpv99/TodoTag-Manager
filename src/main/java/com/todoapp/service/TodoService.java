@@ -2,6 +2,7 @@ package com.todoapp.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import com.todoapp.repository.TagRepository;
 import com.todoapp.repository.TodoRepository;
