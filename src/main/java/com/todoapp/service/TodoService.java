@@ -85,4 +85,7 @@ public class TodoService {
     public void deleteTag(Long id) {
         tagRepository.deleteById(id);
     }
+    public Optional findTagByName(String name) {
+        return tagRepository.findByName(name);
+    }
 }
