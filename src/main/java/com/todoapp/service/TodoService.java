@@ -82,4 +82,7 @@ public class TodoService {
         validateNotEmpty(name, "Tag name");
         return saveTag(new Tag(name.trim()));
     }
+    public void deleteTag(Long id) {
+        tagRepository.deleteById(id);
+    }
 }
