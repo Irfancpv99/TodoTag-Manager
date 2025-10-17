@@ -26,15 +26,16 @@ public class TodoService {
     
     
     public Todo createTodo(String description) {
-        validateNotNull(description, "Todo description");
+        validateNotEmpty(description, "Todo description");
         return saveTodo(new Todo(description.trim()));
     }
 
-    private void validateNotNull(Object value, String fieldName) {
-        if (value == null) {
-            throw new IllegalArgumentException(fieldName + " cannot be null");
+    private void validateNotEmpty(String value, String fieldName) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " cannot be null or empty");
         }
     }
+
     
     public void deleteTodo(Long id) {
         todoRepository.deleteById(id);
@@ -60,7 +61,7 @@ public class TodoService {
         return todoRepository.findByDone(false);
     }
     public List searchTodos(String keyword) {
-        validateNotNull(keyword, "Search keyword");
+        validateNotEmpty(keyword, "Search keyword");
         return todoRepository.findByDescriptionContaining(keyword);
     }
 }
