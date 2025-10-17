@@ -78,5 +78,8 @@ public class TodoService {
     public Tag saveTag(Tag tag) {
         return tagRepository.save(tag);
     }
-    
+    public Tag createTag(String name) {
+        validateNotEmpty(name, "Tag name");
+        return saveTag(new Tag(name.trim()));
+    }
 }
