@@ -164,4 +164,13 @@ class TodoServiceTest {
         assertTrue(result.isPresent());
         assertEquals(tag, result.get());
     }
+    
+    @Test
+    void shouldSaveTag() {
+        Tag tag = new Tag("Work");
+        when(tagRepository.save(tag)).thenReturn(tag);
+
+        assertEquals(tag, todoService.saveTag(tag));
+        verify(tagRepository).save(tag);
+    }
 }
