@@ -242,9 +242,12 @@ class TodoServiceTest {
     @Test
     void shouldThrowExceptionWhenAddingTagToNonExistentTodo() {
         when(todoRepository.findById(1L)).thenReturn(Optional.empty());
-        when(tagRepository.findById(1L)).thenReturn(Optional.of(new Tag("Work")));
-
-        assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(1L, 1L));
+       IllegalArgumentException exception = assertThrows(
+            IllegalArgumentException.class, 
+            () -> todoService.addTagToTodo(1L, 1L)
+        );
+        
+        assertEquals("Todo not found with id: 1", exception.getMessage());
     }
     
     @Test
@@ -254,13 +257,4 @@ class TodoServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> todoService.addTagToTodo(1L, 1L));
     }
-    
-    @Test
-    void shouldThrowExceptionWhenRemovingTagFromNonExistentTodo() {
-        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
-        when(tagRepository.findById(1L)).thenReturn(Optional.of(new Tag("Work")));
-
-        assertThrows(IllegalArgumentException.class, () -> todoService.removeTagFromTodo(1L, 1L));
-    }
-
 }

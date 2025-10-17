@@ -105,9 +105,9 @@ public class TodoService {
 
     private Todo modifyTodoTag(Long todoId, Long tagId, TagModifier modifier) {
         Todo todo = todoRepository.findById(todoId)
-            .orElseThrow(() -> new IllegalArgumentException("Todo or Tag not found"));
+            .orElseThrow(() -> new IllegalArgumentException("Todo not found with id: " + todoId));
         Tag tag = tagRepository.findById(tagId)
-            .orElseThrow(() -> new IllegalArgumentException("Todo or Tag not found"));
+            .orElseThrow(() -> new IllegalArgumentException("Tag not found with id: " + tagId));
         modifier.modify(todo, tag);
         return todoRepository.save(todo);
     }
