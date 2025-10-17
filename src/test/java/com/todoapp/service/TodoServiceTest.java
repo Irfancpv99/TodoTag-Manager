@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.BeforeEach;
 
+import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import com.todoapp.repository.TagRepository;
 import com.todoapp.repository.TodoRepository;

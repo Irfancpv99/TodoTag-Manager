@@ -64,4 +64,11 @@ public class TodoService {
         validateNotEmpty(keyword, "Search keyword");
         return todoRepository.findByDescriptionContaining(keyword);
     }
+    
+    
+//    		TAG SECTION
+
+    public List getAllTags() {
+        return tagRepository.findAll();
+    }	
 }
