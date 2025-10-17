@@ -12,8 +12,10 @@ public class TodoService {
     private final TagRepository tagRepository;
 
     public TodoService(TodoRepository todoRepository, TagRepository tagRepository) {
-        this.todoRepository = todoRepository;
+    	
+    	this.todoRepository = todoRepository;
         this.tagRepository = tagRepository;
+
     }
     
 //    			TODO SECTION
