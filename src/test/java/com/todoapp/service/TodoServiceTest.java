@@ -175,6 +175,15 @@ class TodoServiceTest {
     }
     
     @Test
+    void shouldCreateTag() {
+        Tag tag = new Tag("Work");
+        when(tagRepository.save(any(Tag.class))).thenReturn(tag);
+
+        assertNotNull(todoService.createTag("  Work  "));
+        verify(tagRepository).save(any(Tag.class));
+    }
+    
+    @Test
     void shouldThrowExceptionWhenCreatingTagWithNullName() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTag(null));
     }
