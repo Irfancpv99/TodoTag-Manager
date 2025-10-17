@@ -96,4 +96,23 @@ public class TodoService {
         validateNotEmpty(keyword, "Search keyword");
         return tagRepository.findByNameContaining(keyword);
     }
+    
+//    			TODO-TAG SECTION
+    
+    public Todo addTagToTodo(Long todoId, Long tagId) {
+        return modifyTodoTag(todoId, tagId, (todo, tag) -> todo.addTag(tag));
+    }
+
+    private Todo modifyTodoTag(Long todoId, Long tagId, TagModifier modifier) {
+        Todo todo = todoRepository.findById(todoId)
+            .orElseThrow(() -> new IllegalArgumentException("Todo or Tag not found"));
+        Tag tag = tagRepository.findById(tagId)
+            .orElseThrow(() -> new IllegalArgumentException("Todo or Tag not found"));
+        modifier.modify(todo, tag);
+        return todoRepository.save(todo);
+    }
+    @FunctionalInterface
+    private interface TagModifier {
+        void modify(Todo todo, Tag tag);
+    }
 }
