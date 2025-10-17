@@ -198,4 +198,15 @@ class TodoServiceTest {
         assertDoesNotThrow(() -> todoService.deleteTag(1L));
         verify(tagRepository).deleteById(1L);
     }
+    
+    @Test
+    void shouldFindTagByName() {
+        Tag tag = new Tag("Work");
+        when(tagRepository.findByName("Work")).thenReturn(Optional.of(tag));
+
+        Optional result = todoService.findTagByName("Work");
+
+        assertTrue(result.isPresent());
+        assertEquals(tag, result.get());
+    }
 }
