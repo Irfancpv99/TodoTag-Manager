@@ -178,4 +178,9 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenCreatingTagWithNullName() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTag(null));
     }
+    
+    @Test
+    void shouldThrowExceptionWhenCreatingTagWithEmptyName() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTag("   "));
+    }
 }
