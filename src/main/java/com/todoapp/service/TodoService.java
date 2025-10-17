@@ -115,4 +115,8 @@ public class TodoService {
     private interface TagModifier {
         void modify(Todo todo, Tag tag);
     }
+    
+    public Todo removeTagFromTodo(Long todoId, Long tagId) {
+        return modifyTodoTag(todoId, tagId, (todo, tag) -> todo.removeTag(tag));
+    }
 }
