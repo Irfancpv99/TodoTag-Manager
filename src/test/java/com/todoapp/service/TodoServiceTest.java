@@ -109,5 +109,12 @@ class TodoServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> todoService.markTodoIncomplete(1L));
     }
-}
+    
+    @Test
+    void shouldGetCompletedTodos() {
+        List todos = List.of(new Todo("Task 1"));
+        when(todoRepository.findByDone(true)).thenReturn(todos);
 
+        assertEquals(todos, todoService.getCompletedTodos());
+    }
+}
