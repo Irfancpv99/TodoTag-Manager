@@ -59,4 +59,8 @@ public class TodoService {
     public List getIncompleteTodos() {
         return todoRepository.findByDone(false);
     }
+    public List searchTodos(String keyword) {
+        validateNotNull(keyword, "Search keyword");
+        return todoRepository.findByDescriptionContaining(keyword);
+    }
 }
