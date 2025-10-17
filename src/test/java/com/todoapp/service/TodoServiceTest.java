@@ -192,4 +192,10 @@ class TodoServiceTest {
     void shouldThrowExceptionWhenCreatingTagWithEmptyName() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTag("   "));
     }
+    
+    @Test
+    void shouldDeleteTag() {
+        assertDoesNotThrow(() -> todoService.deleteTag(1L));
+        verify(tagRepository).deleteById(1L);
+    }
 }
