@@ -209,4 +209,10 @@ class TodoServiceTest {
         assertTrue(result.isPresent());
         assertEquals(tag, result.get());
     }
+    
+    @Test
+    void shouldThrowExceptionWhenSearchingTagsWithNull() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.searchTags(null));
+    }
+
 }
