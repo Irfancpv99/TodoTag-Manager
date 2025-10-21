@@ -84,7 +84,7 @@ class TodoServiceIntegrationTest {
     }
 
     
-    // Basic CRUD - Create and Retrieve 
+    // Basic CRUD - Create and Retrieve (MongoDB)
    
     @Test
     @Order(1)
@@ -106,6 +106,28 @@ class TodoServiceIntegrationTest {
         Optional<Todo> retrieved = todoService.getTodoById(created.getId());
         assertTrue(retrieved.isPresent(), "Todo should be retrievable by ID");
         assertEquals("Test MongoDB Task", retrieved.get().getDescription(), "Retrieved description should match");
+    }
+
+    //     Basic CRUD - Create and Retrieve (MySQL)
+    
+    @Test
+    @Order(2)
+    void shouldCreateAndRetrieveTodoWithMySQL() {
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MYSQL.);
+        setMySQLProperties(config);
+        todoService = new TodoService();
+
+        Todo created = todoService.createTodo("Test MySQL Task");
+
+        assertNotNull(created, "Created todo should not be null");
+        assertNotNull(created.getId(), "Created todo should have an ID");
+        assertEquals("Test MySQL Task", created.getDescription(), "Description should match");
+        assertFalse(created.isDone(), "New todo should not be done");
+
+        Optional<Todo> retrieved = todoService.getTodoById(created.getId());
+        assertTrue(retrieved.isPresent(), "Todo should be retrievable by ID");
+        assertEquals("Test MySQL Task", retrieved.get().getDescription(), "Retrieved description should match");
     }
 
     	// Helper Method
