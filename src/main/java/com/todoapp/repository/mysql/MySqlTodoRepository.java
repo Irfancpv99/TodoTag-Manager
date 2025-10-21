@@ -28,6 +28,7 @@ public class MySqlTodoRepository implements TodoRepository {
         return Optional.ofNullable(todo);
     }
 
+    
     @Override
     public Todo save(Todo todo) {
         if (todo.getId() == null) {
@@ -37,6 +38,7 @@ public class MySqlTodoRepository implements TodoRepository {
             return entityManager.merge(todo);
         }
     }
+    
 
     @Override
     public void delete(Todo todo) {

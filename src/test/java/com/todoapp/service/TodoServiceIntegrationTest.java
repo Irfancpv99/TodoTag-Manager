@@ -114,7 +114,7 @@ class TodoServiceIntegrationTest {
     @Order(2)
     void shouldCreateAndRetrieveTodoWithMySQL() {
     	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MYSQL.);
+        config.setDatabaseType(DatabaseType.MYSQL);
         setMySQLProperties(config);
         todoService = new TodoService();
 
