@@ -122,7 +122,7 @@ public class TodoService {
         }
         
         Tag tag = new Tag(name.trim());
-        return saveTag(tag);
+        return  tag;
     }
 
     public void deleteTag(Long id) {

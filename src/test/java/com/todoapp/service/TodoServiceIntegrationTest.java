@@ -171,6 +171,52 @@ class TodoServiceIntegrationTest {
         assertFalse(deleted.isPresent(), "Deleted todo should not be found");
     }
     
+    @Test
+    @Order(5)
+    void shouldManageTagsAndRelationshipsWithMongoDB() {
+       
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MONGODB);
+        setMongoDBProperties(config);
+        todoService = new TodoService();
+
+        Tag tag = todoService.createTag("urgent");
+        Todo todo = todoService.createTodo("Important task");
+        
+        assertNotNull(tag.getId(), "Tag should have an ID");
+        assertEquals("urgent", tag.getName(), "Tag name should match");
+
+        Todo tagged = todoService.addTagToTodo(todo.getId(), tag.getId());
+        
+        assertEquals(1, tagged.getTags().size(), "Todo should have 1 tag");
+        assertTrue(tagged.getTags().stream().anyMatch(t -> t.getName().equals("urgent")),
+                "Todo should contain 'urgent' tag");
+
+        Todo untagged = todoService.removeTagFromTodo(todo.getId(), tag.getId());
+        
+        assertEquals(0, untagged.getTags().size(), "Todo should have no tags after removal");
+    }
+    
+    @Test
+    @Order(6)
+    void shouldManageTagsAndRelationshipsWithMySQL() {
+     
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MYSQL);
+        setMySQLProperties(config);
+        todoService = new TodoService();
+
+        Tag tag = todoService.createTag("work");
+        Todo todo = todoService.createTodo("Work task");
+
+        Todo tagged = todoService.addTagToTodo(todo.getId(), tag.getId());
+        assertEquals(1, tagged.getTags().size(), "Todo should have 1 tag");
+        assertTrue(tagged.getTags().stream().anyMatch(t -> t.getName().equals("work")),
+                "Todo should contain 'work' tag");
+
+        Todo untagged = todoService.removeTagFromTodo(todo.getId(), tag.getId());
+        assertEquals(0, untagged.getTags().size(), "Todo should have no tags after removal");
+    }
 
     	// Helper Method
     
