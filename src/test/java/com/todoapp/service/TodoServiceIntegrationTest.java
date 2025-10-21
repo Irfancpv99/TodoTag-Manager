@@ -217,6 +217,47 @@ class TodoServiceIntegrationTest {
         Todo untagged = todoService.removeTagFromTodo(todo.getId(), tag.getId());
         assertEquals(0, untagged.getTags().size(), "Todo should have no tags after removal");
     }
+    
+    @Test
+    @Order(7)
+    void shouldSearchTodosWithMongoDB() {
+
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MONGODB);
+        setMongoDBProperties(config);
+        todoService = new TodoService();
+
+        todoService.createTodo("Buy groceries");
+        todoService.createTodo("Buy tickets");
+        todoService.createTodo("Clean house");
+
+        List<Todo> results = todoService.searchTodos("Buy");
+
+        assertEquals(2, results.size(), "Should find 2 todos containing 'Buy'");
+        assertTrue(results.stream().allMatch(t -> t.getDescription().contains("Buy")),
+                "All results should contain 'Buy'");
+    }
+
+    @Test
+    @Order(8)
+    void shouldSearchTodosWithMySQL() {
+
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MYSQL);
+        setMySQLProperties(config);
+        todoService = new TodoService();
+
+        todoService.createTodo("Buy groceries");
+        todoService.createTodo("Buy tickets");
+        todoService.createTodo("Clean house");
+
+        List<Todo> results = todoService.searchTodos("Buy");
+
+        assertEquals(2, results.size(), "Should find 2 todos containing 'Buy'");
+        assertTrue(results.stream().allMatch(t -> t.getDescription().contains("Buy")),
+                "All results should contain 'Buy'");
+    }
+
 
     	// Helper Method
     
