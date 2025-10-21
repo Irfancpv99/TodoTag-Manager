@@ -150,6 +150,27 @@ class TodoServiceIntegrationTest {
         Optional<Todo> deleted = todoService.getTodoById(todo.getId());
         assertFalse(deleted.isPresent(), "Deleted todo should not be found");
     }
+    
+    @Order(4)
+    void shouldManageTodoLifecycleWithMySQL() {
+    
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MYSQL);
+        setMySQLProperties(config);
+        todoService = new TodoService();
+        Todo todo = todoService.createTodo("Task to complete");
+
+        assertFalse(todo.isDone(), "Initial todo should not be done");
+
+        Todo completed = todoService.markTodoComplete(todo.getId());
+        assertTrue(completed.isDone(), "Todo should be marked as done");
+        Todo incomplete = todoService.markTodoIncomplete(todo.getId());
+        assertFalse(incomplete.isDone(), "Todo should be marked as not done");
+        todoService.deleteTodo(todo.getId());
+        Optional<Todo> deleted = todoService.getTodoById(todo.getId());
+        assertFalse(deleted.isPresent(), "Deleted todo should not be found");
+    }
+    
 
     	// Helper Method
     

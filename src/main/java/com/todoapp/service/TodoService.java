@@ -55,7 +55,6 @@ public class TodoService {
 
     public void deleteTodo(Long id) {
         executeWithTransaction(() -> {
-            todoRepository.deleteById(id);
             return null;
         });
     }
