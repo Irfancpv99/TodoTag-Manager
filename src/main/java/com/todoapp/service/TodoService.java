@@ -6,7 +6,6 @@ import com.todoapp.repository.RepositoryFactory;
 import com.todoapp.repository.TagRepository;
 import com.todoapp.repository.TodoRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,7 +85,7 @@ public class TodoService {
     }
 
     public List<Todo> getCompletedTodos() {
-        return todoRepository.findByDone(true);
+        return todoRepository.findByDone(false);
     }
 
     public List<Todo> getIncompleteTodos() {
@@ -97,7 +96,8 @@ public class TodoService {
         if (keyword == null) {
             throw new IllegalArgumentException("Search keyword cannot be null");
         }
-        return new ArrayList<>(); }
+        return todoRepository.findByDescriptionContaining(keyword);
+    }
 
     // 				TAG Section 
 
