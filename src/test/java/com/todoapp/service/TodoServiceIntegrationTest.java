@@ -257,6 +257,69 @@ class TodoServiceIntegrationTest {
         assertTrue(results.stream().allMatch(t -> t.getDescription().contains("Buy")),
                 "All results should contain 'Buy'");
     }
+    
+    @Test
+    @Order(9)
+    void shouldFilterCompletedAndIncompleteTodosWithMongoDB() {
+
+        AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MONGODB);
+        setMongoDBProperties(config);
+        todoService = new TodoService();
+
+        Todo todo1 = todoService.createTodo("Task 1");
+        Todo todo2 = todoService.createTodo("Task 2");
+        
+        todoService.markTodoComplete(todo1.getId());
+        
+        Optional<Todo> refetchedTodo1 = todoService.getTodoById(todo1.getId());
+        Optional<Todo> refetchedTodo2 = todoService.getTodoById(todo2.getId());
+        
+        assertTrue(refetchedTodo1.isPresent(), "Todo 1 should exist");
+        assertTrue(refetchedTodo2.isPresent(), "Todo 2 should exist");
+        assertTrue(refetchedTodo1.get().isDone(), "Todo 1 should be done");
+        assertFalse(refetchedTodo2.get().isDone(), "Todo 2 should be incomplete");
+
+        List<Todo> completed = todoService.getCompletedTodos();
+        List<Todo> incomplete = todoService.getIncompleteTodos();
+
+        assertEquals(1, completed.size(), "Should have 1 completed todo");
+        assertEquals(1, incomplete.size(), "Should have 1 incomplete todo");
+        assertTrue(completed.get(0).isDone(), "Completed list should contain done todos");
+        assertFalse(incomplete.get(0).isDone(), "Incomplete list should contain not-done todos");
+    }
+  
+    @Test
+    @Order(10)
+    void shouldFilterCompletedAndIncompleteTodosWithMySQL() {
+    	AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MYSQL);
+        setMySQLProperties(config);
+        todoService = new TodoService();
+
+        Todo todo1 = todoService.createTodo("Task 1");
+        Todo todo2 = todoService.createTodo("Task 2");
+        
+        todoService.markTodoComplete(todo1.getId());
+        
+        Optional<Todo> refetchedTodo1 = todoService.getTodoById(todo1.getId());
+        Optional<Todo> refetchedTodo2 = todoService.getTodoById(todo2.getId());
+        
+        assertTrue(refetchedTodo1.isPresent(), "Todo 1 should exist");
+        assertTrue(refetchedTodo2.isPresent(), "Todo 2 should exist");
+        assertTrue(refetchedTodo1.get().isDone(), "Todo 1 should be done");
+        assertFalse(refetchedTodo2.get().isDone(), "Todo 2 should be incomplete");
+
+        // When: We filter
+        List<Todo> completed = todoService.getCompletedTodos();
+        List<Todo> incomplete = todoService.getIncompleteTodos();
+
+        assertEquals(1, completed.size(), "Should have 1 completed todo");
+        assertEquals(1, incomplete.size(), "Should have 1 incomplete todo");
+        assertTrue(completed.get(0).isDone(), "Completed list should have done todos");
+        assertFalse(incomplete.get(0).isDone(), "Incomplete list should have not-done todos");
+    }
+
 
 
     	// Helper Method
