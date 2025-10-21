@@ -193,10 +193,8 @@ public class TodoService {
             return operation.execute();
         }
     }
-
     @FunctionalInterface
     private interface TransactionOperation<T> {
         T execute();
     }
-    
 }

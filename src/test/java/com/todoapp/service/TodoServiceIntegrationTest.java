@@ -130,6 +130,8 @@ class TodoServiceIntegrationTest {
         assertEquals("Test MySQL Task", retrieved.get().getDescription(), "Retrieved description should match");
     }
     
+//  Life Cycle With MONDODB
+    
     @Test
     @Order(3)
     void shouldManageTodoLifecycleWithMongoDB() {
@@ -151,6 +153,8 @@ class TodoServiceIntegrationTest {
         assertFalse(deleted.isPresent(), "Deleted todo should not be found");
     }
     
+//    Life Cycle With MYSQL
+    @Test
     @Order(4)
     void shouldManageTodoLifecycleWithMySQL() {
     
@@ -170,6 +174,8 @@ class TodoServiceIntegrationTest {
         Optional<Todo> deleted = todoService.getTodoById(todo.getId());
         assertFalse(deleted.isPresent(), "Deleted todo should not be found");
     }
+    
+//    Tag Relationship with MONGODB
     
     @Test
     @Order(5)
@@ -197,6 +203,8 @@ class TodoServiceIntegrationTest {
         assertEquals(0, untagged.getTags().size(), "Todo should have no tags after removal");
     }
     
+//  Tag Relationship with MYSQL
+    
     @Test
     @Order(6)
     void shouldManageTagsAndRelationshipsWithMySQL() {
@@ -218,6 +226,8 @@ class TodoServiceIntegrationTest {
         assertEquals(0, untagged.getTags().size(), "Todo should have no tags after removal");
     }
     
+//  Search Todo with MONGODB
+    
     @Test
     @Order(7)
     void shouldSearchTodosWithMongoDB() {
@@ -237,6 +247,8 @@ class TodoServiceIntegrationTest {
         assertTrue(results.stream().allMatch(t -> t.getDescription().contains("Buy")),
                 "All results should contain 'Buy'");
     }
+    
+//  Search Todo with MYSQL
 
     @Test
     @Order(8)
@@ -257,6 +269,8 @@ class TodoServiceIntegrationTest {
         assertTrue(results.stream().allMatch(t -> t.getDescription().contains("Buy")),
                 "All results should contain 'Buy'");
     }
+    
+//    Completed & Incomplete Todo With MongoD
     
     @Test
     @Order(9)
@@ -289,6 +303,8 @@ class TodoServiceIntegrationTest {
         assertFalse(incomplete.get(0).isDone(), "Incomplete list should contain not-done todos");
     }
   
+//  Completed & Incomplete Todo wITH MYSQL	
+    
     @Test
     @Order(10)
     void shouldFilterCompletedAndIncompleteTodosWithMySQL() {
