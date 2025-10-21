@@ -65,7 +65,7 @@ public class TodoService {
             Optional<Todo> todoOpt = todoRepository.findById(id);
             if (todoOpt.isPresent()) {
                 Todo todo = todoOpt.get();
-                todo.setDone(false);
+                todo.setDone(true);
                 return todoRepository.save(todo);
             }
             throw new IllegalArgumentException("Todo not found with id: " + id);

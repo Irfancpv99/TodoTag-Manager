@@ -133,23 +133,19 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(3)
     void shouldManageTodoLifecycleWithMongoDB() {
-        // Given: A todo exists in MongoDB
         AppConfig config = AppConfig.getInstance();
         config.setDatabaseType(DatabaseType.MONGODB);
         setMongoDBProperties(config);
         todoService = new TodoService();
         Todo todo = todoService.createTodo("Task to complete");
         
-        // When/Then: We mark it complete
         assertFalse(todo.isDone(), "Initial todo should not be done");
         Todo completed = todoService.markTodoComplete(todo.getId());
         assertTrue(completed.isDone(), "Todo should be marked as done");
 
-        // When/Then: We mark it incomplete again
         Todo incomplete = todoService.markTodoIncomplete(todo.getId());
         assertFalse(incomplete.isDone(), "Todo should be marked as not done");
 
-        // When/Then: We delete it
         todoService.deleteTodo(todo.getId());
         Optional<Todo> deleted = todoService.getTodoById(todo.getId());
         assertFalse(deleted.isPresent(), "Deleted todo should not be found");
