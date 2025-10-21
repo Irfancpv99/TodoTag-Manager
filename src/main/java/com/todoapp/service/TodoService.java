@@ -85,7 +85,7 @@ public class TodoService {
     }
 
     public List<Todo> getCompletedTodos() {
-        return todoRepository.findByDone(false);
+        return todoRepository.findByDone(true);
     }
 
     public List<Todo> getIncompleteTodos() {
