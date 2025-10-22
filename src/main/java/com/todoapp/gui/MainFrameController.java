@@ -32,4 +32,11 @@ public class MainFrameController {
         
         return todoService.createTag(tagName.trim());
     }
+    public boolean deleteTodo(Long todoId) {
+        if (todoId == null) {
+            return false;
+        }
+        todoService.deleteTodo(todoId);
+        return true;
+    }
 }
