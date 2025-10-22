@@ -43,6 +43,26 @@ class MainFrameControllerTest {
         assertNull(controller.addTodo("   "));
         verify(service, never()).createTodo(anyString());
     }
+    
+    @Test
+    void addTag_validName_createsTag() {
+        Tag tag = mockTag(1L, "urgent");
+        when(service.findTagByName("urgent")).thenReturn(Optional.empty());
+        when(service.createTag("urgent")).thenReturn(tag);
+
+        assertEquals(tag, controller.addTag("urgent"));
+        verify(service).createTag("urgent");
+    }
+
+    @Test
+    void addTag_emptyNullOrExists_returnsNull() {
+        when(service.findTagByName("urgent")).thenReturn(Optional.of(mockTag(1L, "urgent")));
+
+        assertNull(controller.addTag(""));
+        assertNull(controller.addTag(null));
+        assertNull(controller.addTag("urgent"));
+        verify(service, never()).createTag(anyString());
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
