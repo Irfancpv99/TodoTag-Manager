@@ -39,4 +39,19 @@ public class MainFrameController {
         todoService.deleteTodo(todoId);
         return true;
     }
+    public boolean updateTodoDescription(Long todoId, String newDescription) {
+        if (todoId == null || newDescription == null || newDescription.trim().isEmpty()) {
+            return false;
+        }
+        
+        Optional<Todo> todoOpt = todoService.getTodoById(todoId);
+        if (todoOpt.isEmpty()) {
+            return false;
+        }
+        
+        Todo todo = todoOpt.get();
+        todo.setDescription(newDescription.trim());
+        todoService.saveTodo(todo);
+        return true;
+    }
 }
