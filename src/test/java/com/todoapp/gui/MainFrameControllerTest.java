@@ -75,6 +75,27 @@ class MainFrameControllerTest {
         assertFalse(controller.deleteTodo(null));
         verify(service, never()).deleteTodo(anyLong());
     }
+    
+    @Test
+    void updateTodoDescription_validData_updatesAndReturnsTrue() {
+        Todo todo = mockTodo(1L, "Old");
+        when(service.getTodoById(1L)).thenReturn(Optional.of(todo));
+
+        assertTrue(controller.updateTodoDescription(1L, "New"));
+        assertEquals("New", todo.getDescription());
+        verify(service).saveTodo(todo);
+    }
+
+    @Test
+    void updateTodoDescription_invalidInputs_returnsFalse() {
+        when(service.getTodoById(1L)).thenReturn(Optional.empty());
+
+        assertFalse(controller.updateTodoDescription(null, "New"));
+        assertFalse(controller.updateTodoDescription(1L, ""));
+        assertFalse(controller.updateTodoDescription(1L, null));
+        assertFalse(controller.updateTodoDescription(1L, "New"));
+        verify(service, never()).saveTodo(any());
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
