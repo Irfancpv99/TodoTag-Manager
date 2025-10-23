@@ -54,4 +54,24 @@ public class MainFrameController {
         todoService.saveTodo(todo);
         return true;
     }
+    
+    public Boolean toggleTodoDone(Long todoId) {
+        if (todoId == null) {
+            return null;
+        }
+        
+        Optional<Todo> todoOpt = todoService.getTodoById(todoId);
+        if (todoOpt.isEmpty()) {
+            return null;
+        }
+        
+        Todo todo = todoOpt.get();
+        if (todo.isDone()) {
+            todoService.markTodoIncomplete(todoId);
+            return false;
+        } else {
+            todoService.markTodoComplete(todoId);
+            return true;
+        }
+    }
 }
