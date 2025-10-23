@@ -151,6 +151,20 @@ class MainFrameControllerTest {
 
         assertEquals(tags, controller.getAllTags());
     }
+    
+    @Test
+    void addTagToTodo_validIds_addsAndReturnsTrue() {
+        assertTrue(controller.addTagToTodo(1L, 2L));
+        verify(service).addTagToTodo(1L, 2L);
+    }
+
+    @Test
+    void addTagToTodo_nullIds_returnsFalse() {
+        assertFalse(controller.addTagToTodo(null, 1L));
+        assertFalse(controller.addTagToTodo(1L, null));
+        assertFalse(controller.addTagToTodo(null, null));
+        verify(service, never()).addTagToTodo(anyLong(), anyLong());
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
