@@ -73,10 +73,8 @@ public class MainFrameController {
         } else {
             todoService.markTodoComplete(todoId);
             return true;
-        }
-        
+        }   
     }
-    
     public List<Todo> searchTodos(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return todoService.getAllTodos();
