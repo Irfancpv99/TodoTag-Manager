@@ -1,5 +1,6 @@
 package com.todoapp.gui;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.todoapp.model.Tag;
@@ -73,5 +74,13 @@ public class MainFrameController {
             todoService.markTodoComplete(todoId);
             return true;
         }
+        
+    }
+    
+    public List<Todo> searchTodos(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return todoService.getAllTodos();
+        }
+        return todoService.searchTodos(keyword.trim());
     }
 }
