@@ -96,6 +96,25 @@ class MainFrameControllerTest {
         assertFalse(controller.updateTodoDescription(1L, "New"));
         verify(service, never()).saveTodo(any());
     }
+    
+    @Test
+    void toggleTodoDone_incompleteTodo_marksComplete() {
+        Todo todo = mockTodo(1L, "Task");
+        when(service.getTodoById(1L)).thenReturn(Optional.of(todo));
+
+        assertTrue(controller.toggleTodoDone(1L));
+        verify(service).markTodoComplete(1L);
+    }
+
+    @Test
+    void toggleTodoDone_completeTodo_marksIncomplete() {
+        Todo todo = mockTodo(1L, "Task");
+        todo.setDone(true);
+        when(service.getTodoById(1L)).thenReturn(Optional.of(todo));
+
+        assertFalse(controller.toggleTodoDone(1L));
+        verify(service).markTodoIncomplete(1L);
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
