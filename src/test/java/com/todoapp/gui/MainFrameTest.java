@@ -66,16 +66,16 @@ class MainFrameTest {
             verify(mockController).addTodo("Task 1");
             window.textBox("todoDescriptionField").requireText("");
         }
-    }
-    @Test
-    void addTodo_viaEnterKey_createsTodo() {
-        when(mockController.addTodo(anyString())).thenReturn(new Todo("Task"));
-        when(mockController.getAllTodos()).thenReturn(List.of());
+        @Test
+        void addTodo_viaEnterKey_createsTodo() {
+            when(mockController.addTodo(anyString())).thenReturn(new Todo("Task"));
+            when(mockController.getAllTodos()).thenReturn(List.of());
 
-        window.textBox("todoDescriptionField").enterText("Task 2");
-        window.textBox("todoDescriptionField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
-        
-        verify(mockController).addTodo("Task 2");
-        window.textBox("todoDescriptionField").requireText("");
+            window.textBox("todoDescriptionField").enterText("Task 2");
+            window.textBox("todoDescriptionField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
+            
+            verify(mockController).addTodo("Task 2");
+            window.textBox("todoDescriptionField").requireText("");
+        }
     }
 }
