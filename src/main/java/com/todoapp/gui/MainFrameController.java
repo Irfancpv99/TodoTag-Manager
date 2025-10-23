@@ -89,4 +89,11 @@ public class MainFrameController {
     public List<Tag> getAllTags() {
         return todoService.getAllTags();
     }
+    public boolean addTagToTodo(Long todoId, Long tagId) {
+        if (todoId == null || tagId == null) {
+            return false;
+        }
+        todoService.addTagToTodo(todoId, tagId);
+        return true;
+    }
 }
