@@ -192,8 +192,7 @@
                         <param>com.todoapp.service.*</param>
                         <param>com.todoapp.config.*</param>
                         <param>com.todoapp.gui.MainFrameController</param>
-                        <param>com.todoapp.gui.TodoTableModel</param>
-                    </targetClasses>
+                      </targetClasses>
 
                     <!-- Run all tests except GUI E2E and Integration tests -->
                     <targetTests>
@@ -203,7 +202,7 @@
                     <!-- Exclude GUI E2E and Integration tests -->
                     <excludedTestClasses>
                         <param>com.todoapp.gui.MainFrameE2ETest</param>
-                        <param>com.todoapp.gui.MainFrameIntegrationTest</param>
+                        <param>com.todoapp.gui.MainFrameTest</param>
                      </excludedTestClasses>
 
                     <outputFormats>
