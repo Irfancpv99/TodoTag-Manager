@@ -81,4 +81,12 @@ public class MainFrameController {
         }
         return todoService.searchTodos(keyword.trim());
     }
+    
+    public List<Todo> getAllTodos() {
+        return todoService.getAllTodos();
+    }
+
+    public List<Tag> getAllTags() {
+        return todoService.getAllTags();
+    }
 }
