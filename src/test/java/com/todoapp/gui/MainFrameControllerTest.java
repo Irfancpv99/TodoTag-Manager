@@ -179,6 +179,18 @@ class MainFrameControllerTest {
         assertFalse(controller.removeTagFromTodo(null, null));
         verify(service, never()).removeTagFromTodo(anyLong(), anyLong());
     }
+    
+    @Test
+    void deleteTag_validId_deletesAndReturnsTrue() {
+        assertTrue(controller.deleteTag(1L));
+        verify(service).deleteTag(1L);
+    }
+
+    @Test
+    void deleteTag_nullId_returnsFalse() {
+        assertFalse(controller.deleteTag(null));
+        verify(service, never()).deleteTag(anyLong());
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
