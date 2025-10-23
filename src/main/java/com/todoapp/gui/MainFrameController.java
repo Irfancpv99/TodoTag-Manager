@@ -96,4 +96,12 @@ public class MainFrameController {
         todoService.addTagToTodo(todoId, tagId);
         return true;
     }
+    
+    public boolean removeTagFromTodo(Long todoId, Long tagId) {
+        if (todoId == null || tagId == null) {
+            return false;
+        }
+        todoService.removeTagFromTodo(todoId, tagId);
+        return true;
+    }
 }
