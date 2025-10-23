@@ -52,6 +52,7 @@ public class MainFrame extends JFrame {
 
     private void setupListeners() {
         findButton("addTodoButton").addActionListener(e -> addTodo());
+        todoDescriptionField.addActionListener(e -> addTodo());
     }
 
     private JButton findButton(String name) {
