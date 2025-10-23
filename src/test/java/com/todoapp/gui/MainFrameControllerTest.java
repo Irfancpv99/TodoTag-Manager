@@ -135,6 +135,22 @@ class MainFrameControllerTest {
         assertEquals(all, controller.searchTodos("   "));
         verify(service, times(3)).getAllTodos();
     }
+    
+    @Test
+    void getAllTodos_returnsAllTodos() {
+        List<Todo> todos = List.of(mockTodo(1L, "Task"));
+        when(service.getAllTodos()).thenReturn(todos);
+
+        assertEquals(todos, controller.getAllTodos());
+    }
+
+    @Test
+    void getAllTags_returnsAllTags() {
+        List<Tag> tags = List.of(mockTag(1L, "urgent"));
+        when(service.getAllTags()).thenReturn(tags);
+
+        assertEquals(tags, controller.getAllTags());
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
