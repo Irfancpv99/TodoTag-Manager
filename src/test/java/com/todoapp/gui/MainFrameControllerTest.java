@@ -115,6 +115,26 @@ class MainFrameControllerTest {
         assertFalse(controller.toggleTodoDone(1L));
         verify(service).markTodoIncomplete(1L);
     }
+    
+    @Test
+    void searchTodos_withKeyword_returnsFiltered() {
+        List<Todo> results = List.of(mockTodo(1L, "Test"));
+        when(service.searchTodos("test")).thenReturn(results);
+
+        assertEquals(results, controller.searchTodos("test"));
+        verify(service).searchTodos("test");
+    }
+
+    @Test
+    void searchTodos_emptyOrNull_returnsAll() {
+        List<Todo> all = List.of(mockTodo(1L, "Task"));
+        when(service.getAllTodos()).thenReturn(all);
+
+        assertEquals(all, controller.searchTodos(""));
+        assertEquals(all, controller.searchTodos(null));
+        assertEquals(all, controller.searchTodos("   "));
+        verify(service, times(3)).getAllTodos();
+    }
 
     private Todo mockTodo(Long id, String description) {
         Todo todo = new Todo();
