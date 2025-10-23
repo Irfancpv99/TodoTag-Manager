@@ -211,7 +211,7 @@
                         <outputFormat>XML</outputFormat>
                     </outputFormats>
 
-                    <mutationThreshold>90</mutationThreshold>
+                    <mutationThreshold>100</mutationThreshold>
                     <timeoutConstant>10000</timeoutConstant>
                     <timeoutFactor>3.0</timeoutFactor>
                     <threads>4</threads>

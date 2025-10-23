@@ -115,6 +115,24 @@ class MainFrameControllerTest {
         assertFalse(controller.toggleTodoDone(1L));
         verify(service).markTodoIncomplete(1L);
     }
+
+    @Test
+    void toggleTodoDone_nullId_returnsNull() {
+        assertNull(controller.toggleTodoDone(null));
+        verify(service, never()).getTodoById(anyLong());
+        verify(service, never()).markTodoComplete(anyLong());
+        verify(service, never()).markTodoIncomplete(anyLong());
+    }
+
+    @Test
+    void toggleTodoDone_todoNotFound_returnsNull() {
+        when(service.getTodoById(1L)).thenReturn(Optional.empty());
+
+        assertNull(controller.toggleTodoDone(1L));
+        verify(service).getTodoById(1L);
+        verify(service, never()).markTodoComplete(anyLong());
+        verify(service, never()).markTodoIncomplete(anyLong());
+    }
     
     @Test
     void searchTodos_withKeyword_returnsFiltered() {
