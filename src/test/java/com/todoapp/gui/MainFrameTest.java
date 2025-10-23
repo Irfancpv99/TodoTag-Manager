@@ -77,5 +77,17 @@ class MainFrameTest {
             verify(mockController).addTodo("Task 2");
             window.textBox("todoDescriptionField").requireText("");
         }
+        @Test
+        void deleteTodo_removesSelectedTodo() {
+            Todo todo = createTodo(1L, "Task", false);
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.deleteTodo(1L)).thenReturn(true);
+
+            frame.refreshTodos(); 
+            window.table("todoTable").selectRows(0);
+            window.button("deleteButton").click();
+
+            verify(mockController).deleteTodo(1L);
+        }
     }
 }
