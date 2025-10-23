@@ -8,7 +8,7 @@ on:
 
 env:
   JAVA_VERSION: 17
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Djava.awt.headless=true"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
 
 jobs:
   validate-tdd:
@@ -76,24 +76,38 @@ jobs:
           echo "MySQL ready"
           echo "All services ready for TDD tests"
 
+      - name: Setup Xvfb for GUI tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sleep 3
+          echo "Virtual display server started on :99"
+
       - name: Run Unit Tests (TDD Red-Green-Refactor)
-        run: mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false -Djava.awt.headless=true
+        run: mvn clean test -Dtest="**/*Test.java" -Dmaven.test.failure.ignore=false
+        env:
+          DISPLAY: :99
 
       - name: Run Integration Tests (TDD Integration Layer)
         run: |
           if find src/test/java -name "*IntegrationTest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*IntegrationTest.java" -Djava.awt.headless=true
+            mvn test -Dtest="**/*IntegrationTest.java"
           else
             echo "No integration tests found - skipping"
           fi
+        env:
+          DISPLAY: :99
 
       - name: Run E2E Tests (TDD Complete Workflows)
         run: |
           if find src/test/java -name "*E2ETest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*E2ETest.java" -Djava.awt.headless=true
+            mvn test -Dtest="**/*E2ETest.java"
           else
             echo "No E2E tests found - skipping"
           fi
+        env:
+          DISPLAY: :99
 
       - name: Generate Code Coverage Report
         run: mvn jacoco:report
@@ -162,8 +176,17 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Setup Xvfb for GUI tests
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+          sleep 3
+
       - name: Run PIT Mutation Testing
-        run: mvn clean test org.pitest:pitest-maven:mutationCoverage -Djava.awt.headless=true
+        run: mvn clean test org.pitest:pitest-maven:mutationCoverage
+        env:
+          DISPLAY: :99
 
       - name: Upload Mutation Test Results
         uses: actions/upload-artifact@v4
