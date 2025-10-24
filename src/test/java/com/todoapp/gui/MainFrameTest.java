@@ -112,5 +112,34 @@ class MainFrameTest {
 
             verify(mockController).toggleTodoDone(1L);
         }
+        @Test
+        void editTodo_showsDialogAndUpdates() {
+            Todo todo = createTodo(1L, "Original", false);
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.updateTodoDescription(1L, "Updated")).thenReturn(true);
+
+            frame.refreshTodos();
+            window.table("todoTable").selectRows(0);
+            window.button("editButton").click();
+
+            window.dialog().textBox().deleteText().enterText("Updated");
+            window.dialog().button(withText("OK")).click();
+
+            verify(mockController).updateTodoDescription(1L, "Updated");
+        }
+
+        @Test
+        void editTodo_cancelDoesNothing() {
+            Todo todo = createTodo(1L, "Original", false);
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+
+            frame.refreshTodos();
+            window.table("todoTable").selectRows(0);
+            window.button("editButton").click();
+
+            window.dialog().cancelButton().click();
+
+            verify(mockController, never()).updateTodoDescription(anyLong(), anyString());
+        }
     }
 }
