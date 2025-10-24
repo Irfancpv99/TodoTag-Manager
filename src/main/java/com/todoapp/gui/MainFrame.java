@@ -147,6 +147,12 @@ public class MainFrame extends JFrame {
         addTagSection(panel, "Todo Tags:", tagList);
         panel.add(Box.createVerticalStrut(10));
         addTagSection(panel, "All Available Tags:", availableTagsList);
+        
+        // Add buttons to tag panel
+        panel.add(Box.createVerticalStrut(10));
+        addAlignedButton(panel, "Add Tag to Todo", "addTagToTodoButton");
+        addAlignedButton(panel, "Remove Tag from Todo", "removeTagFromTodoButton");
+        
         return panel;
     }
 
@@ -168,6 +174,15 @@ public class MainFrame extends JFrame {
         return label;
     }
 
+    private void addAlignedButton(JPanel parent, String text, String name) {
+        JButton button = new JButton(text);
+        button.setName(name);
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, button.getPreferredSize().height));
+        parent.add(button);
+        parent.add(Box.createVerticalStrut(5));
+    }
+
     private JPanel createInputRow(String labelText, JTextField textField, String buttonName, String buttonText) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         panel.add(new JLabel(labelText));
@@ -186,6 +201,8 @@ public class MainFrame extends JFrame {
         findButton("searchButton").addActionListener(e -> searchTodos());
         findButton("showAllButton").addActionListener(e -> showAllTodos());
         findButton("addTagButton").addActionListener(e -> addTag());
+        findButton("addTagToTodoButton").addActionListener(e -> addTagToTodo());
+        findButton("removeTagFromTodoButton").addActionListener(e -> removeTagFromTodo());
         todoDescriptionField.addActionListener(e -> addTodo());
         searchField.addActionListener(e -> searchTodos());
         tagNameField.addActionListener(e -> addTag());
@@ -232,6 +249,44 @@ public class MainFrame extends JFrame {
             controller.addTag(tagName.trim());
             tagNameField.setText("");
             refreshTags();
+        }
+    }
+
+    public void addTagToTodo() {
+        Todo todo = getSelectedTodo();
+        Tag tag = availableTagsList.getSelectedValue();
+        if (todo == null || tag == null) {
+            return;
+        }
+        if (controller.addTagToTodo(todo.getId(), tag.getId())) {
+            refreshAndReselect(todo.getId());
+        }
+    }
+
+    public void removeTagFromTodo() {
+        Todo todo = getSelectedTodo();
+        Tag tag = tagList.getSelectedValue();
+        if (todo == null || tag == null) {
+            return;
+        }
+        if (controller.removeTagFromTodo(todo.getId(), tag.getId())) {
+            refreshAndReselect(todo.getId());
+        }
+    }
+
+    private void refreshAndReselect(Long todoId) {
+        controller.getAllTodos().stream()
+            .filter(t -> t.getId().equals(todoId))
+            .findFirst()
+            .ifPresent(this::updateTodoTags);
+        
+        refreshTodos();
+        
+        for (int i = 0; i < todoTableModel.getRowCount(); i++) {
+            if (todoTableModel.getTodoAt(i).getId().equals(todoId)) {
+                todoTable.setRowSelectionInterval(i, i);
+                break;
+            }
         }
     }
 
