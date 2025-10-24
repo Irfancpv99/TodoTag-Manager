@@ -1,5 +1,6 @@
 package com.todoapp.gui;
 
+import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 
 import javax.swing.*;
@@ -15,6 +16,7 @@ public class MainFrame extends JFrame {
     // UI Components
     private JTextField todoDescriptionField;
     private JTextField searchField;
+    private JTextField tagNameField;
     private JTable todoTable;
     private TodoTableModel todoTableModel;
   
@@ -40,6 +42,9 @@ public class MainFrame extends JFrame {
         searchField = new JTextField(20);
         searchField.setName("searchField");
         
+        tagNameField = new JTextField(20);
+        tagNameField.setName("tagNameField");
+        
         todoTableModel = new TodoTableModel();
         todoTable = new JTable(todoTableModel);
         todoTable.setName("todoTable");
@@ -63,6 +68,9 @@ public class MainFrame extends JFrame {
         
         // Add todo input row
         topPanel.add(createInputRow("Add Todo:", todoDescriptionField, "addTodoButton", "Add Todo"));
+        
+        // Add tag input row
+        topPanel.add(createInputRow("Add Tag:", tagNameField, "addTagButton", "Add Tag"));
         
         // Create search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
@@ -112,12 +120,14 @@ public class MainFrame extends JFrame {
 
     private void setupListeners() {
         findButton("addTodoButton").addActionListener(e -> addTodo());
+        findButton("addTagButton").addActionListener(e -> addTag());
         findButton("editButton").addActionListener(e -> editTodo());
         findButton("deleteButton").addActionListener(e -> deleteTodo());
         findButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
         findButton("searchButton").addActionListener(e -> searchTodos());
         findButton("showAllButton").addActionListener(e -> showAllTodos());
         todoDescriptionField.addActionListener(e -> addTodo());
+        tagNameField.addActionListener(e -> addTag());
         searchField.addActionListener(e -> searchTodos());
     }
 
@@ -204,6 +214,21 @@ public class MainFrame extends JFrame {
     public void showAllTodos() {
         refreshTodos();
         searchField.setText("");
+    }
+
+    public void addTag() {
+        String tagName = tagNameField.getText();
+        if (tagName != null && !tagName.trim().isEmpty()) {
+            Tag created = controller.addTag(tagName.trim());
+            if (created != null) {
+                tagNameField.setText("");
+                refreshTags();
+            }
+        }
+    }
+
+    public void refreshTags() {
+        // Will implement when we add tag lists
     }
 
     public void refreshTodos() {
