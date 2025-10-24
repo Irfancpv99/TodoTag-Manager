@@ -101,5 +101,16 @@ class MainFrameTest {
 
             verify(mockController).toggleTodoDone(1L);
         }
+        @Test
+        void toggleTodoDone_viaDoubleClick_togglesStatus() {
+            Todo todo = createTodo(1L, "Task", false);
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.toggleTodoDone(1L)).thenReturn(true);
+
+            frame.refreshTodos();
+            window.table("todoTable").doubleClick();
+
+            verify(mockController).toggleTodoDone(1L);
+        }
     }
 }
