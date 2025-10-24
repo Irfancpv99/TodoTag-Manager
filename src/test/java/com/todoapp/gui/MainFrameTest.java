@@ -259,5 +259,18 @@ class MainFrameTest {
 
             verify(mockController).removeTagFromTodo(1L, 2L);
         }
+        @Test
+        void deleteTag_deletesSelectedTag() {
+            Tag tag = createTag(1L, "urgent");
+            
+            when(mockController.getAllTags()).thenReturn(List.of(tag));
+            when(mockController.deleteTag(1L)).thenReturn(true);
+
+            frame.refreshTags();
+            window.list("availableTagsList").selectItem(0);
+            window.button("deleteTagButton").click();
+
+            verify(mockController).deleteTag(1L);
+        }
     }
 }
