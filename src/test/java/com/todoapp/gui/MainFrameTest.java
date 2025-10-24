@@ -164,4 +164,30 @@ class MainFrameTest {
             verify(mockController).searchTodos("Test");
         }
     }
+    @Nested
+    class TagOperations extends TestBase {
+
+        @Test
+        void addTag_viaButton_createsTag() {
+            when(mockController.addTag(anyString())).thenReturn(new Tag("urgent"));
+            when(mockController.getAllTags()).thenReturn(List.of());
+
+            window.textBox("tagNameField").enterText("urgent");
+            window.button("addTagButton").click();
+
+            verify(mockController).addTag("urgent");
+            window.textBox("tagNameField").requireText("");
+        }
+
+        @Test
+        void addTag_viaEnterKey_createsTag() {
+            when(mockController.addTag(anyString())).thenReturn(new Tag("work"));
+
+            window.textBox("tagNameField").enterText("work");
+            window.textBox("tagNameField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
+
+            verify(mockController).addTag("work");
+            window.textBox("tagNameField").requireText("");
+        }
+    }
 }
