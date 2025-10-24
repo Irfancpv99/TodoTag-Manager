@@ -16,8 +16,7 @@ public class MainFrame extends JFrame {
     private JTextField todoDescriptionField;
     private JTable todoTable;
     private TodoTableModel todoTableModel;
-    
-    // Controller and data models
+  
     private MainFrameController controller;
 
     public MainFrame(MainFrameController controller) {
@@ -59,7 +58,10 @@ public class MainFrame extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton deleteButton = new JButton("Delete Todo");
         deleteButton.setName("deleteButton");
+        JButton toggleButton = new JButton("Toggle Done");
+        toggleButton.setName("toggleDoneButton");
         buttonPanel.add(deleteButton);
+        buttonPanel.add(toggleButton);
         
         centerPanel.add(buttonPanel, BorderLayout.SOUTH);
         
@@ -70,11 +72,11 @@ public class MainFrame extends JFrame {
     private void setupListeners() {
         findButton("addTodoButton").addActionListener(e -> addTodo());
         findButton("deleteButton").addActionListener(e -> deleteTodo());
+        findButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
         todoDescriptionField.addActionListener(e -> addTodo());
     }
 
     private JButton findButton(String name) {
-        // Search in top panel
         Component topPanel = getContentPane().getComponent(0);
         if (topPanel instanceof JPanel) {
             for (Component comp : ((JPanel) topPanel).getComponents()) {
@@ -84,7 +86,6 @@ public class MainFrame extends JFrame {
             }
         }
         
-        // Search in center panel's button panel
         Component centerPanel = getContentPane().getComponent(1);
         if (centerPanel instanceof JPanel) {
             for (Component comp : ((JPanel) centerPanel).getComponents()) {
@@ -120,12 +121,25 @@ public class MainFrame extends JFrame {
         }
     }
 
+    public void toggleTodoDone() {
+        int selectedRow = todoTable.getSelectedRow();
+        if (selectedRow >= 0) {
+            Todo todo = todoTableModel.getTodoAt(selectedRow);
+            Boolean newStatus = controller.toggleTodoDone(todo.getId());
+            if (newStatus != null) {
+                refreshTodos();
+             
+                todoTable.setRowSelectionInterval(selectedRow, selectedRow);
+            }
+        }
+    }
+
     public void refreshTodos() {
         List<Todo> todos = controller.getAllTodos();
         todoTableModel.setTodos(todos);
     }
 
-    // TodoTableModel inner class
+    // TodoTableModel 
     static class TodoTableModel extends AbstractTableModel {
         private static final long serialVersionUID = 1L;
         private final String[] columnNames = {"ID", "Description", "Done"};
