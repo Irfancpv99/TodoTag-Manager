@@ -241,5 +241,23 @@ class MainFrameTest {
 
             verify(mockController).addTagToTodo(1L, 2L);
         }
+        @Test
+        void removeTagFromTodo_removesSelectedTagFromTodo() {
+            Tag tag = createTag(2L, "urgent");
+            Todo todo = createTodo(1L, "Task", false);
+            todo.addTag(tag);
+            
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.getAllTags()).thenReturn(List.of(tag));
+            when(mockController.removeTagFromTodo(1L, 2L)).thenReturn(true);
+
+            frame.refreshTodos();
+            frame.refreshTags();
+            window.table("todoTable").selectRows(0);
+            window.list("tagList").selectItem(0);
+            window.button("removeTagFromTodoButton").click();
+
+            verify(mockController).removeTagFromTodo(1L, 2L);
+        }
     }
 }
