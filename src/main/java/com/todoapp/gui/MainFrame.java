@@ -14,6 +14,7 @@ public class MainFrame extends JFrame {
 
     // UI Components
     private JTextField todoDescriptionField;
+    private JTextField searchField;
     private JTable todoTable;
     private TodoTableModel todoTableModel;
   
@@ -36,6 +37,9 @@ public class MainFrame extends JFrame {
         todoDescriptionField = new JTextField(30);
         todoDescriptionField.setName("todoDescriptionField");
         
+        searchField = new JTextField(20);
+        searchField.setName("searchField");
+        
         todoTableModel = new TodoTableModel();
         todoTable = new JTable(todoTableModel);
         todoTable.setName("todoTable");
@@ -53,17 +57,32 @@ public class MainFrame extends JFrame {
     private void setupLayout() {
         setLayout(new BorderLayout(10, 10));
         
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        topPanel.add(new JLabel("Add Todo:"));
-        topPanel.add(todoDescriptionField);
+        // Create top panel with vertical layout
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         
-        JButton addButton = new JButton("Add Todo");
-        addButton.setName("addTodoButton");
-        topPanel.add(addButton);
+        // Add todo input row
+        topPanel.add(createInputRow("Add Todo:", todoDescriptionField, "addTodoButton", "Add Todo"));
         
+        // Create search panel
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        searchPanel.add(new JLabel("Search:"));
+        searchPanel.add(searchField);
+        JButton searchButton = new JButton("Search");
+        searchButton.setName("searchButton");
+        searchPanel.add(searchButton);
+        JButton showAllButton = new JButton("Show All");
+        showAllButton.setName("showAllButton");
+        searchPanel.add(showAllButton);
+        topPanel.add(searchPanel);
+        
+        topPanel.add(new JSeparator());
+        
+        // Center panel with table
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(new JScrollPane(todoTable), BorderLayout.CENTER);
         
+        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton editButton = new JButton("Edit Todo");
         editButton.setName("editButton");
@@ -81,37 +100,43 @@ public class MainFrame extends JFrame {
         add(centerPanel, BorderLayout.CENTER);
     }
 
+    private JPanel createInputRow(String labelText, JTextField textField, String buttonName, String buttonText) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panel.add(new JLabel(labelText));
+        panel.add(textField);
+        JButton button = new JButton(buttonText);
+        button.setName(buttonName);
+        panel.add(button);
+        return panel;
+    }
+
     private void setupListeners() {
         findButton("addTodoButton").addActionListener(e -> addTodo());
         findButton("editButton").addActionListener(e -> editTodo());
         findButton("deleteButton").addActionListener(e -> deleteTodo());
         findButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
+        findButton("searchButton").addActionListener(e -> searchTodos());
+        findButton("showAllButton").addActionListener(e -> showAllTodos());
         todoDescriptionField.addActionListener(e -> addTodo());
+        searchField.addActionListener(e -> searchTodos());
     }
 
     private JButton findButton(String name) {
-        Component topPanel = getContentPane().getComponent(0);
-        if (topPanel instanceof JPanel) {
-            for (Component comp : ((JPanel) topPanel).getComponents()) {
-                if (comp instanceof JButton && name.equals(comp.getName())) {
-                    return (JButton) comp;
+        return findButtonInContainer(getContentPane(), name);
+    }
+
+    private JButton findButtonInContainer(Container container, String name) {
+        for (Component comp : container.getComponents()) {
+            if (comp instanceof JButton && name.equals(comp.getName())) {
+                return (JButton) comp;
+            }
+            if (comp instanceof Container) {
+                JButton button = findButtonInContainer((Container) comp, name);
+                if (button != null) {
+                    return button;
                 }
             }
         }
-        
-        Component centerPanel = getContentPane().getComponent(1);
-        if (centerPanel instanceof JPanel) {
-            for (Component comp : ((JPanel) centerPanel).getComponents()) {
-                if (comp instanceof JPanel) {
-                    for (Component innerComp : ((JPanel) comp).getComponents()) {
-                        if (innerComp instanceof JButton && name.equals(innerComp.getName())) {
-                            return (JButton) innerComp;
-                        }
-                    }
-                }
-            }
-        }
-        
         return null;
     }
 
@@ -161,10 +186,24 @@ public class MainFrame extends JFrame {
             Boolean newStatus = controller.toggleTodoDone(todo.getId());
             if (newStatus != null) {
                 refreshTodos();
-             
                 todoTable.setRowSelectionInterval(selectedRow, selectedRow);
             }
         }
+    }
+
+    public void searchTodos() {
+        String keyword = searchField.getText();
+        if (keyword == null) {
+            keyword = "";
+        }
+        keyword = keyword.trim();
+        List<Todo> results = controller.searchTodos(keyword);
+        todoTableModel.setTodos(results);
+    }
+
+    public void showAllTodos() {
+        refreshTodos();
+        searchField.setText("");
     }
 
     public void refreshTodos() {
