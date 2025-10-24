@@ -39,6 +39,15 @@ public class MainFrame extends JFrame {
         todoTableModel = new TodoTableModel();
         todoTable = new JTable(todoTableModel);
         todoTable.setName("todoTable");
+        
+        todoTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    toggleTodoDone();
+                }
+            }
+        });
     }
 
     private void setupLayout() {
