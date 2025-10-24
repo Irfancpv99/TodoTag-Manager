@@ -153,6 +153,12 @@ public class MainFrame extends JFrame {
         addAlignedButton(panel, "Add Tag to Todo", "addTagToTodoButton");
         addAlignedButton(panel, "Remove Tag from Todo", "removeTagFromTodoButton");
         
+        // Add separator and button to tag panel
+        panel.add(Box.createVerticalStrut(5));
+        panel.add(new JSeparator());
+        panel.add(Box.createVerticalStrut(5));
+        addAlignedButton(panel, "Delete Selected Tag", "deleteTagButton");
+        
         return panel;
     }
 
@@ -203,11 +209,11 @@ public class MainFrame extends JFrame {
         findButton("addTagButton").addActionListener(e -> addTag());
         findButton("addTagToTodoButton").addActionListener(e -> addTagToTodo());
         findButton("removeTagFromTodoButton").addActionListener(e -> removeTagFromTodo());
+        findButton("deleteTagButton").addActionListener(e -> deleteTag());
         todoDescriptionField.addActionListener(e -> addTodo());
         searchField.addActionListener(e -> searchTodos());
         tagNameField.addActionListener(e -> addTag());
         
-        // Add table selection listener for tags
         todoTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 updateTodoTags(getSelectedTodo());
@@ -271,6 +277,18 @@ public class MainFrame extends JFrame {
         }
         if (controller.removeTagFromTodo(todo.getId(), tag.getId())) {
             refreshAndReselect(todo.getId());
+        }
+    }
+
+    public void deleteTag() {
+        Tag selected = availableTagsList.getSelectedValue();
+        if (selected == null) {
+            return;
+        }
+        if (controller.deleteTag(selected.getId())) {
+            refreshTags();
+            refreshTodos(); // Refresh todos in case any had this tag
+            tagListModel.clear(); // Clear todo tags display
         }
     }
 
