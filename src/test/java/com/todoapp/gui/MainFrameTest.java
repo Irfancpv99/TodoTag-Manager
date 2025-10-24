@@ -224,5 +224,22 @@ class MainFrameTest {
             assertThat(window.list("tagList").contents()).hasSize(1);
             assertThat(window.list("tagList").contents()[0]).contains("urgent");
         }
+        @Test
+        void addTagToTodo_addsSelectedTagToSelectedTodo() {
+            Tag tag = createTag(2L, "urgent");
+            Todo todo = createTodo(1L, "Task", false);
+            
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.getAllTags()).thenReturn(List.of(tag));
+            when(mockController.addTagToTodo(1L, 2L)).thenReturn(true);
+
+            frame.refreshTodos();
+            frame.refreshTags();
+            window.table("todoTable").selectRows(0);
+            window.list("availableTagsList").selectItem(0);
+            window.button("addTagToTodoButton").click();
+
+            verify(mockController).addTagToTodo(1L, 2L);
+        }
     }
 }
