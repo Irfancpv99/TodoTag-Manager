@@ -202,6 +202,8 @@ class MainFrameTest {
 
             frame.refreshTags();
             frame.refreshTodos();
+            
+            window.table("todoTable").selectRows(0);
 
             assertThat(window.list("availableTagsList").contents()).hasSize(2);
             assertThat(window.list("tagList").contents()).hasSize(1);
