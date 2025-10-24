@@ -189,5 +189,38 @@ class MainFrameTest {
             verify(mockController).addTag("work");
             window.textBox("tagNameField").requireText("");
         }
+        
+        @Test
+        void tagLists_showAvailableAndTodoTags() {
+            Tag tag1 = createTag(1L, "urgent");
+            Tag tag2 = createTag(2L, "work");
+            Todo todo = createTodo(1L, "Task", false);
+            todo.addTag(tag1);
+
+            when(mockController.getAllTags()).thenReturn(List.of(tag1, tag2));
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+
+            frame.refreshTags();
+            frame.refreshTodos();
+
+            assertThat(window.list("availableTagsList").contents()).hasSize(2);
+            assertThat(window.list("tagList").contents()).hasSize(1);
+        }
+
+        @Test
+        void updateTagList_whenTodoSelected() {
+            Tag tag = createTag(1L, "urgent");
+            Todo todo = createTodo(1L, "Task", false);
+            todo.addTag(tag);
+
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.getAllTags()).thenReturn(List.of(tag));
+
+            frame.refreshTodos();
+            window.table("todoTable").selectRows(0);
+
+            assertThat(window.list("tagList").contents()).hasSize(1);
+            assertThat(window.list("tagList").contents()[0]).contains("urgent");
+        }
     }
 }
