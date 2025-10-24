@@ -272,5 +272,35 @@ class MainFrameTest {
 
             verify(mockController).deleteTag(1L);
         }
+        @Test
+        void addTodo_trimsWhitespace() {
+            when(mockController.addTodo("Task")).thenReturn(new Todo("Task"));
+            when(mockController.getAllTodos()).thenReturn(List.of());
+
+            window.textBox("todoDescriptionField").enterText("  Task  ");
+            window.button("addTodoButton").click();
+
+            verify(mockController).addTodo("Task");
+        }
+
+        @Test
+        void addTag_trimsWhitespace() {
+            when(mockController.addTag("urgent")).thenReturn(new Tag("urgent"));
+
+            window.textBox("tagNameField").enterText("  urgent  ");
+            window.button("addTagButton").click();
+
+            verify(mockController).addTag("urgent");
+        }
+
+        @Test
+        void searchTodos_trimsWhitespace() {
+            when(mockController.searchTodos("test")).thenReturn(List.of());
+
+            window.textBox("searchField").enterText("  test  ");
+            window.button("searchButton").click();
+
+            verify(mockController).searchTodos("test");
+        }
     }
 }
