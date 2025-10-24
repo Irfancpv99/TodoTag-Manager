@@ -303,4 +303,34 @@ class MainFrameTest {
             verify(mockController).searchTodos("test");
         }
     }
+    @Nested
+    class ExceptionHandling extends TestBase {
+
+        @Test
+        void handleAddTodoFailure_showsErrorDialog() {
+            when(mockController.addTodo(anyString())).thenThrow(
+                new RuntimeException("Database error")
+            );
+
+            window.textBox("todoDescriptionField").enterText("Test");
+            window.button("addTodoButton").click();
+
+            window.optionPane().requireErrorMessage().okButton().click();
+        }
+
+        @Test
+        void handleDeleteTodoFailure_showsErrorDialog() {
+            Todo todo = createTodo(1L, "Task", false);
+            when(mockController.getAllTodos()).thenReturn(List.of(todo));
+            when(mockController.deleteTodo(1L)).thenThrow(
+                new RuntimeException("Delete failed")
+            );
+
+            frame.refreshTodos();
+            window.table("todoTable").selectRows(0);
+            window.button("deleteButton").click();
+
+            window.optionPane().requireErrorMessage().okButton().click();
+        }
+    }
 }
