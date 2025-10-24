@@ -207,7 +207,6 @@ public class MainFrame extends JFrame {
         searchField.addActionListener(e -> searchTodos());
         tagNameField.addActionListener(e -> addTag());
         
-        // Add table selection listener for tags
         todoTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 updateTodoTags(getSelectedTodo());
