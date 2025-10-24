@@ -13,6 +13,7 @@ public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private static final String WINDOW_TITLE = "Todo Manager - TDD Development Demo Application";
 
+    
     // UI Components
     private JTextField todoDescriptionField;
     private JTextField searchField;
