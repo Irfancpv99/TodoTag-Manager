@@ -1,7 +1,7 @@
 package com.todoapp.gui;
 
-import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
+import com.todoapp.model.Tag;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -19,6 +19,12 @@ public class MainFrame extends JFrame {
     private JTextField tagNameField;
     private JTable todoTable;
     private TodoTableModel todoTableModel;
+    
+    // Tag components
+    private JList<Tag> tagList;
+    private JList<Tag> availableTagsList;
+    private DefaultListModel<Tag> tagListModel;
+    private DefaultListModel<Tag> availableTagsListModel;
   
     private MainFrameController controller;
 
@@ -57,6 +63,18 @@ public class MainFrame extends JFrame {
                 }
             }
         });
+        
+        // Initialize tag components
+        tagListModel = new DefaultListModel<>();
+        availableTagsListModel = new DefaultListModel<>();
+        tagList = createList(tagListModel, "tagList");
+        availableTagsList = createList(availableTagsListModel, "availableTagsList");
+    }
+
+    private JList<Tag> createList(DefaultListModel<Tag> model, String name) {
+        JList<Tag> list = new JList<>(model);
+        list.setName(name);
+        return list;
     }
 
     private void setupLayout() {
@@ -86,9 +104,24 @@ public class MainFrame extends JFrame {
         
         topPanel.add(new JSeparator());
         
-        // Center panel with table
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.add(new JScrollPane(todoTable), BorderLayout.CENTER);
+        // Center panel with table and tags
+        JPanel centerPanel = createCenterPanel();
+        
+        add(topPanel, BorderLayout.NORTH);
+        add(centerPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createCenterPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.add(createTodoPanel(), BorderLayout.CENTER);
+        panel.add(createTagPanel(), BorderLayout.EAST);
+        return panel;
+    }
+
+    private JPanel createTodoPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JScrollPane(todoTable), BorderLayout.CENTER);
         
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -102,10 +135,36 @@ public class MainFrame extends JFrame {
         buttonPanel.add(deleteButton);
         buttonPanel.add(toggleButton);
         
-        centerPanel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private JPanel createTagPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setPreferredSize(new Dimension(280, 0));
+        addTagSection(panel, "Todo Tags:", tagList);
+        panel.add(Box.createVerticalStrut(10));
+        addTagSection(panel, "All Available Tags:", availableTagsList);
+        return panel;
+    }
+
+    private void addTagSection(JPanel parent, String title, JList<Tag> list) {
+        JLabel label = createBoldLabel(title);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        parent.add(label);
+        parent.add(Box.createVerticalStrut(5));
         
-        add(topPanel, BorderLayout.NORTH);
-        add(centerPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(list);
+        scrollPane.setPreferredSize(new Dimension(280, 120));
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        parent.add(scrollPane);
+    }
+
+    private JLabel createBoldLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+        return label;
     }
 
     private JPanel createInputRow(String labelText, JTextField textField, String buttonName, String buttonText) {
@@ -120,15 +179,22 @@ public class MainFrame extends JFrame {
 
     private void setupListeners() {
         findButton("addTodoButton").addActionListener(e -> addTodo());
-        findButton("addTagButton").addActionListener(e -> addTag());
         findButton("editButton").addActionListener(e -> editTodo());
         findButton("deleteButton").addActionListener(e -> deleteTodo());
         findButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
         findButton("searchButton").addActionListener(e -> searchTodos());
         findButton("showAllButton").addActionListener(e -> showAllTodos());
+        findButton("addTagButton").addActionListener(e -> addTag());
         todoDescriptionField.addActionListener(e -> addTodo());
-        tagNameField.addActionListener(e -> addTag());
         searchField.addActionListener(e -> searchTodos());
+        tagNameField.addActionListener(e -> addTag());
+        
+        // Add table selection listener for tags
+        todoTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                updateTodoTags(getSelectedTodo());
+            }
+        });
     }
 
     private JButton findButton(String name) {
@@ -156,6 +222,15 @@ public class MainFrame extends JFrame {
             controller.addTodo(description.trim());
             todoDescriptionField.setText("");
             refreshTodos();
+        }
+    }
+
+    public void addTag() {
+        String tagName = tagNameField.getText();
+        if (tagName != null && !tagName.trim().isEmpty()) {
+            controller.addTag(tagName.trim());
+            tagNameField.setText("");
+            refreshTags();
         }
     }
 
@@ -216,24 +291,36 @@ public class MainFrame extends JFrame {
         searchField.setText("");
     }
 
-    public void addTag() {
-        String tagName = tagNameField.getText();
-        if (tagName != null && !tagName.trim().isEmpty()) {
-            Tag created = controller.addTag(tagName.trim());
-            if (created != null) {
-                tagNameField.setText("");
-                refreshTags();
-            }
+    public void refreshTodos() {
+        int selectedRow = todoTable.getSelectedRow();
+        List<Todo> todos = controller.getAllTodos();
+        todoTableModel.setTodos(todos);
+        
+        // Restore selection if it was valid
+        if (selectedRow >= 0 && selectedRow < todos.size()) {
+            todoTable.setRowSelectionInterval(selectedRow, selectedRow);
+            updateTodoTags(todoTableModel.getTodoAt(selectedRow));
+        } else {
+            updateTodoTags(null);
         }
     }
 
     public void refreshTags() {
-        // Will implement when we add tag lists
+        List<Tag> tags = controller.getAllTags();
+        availableTagsListModel.clear();
+        tags.forEach(availableTagsListModel::addElement);
     }
 
-    public void refreshTodos() {
-        List<Todo> todos = controller.getAllTodos();
-        todoTableModel.setTodos(todos);
+    private void updateTodoTags(Todo todo) {
+        tagListModel.clear();
+        if (todo != null && todo.getTags() != null) {
+            todo.getTags().forEach(tagListModel::addElement);
+        }
+    }
+
+    public Todo getSelectedTodo() {
+        int selectedRow = todoTable.getSelectedRow();
+        return selectedRow >= 0 ? todoTableModel.getTodoAt(selectedRow) : null;
     }
 
     // TodoTableModel 
