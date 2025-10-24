@@ -6,6 +6,7 @@ import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.core.Robot;
 import org.assertj.swing.core.BasicRobot;
+import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -123,7 +124,7 @@ class MainFrameTest {
             window.button("editButton").click();
 
             window.dialog().textBox().deleteText().enterText("Updated");
-            window.dialog().button(withText("OK")).click();
+            window.dialog().button(JButtonMatcher.withText("OK")).click();
 
             verify(mockController).updateTodoDescription(1L, "Updated");
         }
@@ -137,9 +138,30 @@ class MainFrameTest {
             window.table("todoTable").selectRows(0);
             window.button("editButton").click();
 
-            window.dialog().cancelButton().click();
+            window.dialog().button(JButtonMatcher.withText("Cancel")).click();
 
             verify(mockController, never()).updateTodoDescription(anyLong(), anyString());
+        }
+        @Test
+        void searchTodos_viaButton_filtersResults() {
+            when(mockController.searchTodos("Buy")).thenReturn(
+                List.of(new Todo("Buy milk"), new Todo("Buy eggs"))
+            );
+
+            window.textBox("searchField").enterText("Buy");
+            window.button("searchButton").click();
+
+            verify(mockController).searchTodos("Buy");
+        }
+
+        @Test
+        void searchTodos_viaEnterKey_filtersResults() {
+            when(mockController.searchTodos("Test")).thenReturn(List.of());
+
+            window.textBox("searchField").enterText("Test");
+            window.textBox("searchField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
+
+            verify(mockController).searchTodos("Test");
         }
     }
 }
