@@ -65,10 +65,13 @@ public class MainFrame extends JFrame {
         centerPanel.add(new JScrollPane(todoTable), BorderLayout.CENTER);
         
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton editButton = new JButton("Edit Todo");
+        editButton.setName("editButton");
         JButton deleteButton = new JButton("Delete Todo");
         deleteButton.setName("deleteButton");
         JButton toggleButton = new JButton("Toggle Done");
         toggleButton.setName("toggleDoneButton");
+        buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(toggleButton);
         
@@ -80,6 +83,7 @@ public class MainFrame extends JFrame {
 
     private void setupListeners() {
         findButton("addTodoButton").addActionListener(e -> addTodo());
+        findButton("editButton").addActionListener(e -> editTodo());
         findButton("deleteButton").addActionListener(e -> deleteTodo());
         findButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
         todoDescriptionField.addActionListener(e -> addTodo());
@@ -117,6 +121,26 @@ public class MainFrame extends JFrame {
             controller.addTodo(description.trim());
             todoDescriptionField.setText("");
             refreshTodos();
+        }
+    }
+
+    public void editTodo() {
+        int selectedRow = todoTable.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Please select a todo to edit", 
+                "No Selection", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        Todo todo = todoTableModel.getTodoAt(selectedRow);
+        String newDescription = (String) JOptionPane.showInputDialog(
+            this, "Edit todo description:", "Edit Todo",
+            JOptionPane.PLAIN_MESSAGE, null, null, todo.getDescription()
+        );
+        if (newDescription != null && !newDescription.trim().isEmpty()) {
+            if (controller.updateTodoDescription(todo.getId(), newDescription)) {
+                refreshTodos();
+                todoTable.setRowSelectionInterval(selectedRow, selectedRow);
+            }
         }
     }
 
