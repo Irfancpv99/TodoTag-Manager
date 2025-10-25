@@ -127,6 +127,51 @@ class MainFrameE2ETest {
 
         assertThat(window.list("availableTagsList").contents()).isEmpty();
     }
+    
+    @Test
+    @Order(3)
+    @DisplayName("Search and edit workflow")
+    void searchAndEdit() {
+        // Add multiple todos
+        addTodo("Buy groceries");
+        addTodo("Buy tickets");
+        addTodo("Clean house");
+        
+        Pause.pause(1000);
+        assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
+
+        // Search - THIS WILL FAIL
+        window.textBox("searchField").enterText("Buy");
+        window.button("searchButton").click();
+        Pause.pause(1000);
+
+        assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
+
+        // Show all
+        window.button("showAllButton").click();
+        Pause.pause(1000);
+
+        assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
+
+        // Edit first todo
+        window.table("todoTable").selectRows(0);
+        window.button("editButton").click();
+        Pause.pause(500);
+
+        window.dialog().textBox().deleteText().enterText("Updated task");
+        window.dialog().button(withText("OK")).click();
+        Pause.pause(1000);
+
+        assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
+            .isEqualTo("Updated task");
+    }
+
+    // Add helper method
+    private void addTodo(String description) {
+        window.textBox("todoDescriptionField").enterText(description);
+        window.button("addTodoButton").click();
+        Pause.pause(500);
+    }
 
     private void waitForTableUpdate(int expectedRowCount) {
         org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(5000);
