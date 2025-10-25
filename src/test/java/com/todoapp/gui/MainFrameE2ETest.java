@@ -132,7 +132,7 @@ class MainFrameE2ETest {
     @Order(3)
     @DisplayName("Search and edit workflow")
     void searchAndEdit() {
-        // Add multiple todos
+        // Add multiple todo
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
@@ -140,7 +140,6 @@ class MainFrameE2ETest {
         Pause.pause(1000);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        // Search - THIS WILL FAIL
         window.textBox("searchField").enterText("Buy");
         window.button("searchButton").click();
         Pause.pause(1000);
@@ -153,7 +152,7 @@ class MainFrameE2ETest {
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        // Edit first todo
+        // Edit  todo
         window.table("todoTable").selectRows(0);
         window.button("editButton").click();
         Pause.pause(500);
@@ -238,6 +237,15 @@ class MainFrameE2ETest {
         resetField("com.todoapp.config.AppConfig", "instance");
         resetField("com.todoapp.repository.RepositoryFactory", "instance");
         resetField("com.todoapp.config.DatabaseManager", "instance");
+    }
+    
+    private org.assertj.swing.core.GenericTypeMatcher<javax.swing.JButton> withText(String text) {
+        return new org.assertj.swing.core.GenericTypeMatcher<>(javax.swing.JButton.class) {
+            @Override
+            protected boolean isMatching(javax.swing.JButton button) {
+                return text.equals(button.getText());
+            }
+        };
     }
 
     private static void resetField(String className, String fieldName) {
