@@ -15,6 +15,8 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import java.lang.reflect.Field;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
@@ -41,11 +43,7 @@ class MainFrameE2ETest {
         configureMongoDB();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
-        frame = GuiActionRunner.execute(() -> {
-            TodoService service = new TodoService();
-            MainFrameController controller = new MainFrameController(service);
-            return new MainFrame(controller);
-        });
+        frame = GuiActionRunner.execute(() -> new MainFrame());
         window = new FrameFixture(robot, frame);
         window.show();
     }
@@ -61,8 +59,7 @@ class MainFrameE2ETest {
     @Order(1)
     @DisplayName("Complete todo lifecycle: add, mark done, delete")
     void todoLifecycle() {
-        
-    	window.textBox("todoDescriptionField").enterText("Buy groceries");
+        window.textBox("todoDescriptionField").enterText("Buy groceries");
         window.button("addTodoButton").click();
         waitForTableUpdate(1);
 
@@ -89,14 +86,18 @@ class MainFrameE2ETest {
     }
 
     private void waitForTableUpdate(int expectedRowCount) {
-     }
+       
+    }
 
     private static void configureMongoDB() throws Exception {
-     }
+       
+    }
 
     private void cleanDatabase() {
-      }
+       
+    }
 
     private static void resetSingletons() throws Exception {
-   	}
+       
+    }
 }
