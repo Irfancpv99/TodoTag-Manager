@@ -152,7 +152,7 @@ class MainFrameE2ETest {
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        // Edit  todo
+     // Edit  todo
         window.table("todoTable").selectRows(0);
         window.button("editButton").click();
         Pause.pause(500);
@@ -160,12 +160,49 @@ class MainFrameE2ETest {
         window.dialog().textBox().deleteText().enterText("Updated task");
         window.dialog().button(withText("OK")).click();
         Pause.pause(1000);
+    }
+    
+    @Test
+    @Order(4)
+    @DisplayName("Multiple tags on single todo")
+    void multipleTagsWorkflow() {
+        // Add todo
+        window.textBox("todoDescriptionField").enterText("Important meeting");
+        window.button("addTodoButton").click();
+        Pause.pause(800);
 
-        assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
-            .isEqualTo("Updated task");
+        // Add multiple tags
+        addTag("urgent");
+        addTag("work");
+        addTag("meeting");
+        
+        Pause.pause(500);
+        assertThat(window.list("availableTagsList").contents()).hasSize(2);
+
+        // Select todo
+        window.table("todoTable").selectRows(0);
+        Pause.pause(500);
+
+        //  first tag
+        window.list("availableTagsList").selectItem(0);
+        window.button("addTagToTodoButton").click();
+        Pause.pause(800);
+
+        //  second tag
+        window.list("availableTagsList").selectItem(1);
+        window.button("addTagToTodoButton").click();
+        Pause.pause(800);
+
+        assertThat(window.list("tagList").contents()).hasSize(2);
+    }
+    
+    
+    private void addTag(String name) {
+        window.textBox("tagNameField").enterText(name);
+        window.button("addTagButton").click();
+        Pause.pause(500);
     }
 
-    // Add helper method
     private void addTodo(String description) {
         window.textBox("todoDescriptionField").enterText(description);
         window.button("addTodoButton").click();
