@@ -101,7 +101,7 @@ class MainFrameE2ETest {
         window.button("addTagButton").click();
         waitForListUpdate("availableTagsList", 1);
 
-        assertThat(window.list("availableTagsList").contents()).hasSize(2);
+        assertThat(window.list("availableTagsList").contents()).hasSize(1);
         assertThat(window.list("availableTagsList").contents()[0]).contains("urgent");
 
         window.table("todoTable").selectRows(0);

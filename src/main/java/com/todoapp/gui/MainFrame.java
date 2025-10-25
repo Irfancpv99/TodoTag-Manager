@@ -216,24 +216,25 @@ public class MainFrame extends JFrame {
         
         todoTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                updateTodoTags(getSelectedTodo());
+                Todo selected = getSelectedTodo();
+                updateTodoTags(selected);
             }
         });
     }
 
     private JButton findButton(String name) {
-        return findButtonInContainer(getContentPane(), name);
+        return (JButton) findComponentByName(this, name);
     }
 
-    private JButton findButtonInContainer(Container container, String name) {
-        for (Component comp : container.getComponents()) {
-            if (comp instanceof JButton && name.equals(comp.getName())) {
-                return (JButton) comp;
+    private Component findComponentByName(Container container, String name) {
+        for (Component component : container.getComponents()) {
+            if (name.equals(component.getName())) {
+                return component;
             }
-            if (comp instanceof Container) {
-                JButton button = findButtonInContainer((Container) comp, name);
-                if (button != null) {
-                    return button;
+            if (component instanceof Container) {
+                Component found = findComponentByName((Container) component, name);
+                if (found != null) {
+                    return found;
                 }
             }
         }
@@ -243,57 +244,79 @@ public class MainFrame extends JFrame {
     public void addTodo() {
         executeAction(() -> {
             String description = getTextOrEmpty(todoDescriptionField);
-            if (!description.isEmpty()) {
-                Todo created = controller.addTodo(description);
-                if (created != null) {
-                    SwingUtilities.invokeLater(() -> {
-                        todoDescriptionField.setText("");
-                        refreshTodos();
-                    });
-                }
+            if (description.isEmpty()) {
+                SwingUtilities.invokeLater(() -> showMessage(
+                    "Please enter a description", "Empty Description", JOptionPane.WARNING_MESSAGE
+                ));
+                return;
+            }
+            Todo newTodo = controller.addTodo(description);
+            if (newTodo != null) {
+                SwingUtilities.invokeLater(() -> {
+                    todoDescriptionField.setText("");
+                    refreshTodos();
+                });
             }
         }, "Failed to add todo");
     }
 
     public void addTag() {
         executeAction(() -> {
-            String tagName = getTextOrEmpty(tagNameField);
-            if (!tagName.isEmpty()) {
-                Tag created = controller.addTag(tagName);
-                if (created != null) {
-                    SwingUtilities.invokeLater(() -> {
-                        tagNameField.setText("");
-                        refreshTags();
-                    });
-                }
+            String name = getTextOrEmpty(tagNameField);
+            if (name.isEmpty()) {
+                SwingUtilities.invokeLater(() -> showMessage(
+                    "Please enter a tag name", "Empty Tag Name", JOptionPane.WARNING_MESSAGE
+                ));
+                return;
+            }
+            Tag newTag = controller.addTag(name);
+            if (newTag != null) {
+                SwingUtilities.invokeLater(() -> {
+                    tagNameField.setText("");
+                    refreshTags();
+                });
             }
         }, "Failed to add tag");
     }
 
     public void addTagToTodo() {
-        executeAction(() -> {
-            Todo todo = getSelectedTodo();
-            Tag tag = availableTagsList.getSelectedValue();
-            if (todo == null || tag == null) {
-                return;
-            }
-            if (controller.addTagToTodo(todo.getId(), tag.getId())) {
-                SwingUtilities.invokeLater(() -> refreshAndReselect(todo.getId()));
-            }
-        }, "Failed to add tag to todo");
+        Todo todo = getSelectedTodo();
+        Tag tag = availableTagsList.getSelectedValue();
+        if (todo == null || tag == null) return;
+
+        if (controller.addTagToTodo(todo.getId(), tag.getId())) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTags();
+                refreshTodos();
+                for (int i = 0; i < todoTableModel.getRowCount(); i++) {
+                    if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
+                        todoTable.setRowSelectionInterval(i, i);
+                        updateTodoTags(todoTableModel.getTodoAt(i));
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     public void removeTagFromTodo() {
-        executeAction(() -> {
-            Todo todo = getSelectedTodo();
-            Tag tag = tagList.getSelectedValue();
-            if (todo == null || tag == null) {
-                return;
-            }
-            if (controller.removeTagFromTodo(todo.getId(), tag.getId())) {
-                SwingUtilities.invokeLater(() -> refreshAndReselect(todo.getId()));
-            }
-        }, "Failed to remove tag from todo");
+        Todo todo = getSelectedTodo();
+        Tag tag = tagList.getSelectedValue();
+        if (todo == null || tag == null) return;
+
+        if (controller.removeTagFromTodo(todo.getId(), tag.getId())) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTags();
+                refreshTodos();
+                for (int i = 0; i < todoTableModel.getRowCount(); i++) {
+                    if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
+                        todoTable.setRowSelectionInterval(i, i);
+                        updateTodoTags(todoTableModel.getTodoAt(i));
+                        break;
+                    }
+                }
+            });
+        }
     }
 
     public void deleteTag() {
