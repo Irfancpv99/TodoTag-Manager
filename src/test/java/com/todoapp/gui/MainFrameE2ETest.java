@@ -88,6 +88,45 @@ class MainFrameE2ETest {
         waitForTableUpdate(0);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(0);
     }
+    
+    @Test
+    @Order(2)
+    @DisplayName("Complete tag workflow: create, assign, remove")
+    void tagWorkflow() {
+        window.textBox("todoDescriptionField").enterText("Complete project");
+        window.button("addTodoButton").click();
+        waitForTableUpdate(1);
+
+        window.textBox("tagNameField").enterText("urgent");
+        window.button("addTagButton").click();
+        waitForListUpdate("availableTagsList", 1);
+
+        assertThat(window.list("availableTagsList").contents()).hasSize(2);
+        assertThat(window.list("availableTagsList").contents()[0]).contains("urgent");
+
+        window.table("todoTable").selectRows(0);
+        Pause.pause(300);
+        window.list("availableTagsList").selectItem(0);
+        window.button("addTagToTodoButton").click();
+        waitForListUpdate("tagList", 1);
+
+        assertThat(window.list("tagList").contents()).hasSize(1);
+        assertThat(window.list("tagList").contents()[0]).contains("urgent");
+
+        window.list("tagList").selectItem(0);
+        window.button("removeTagFromTodoButton").click();
+        waitForListUpdate("tagList", 0);
+
+        assertThat(window.list("tagList").contents()).isEmpty();
+
+        // Delete tag
+        window.list("availableTagsList").selectItem(0);
+        window.button("deleteTagButton").click();
+        Pause.pause(500);
+        waitForListUpdate("availableTagsList", 0);
+
+        assertThat(window.list("availableTagsList").contents()).isEmpty();
+    }
 
     private void waitForTableUpdate(int expectedRowCount) {
         org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(5000);
@@ -96,6 +135,18 @@ class MainFrameE2ETest {
             @Override
             public boolean test() {
                 return window.table("todoTable").rowCount() == expectedRowCount;
+            }
+        };
+        Pause.pause(condition, timeout);
+    }
+
+    private void waitForListUpdate(String listName, int expectedSize) {
+        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(5000);
+        org.assertj.swing.timing.Condition condition = new org.assertj.swing.timing.Condition(
+            "List '" + listName + "' size to be " + expectedSize) {
+            @Override
+            public boolean test() {
+                return window.list(listName).contents().length == expectedSize;
             }
         };
         Pause.pause(condition, timeout);
