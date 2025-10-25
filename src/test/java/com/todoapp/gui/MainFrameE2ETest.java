@@ -43,7 +43,11 @@ class MainFrameE2ETest {
         configureMongoDB();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
-        frame = GuiActionRunner.execute(() -> new MainFrame());
+        frame = GuiActionRunner.execute(() -> {
+            TodoService service = new TodoService();
+            MainFrameController controller = new MainFrameController(service);
+            return new MainFrame(controller);
+        });
         window = new FrameFixture(robot, frame);
         window.show();
     }
@@ -86,18 +90,66 @@ class MainFrameE2ETest {
     }
 
     private void waitForTableUpdate(int expectedRowCount) {
-       
+        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(5000);
+        org.assertj.swing.timing.Condition condition = new org.assertj.swing.timing.Condition(
+            "Table row count to be " + expectedRowCount) {
+            @Override
+            public boolean test() {
+                return window.table("todoTable").rowCount() == expectedRowCount;
+            }
+        };
+        Pause.pause(condition, timeout);
     }
 
     private static void configureMongoDB() throws Exception {
-       
+        AppConfig config = AppConfig.getInstance();
+        config.setDatabaseType(DatabaseType.MONGODB);
+
+        Field propsField = AppConfig.class.getDeclaredField("properties");
+        propsField.setAccessible(true);
+        java.util.Properties props = (java.util.Properties) propsField.get(config);
+
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        String[] parts = connectionString.replace("mongodb://", "").split(":");
+        String host = parts[0];
+        String port = parts[1].split("/")[0];
+
+        props.setProperty("mongodb.host", host);
+        props.setProperty("mongodb.port", port);
+        props.setProperty("mongodb.database", "e2e_test");
     }
 
     private void cleanDatabase() {
-       
+        try {
+            TodoService service = new TodoService();
+            service.getAllTodos().forEach(todo -> {
+                try {
+                    service.deleteTodo(todo.getId());
+                } catch (Exception ignored) {
+                }
+            });
+            service.getAllTags().forEach(tag -> {
+                try {
+                    service.deleteTag(tag.getId());
+                } catch (Exception ignored) {
+                }
+            });
+        } catch (Exception ignored) {
+        }
     }
 
     private static void resetSingletons() throws Exception {
-       
+        resetField("com.todoapp.config.AppConfig", "instance");
+        resetField("com.todoapp.repository.RepositoryFactory", "instance");
+        resetField("com.todoapp.config.DatabaseManager", "instance");
+    }
+
+    private static void resetField(String className, String fieldName) {
+        try {
+            Field field = Class.forName(className).getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(null, null);
+        } catch (Exception ignored) {
+        }
     }
 }
