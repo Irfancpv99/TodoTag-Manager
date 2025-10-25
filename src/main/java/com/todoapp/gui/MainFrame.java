@@ -279,7 +279,7 @@ public class MainFrame extends JFrame {
         }, "Failed to add tag");
     }
 
-    public void addTagToTodo() {
+  public void addTagToTodo() {
         Todo todo = getSelectedTodo();
         Tag tag = availableTagsList.getSelectedValue();
         if (todo == null || tag == null) return;
@@ -288,6 +288,7 @@ public class MainFrame extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 refreshTags();
                 refreshTodos();
+                availableTagsList.clearSelection();
                 for (int i = 0; i < todoTableModel.getRowCount(); i++) {
                     if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
                         todoTable.setRowSelectionInterval(i, i);

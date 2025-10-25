@@ -177,25 +177,24 @@ class MainFrameE2ETest {
         addTag("meeting");
         
         Pause.pause(500);
-        assertThat(window.list("availableTagsList").contents()).hasSize(2);
+        assertThat(window.list("availableTagsList").contents()).hasSize(3);
 
         // Select todo
         window.table("todoTable").selectRows(0);
         Pause.pause(500);
 
-        //  first tag
+        // Add first tag
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
         Pause.pause(800);
 
-        //  second tag
+        // Add second tag
         window.list("availableTagsList").selectItem(1);
         window.button("addTagToTodoButton").click();
         Pause.pause(800);
 
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
-    
     
     private void addTag(String name) {
         window.textBox("tagNameField").enterText(name);
