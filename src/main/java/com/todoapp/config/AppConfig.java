@@ -7,7 +7,7 @@ import java.util.Properties;
 public class AppConfig {
     
     private static AppConfig instance;
-    private final Properties properties;
+    protected final Properties properties;
 
     protected AppConfig() {
         properties = new Properties();
@@ -30,9 +30,7 @@ public class AppConfig {
                 setDefaultProperties();
             }
         } catch (IOException e) {
-            // Intentionally using default properties if file cannot be loaded
-            setDefaultProperties();
-        }
+               }
     }
 
     protected void setDefaultProperties() {
