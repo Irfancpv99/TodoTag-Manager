@@ -50,6 +50,7 @@ class MainFrameE2ETest {
         });
         window = new FrameFixture(robot, frame);
         window.show();
+        Pause.pause(500);
     }
 
     @AfterEach
