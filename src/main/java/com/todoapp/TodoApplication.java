@@ -1,0 +1,22 @@
+package com.todoapp;
+
+import com.todoapp.gui.MainFrame;
+import com.todoapp.gui.MainFrameController;
+import com.todoapp.service.TodoService;
+
+import javax.swing.SwingUtilities;
+
+public class TodoApplication {
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            TodoService todoService = new TodoService();
+            MainFrameController controller = new MainFrameController(todoService);
+            MainFrame mainFrame = new MainFrame(controller);
+            
+            mainFrame.refreshTodos();
+            mainFrame.refreshTags();
+            mainFrame.setVisible(true);
+        });
+    }
+}
