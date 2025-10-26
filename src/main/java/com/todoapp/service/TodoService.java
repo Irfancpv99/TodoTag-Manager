@@ -25,7 +25,7 @@ public class TodoService {
     public TodoService(TodoRepository todoRepository, TagRepository tagRepository) {
         this.todoRepository = todoRepository;
         this.tagRepository = tagRepository;
-        this.repositoryFactory = null; // 
+        this.repositoryFactory = null; 
     }
 
     // 				TODO Section

@@ -30,6 +30,8 @@ public class AppConfig {
                 setDefaultProperties();
             }
         } catch (IOException e) {
+            // Intentionally using default properties if file cannot be loaded
+            setDefaultProperties();
         }
     }
 

@@ -2,6 +2,5 @@ package com.todoapp.config;
 
 
 public enum DatabaseType {
-    MONGODB,
-    MYSQL
-}
+    MONGODB,MYSQL
+    }
