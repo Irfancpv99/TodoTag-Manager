@@ -21,6 +21,7 @@ public class MainFrameController {
         }
         return todoService.createTodo(description.trim());
     }
+    
     public Tag addTag(String tagName) {
         if (tagName == null || tagName.trim().isEmpty()) {
             return null;
@@ -33,6 +34,7 @@ public class MainFrameController {
         
         return todoService.createTag(tagName.trim());
     }
+    
     public boolean deleteTodo(Long todoId) {
         if (todoId == null) {
             return false;
@@ -40,6 +42,7 @@ public class MainFrameController {
         todoService.deleteTodo(todoId);
         return true;
     }
+    
     public boolean updateTodoDescription(Long todoId, String newDescription) {
         if (todoId == null || newDescription == null || newDescription.trim().isEmpty()) {
             return false;
@@ -75,6 +78,7 @@ public class MainFrameController {
             return true;
         }   
     }
+    
     public List<Todo> searchTodos(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return todoService.getAllTodos();
@@ -89,6 +93,7 @@ public class MainFrameController {
     public List<Tag> getAllTags() {
         return todoService.getAllTags();
     }
+    
     public boolean addTagToTodo(Long todoId, Long tagId) {
         if (todoId == null || tagId == null) {
             return false;

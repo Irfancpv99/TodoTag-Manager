@@ -12,6 +12,7 @@ import java.util.List;
 public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private static final String WINDOW_TITLE = "Todo Manager - TDD Development Demo Application";
+    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(MainFrame.class.getName());
 
     
     // UI Components
@@ -37,7 +38,7 @@ public class MainFrame extends JFrame {
         setupLayout();
         setupListeners();
         
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
     }
@@ -213,7 +214,6 @@ public class MainFrame extends JFrame {
         todoDescriptionField.addActionListener(e -> addTodo());
         searchField.addActionListener(e -> searchTodos());
         tagNameField.addActionListener(e -> addTag());
-        
         todoTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 Todo selected = getSelectedTodo();
@@ -223,16 +223,23 @@ public class MainFrame extends JFrame {
     }
 
     private JButton findButton(String name) {
-        return (JButton) findComponentByName(this, name);
+        Component component = findComponentByName(this, name);
+        if (component instanceof JButton button) {
+            return button;
+        }
+        throw new IllegalStateException("Button not found: " + name);
     }
 
     private Component findComponentByName(Container container, String name) {
+        if (name.equals(container.getName())) {
+            return container;
+        }
         for (Component component : container.getComponents()) {
             if (name.equals(component.getName())) {
                 return component;
             }
-            if (component instanceof Container) {
-                Component found = findComponentByName((Container) component, name);
+            if (component instanceof Container containerComponent) {
+                Component found = findComponentByName(containerComponent, name);
                 if (found != null) {
                     return found;
                 }
@@ -246,15 +253,16 @@ public class MainFrame extends JFrame {
             String description = getTextOrEmpty(todoDescriptionField);
             if (description.isEmpty()) {
                 SwingUtilities.invokeLater(() -> showMessage(
-                    "Please enter a description", "Empty Description", JOptionPane.WARNING_MESSAGE
+                    "Description cannot be empty", "Invalid Input", JOptionPane.WARNING_MESSAGE
                 ));
                 return;
             }
-            Todo newTodo = controller.addTodo(description);
-            if (newTodo != null) {
+            
+            Todo todo = controller.addTodo(description);
+            if (todo != null) {
                 SwingUtilities.invokeLater(() -> {
-                    todoDescriptionField.setText("");
                     refreshTodos();
+                    todoDescriptionField.setText("");
                 });
             }
         }, "Failed to add todo");
@@ -262,48 +270,62 @@ public class MainFrame extends JFrame {
 
     public void addTag() {
         executeAction(() -> {
-            String name = getTextOrEmpty(tagNameField);
-            if (name.isEmpty()) {
+            String tagName = getTextOrEmpty(tagNameField);
+            if (tagName.isEmpty()) {
                 SwingUtilities.invokeLater(() -> showMessage(
-                    "Please enter a tag name", "Empty Tag Name", JOptionPane.WARNING_MESSAGE
+                    "Tag name cannot be empty", "Invalid Input", JOptionPane.WARNING_MESSAGE
                 ));
                 return;
             }
-            Tag newTag = controller.addTag(name);
-            if (newTag != null) {
+            
+            Tag tag = controller.addTag(tagName);
+            if (tag != null) {
                 SwingUtilities.invokeLater(() -> {
-                    tagNameField.setText("");
                     refreshTags();
+                    tagNameField.setText("");
                 });
             }
         }, "Failed to add tag");
     }
 
-  public void addTagToTodo() {
-        Todo todo = getSelectedTodo();
-        Tag tag = availableTagsList.getSelectedValue();
-        if (todo == null || tag == null) return;
-
-        if (controller.addTagToTodo(todo.getId(), tag.getId())) {
-            SwingUtilities.invokeLater(() -> {
-                refreshTags();
-                refreshTodos();
-                availableTagsList.clearSelection();
-                for (int i = 0; i < todoTableModel.getRowCount(); i++) {
-                    if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
-                        todoTable.setRowSelectionInterval(i, i);
-                        updateTodoTags(todoTableModel.getTodoAt(i));
-                        break;
+    public void addTagToTodo() {
+        executeAction(() -> {
+            Todo todo = getSelectedTodo();
+            Tag tag = availableTagsList.getSelectedValue();
+            
+            if (todo == null || tag == null) {
+                SwingUtilities.invokeLater(() -> showMessage(
+                    "Please select both a todo and a tag", "Invalid Selection", JOptionPane.WARNING_MESSAGE
+                ));
+                return;
+            }
+            
+            if (controller.addTagToTodo(todo.getId(), tag.getId())) {
+                SwingUtilities.invokeLater(() -> {
+                    refreshTags();
+                    refreshTodos();
+                    for (int i = 0; i < todoTableModel.getRowCount(); i++) {
+                        if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
+                            todoTable.setRowSelectionInterval(i, i);
+                            updateTodoTags(todoTableModel.getTodoAt(i));
+                            break;
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
+        }, "Failed to add tag to todo");
     }
 
     public void removeTagFromTodo() {
         Todo todo = getSelectedTodo();
         Tag tag = tagList.getSelectedValue();
-        if (todo == null || tag == null) return;
+        
+        if (todo == null || tag == null) {
+            SwingUtilities.invokeLater(() -> showMessage(
+                "Please select both a todo and a tag to remove", "Invalid Selection", JOptionPane.WARNING_MESSAGE
+            ));
+            return;
+        }
 
         if (controller.removeTagFromTodo(todo.getId(), tag.getId())) {
             SwingUtilities.invokeLater(() -> {
@@ -336,22 +358,6 @@ public class MainFrame extends JFrame {
         }, "Failed to delete tag");
     }
 
-    private void refreshAndReselect(Long todoId) {
-        controller.getAllTodos().stream()
-            .filter(t -> t.getId().equals(todoId))
-            .findFirst()
-            .ifPresent(this::updateTodoTags);
-        
-        refreshTodos();
-        
-        for (int i = 0; i < todoTableModel.getRowCount(); i++) {
-            if (todoTableModel.getTodoAt(i).getId().equals(todoId)) {
-                todoTable.setRowSelectionInterval(i, i);
-                break;
-            }
-        }
-    }
-
     public void editTodo() {
         executeAction(() -> {
             int selectedRow = todoTable.getSelectedRow();
@@ -366,13 +372,11 @@ public class MainFrame extends JFrame {
                 this, "Edit todo description:", "Edit Todo",
                 JOptionPane.PLAIN_MESSAGE, null, null, todo.getDescription()
             );
-            if (newDescription != null && !newDescription.trim().isEmpty()) {
-                if (controller.updateTodoDescription(todo.getId(), newDescription)) {
-                    SwingUtilities.invokeLater(() -> {
-                        refreshTodos();
-                        todoTable.setRowSelectionInterval(selectedRow, selectedRow);
-                    });
-                }
+            if (newDescription != null && !newDescription.trim().isEmpty() && controller.updateTodoDescription(todo.getId(), newDescription)) {
+                SwingUtilities.invokeLater(() -> {
+                    refreshTodos();
+                    todoTable.setRowSelectionInterval(selectedRow, selectedRow);
+                });
             }
         }, "Failed to edit todo");
     }
@@ -454,7 +458,7 @@ public class MainFrame extends JFrame {
         try {
             action.run();
         } catch (Exception e) {
-            System.err.println(errorMessage + ": " + e.getMessage());
+            LOG.log(java.util.logging.Level.SEVERE, errorMessage, e);
             SwingUtilities.invokeLater(() -> showMessage(
                 errorMessage + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE
             ));
@@ -479,7 +483,7 @@ public class MainFrame extends JFrame {
     static class TodoTableModel extends AbstractTableModel {
         private static final long serialVersionUID = 1L;
         private final String[] columnNames = {"ID", "Description", "Done"};
-        private List<Todo> todos = new ArrayList<>();
+        private transient List<Todo> todos = new ArrayList<>();
 
         public void setTodos(List<Todo> todos) {
             this.todos = new ArrayList<>(todos);
