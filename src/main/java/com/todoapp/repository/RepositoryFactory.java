@@ -9,6 +9,7 @@ import com.todoapp.repository.mysql.MySqlTagRepository;
 import com.todoapp.repository.mysql.MySqlTodoRepository;
 import jakarta.persistence.EntityManager;
 
+@SuppressWarnings("java:S6548") 
 public class RepositoryFactory {
     
     private static RepositoryFactory instance;

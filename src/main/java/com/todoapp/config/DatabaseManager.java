@@ -8,6 +8,19 @@ import jakarta.persistence.Persistence;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Manages database connections and EntityManager lifecycle.
+ * 
+ * Uses Singleton pattern because:
+ * - Manages expensive database connection resources that should be shared application-wide
+ * - Ensures single EntityManagerFactory per application lifecycle
+ * - Thread-safe initialization with synchronized getInstance()
+ * 
+ * The Singleton pattern is appropriate here despite SonarCloud warnings because
+ * this class manages stateful, expensive resources (database connections) that
+ * must be shared across the application and properly cleaned up on shutdown.
+ */
+@SuppressWarnings("java:S6548") // Singleton pattern is intentional and necessary for resource management
 public class DatabaseManager {
     private static DatabaseManager instance;
     private EntityManagerFactory entityManagerFactory;
@@ -38,7 +51,7 @@ public class DatabaseManager {
             this.entityManagerFactory = Persistence.createEntityManagerFactory("todoapp", properties);
             this.entityManager = entityManagerFactory.createEntityManager();
         } catch (Exception e) {
-            throw new RuntimeException("Database initialization failed", e);
+            throw new IllegalStateException("Database initialization failed", e);
         }
     }
 
