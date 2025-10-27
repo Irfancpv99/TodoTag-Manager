@@ -25,7 +25,7 @@ public class AppConfig {
     private static AppConfig instance;
     private final Properties properties;
 
-    private AppConfig() {
+    AppConfig() {
         properties = new Properties();
         loadProperties();
     }
