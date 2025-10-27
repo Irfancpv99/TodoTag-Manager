@@ -163,6 +163,16 @@ class MainFrameTest {
 
             verify(mockController).searchTodos("Test");
         }
+        
+        @Test
+        void searchTodos_trimsWhitespace() {
+            when(mockController.searchTodos("test")).thenReturn(List.of());
+
+            window.textBox("searchField").enterText("  test  ");
+            window.button("searchButton").click();
+
+            verify(mockController).searchTodos("test");
+        }
     }
     @Nested
     class TagOperations extends TestBase {
@@ -293,15 +303,7 @@ class MainFrameTest {
             verify(mockController).addTag("urgent");
         }
 
-        @Test
-        void searchTodos_trimsWhitespace() {
-            when(mockController.searchTodos("test")).thenReturn(List.of());
-
-            window.textBox("searchField").enterText("  test  ");
-            window.button("searchButton").click();
-
-            verify(mockController).searchTodos("test");
-        }
+        
     }
     @Nested
     class ExceptionHandling extends TestBase {
