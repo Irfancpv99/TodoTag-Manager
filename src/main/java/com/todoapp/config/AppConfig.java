@@ -2,6 +2,7 @@ package com.todoapp.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.Properties;
 
 public class AppConfig {
@@ -40,15 +41,17 @@ public class AppConfig {
     /* ---------- loading ---------- */
     
     private void loadProperties() {
-        try (InputStream in = getClass().getClassLoader()
-                              .getResourceAsStream("application.properties")) {
-            if (in != null) {
-                properties.load(in);
-            } else {
-                setDefaultProperties();
-            }
-        } catch (IOException ignored) {
-            setDefaultProperties();          
+        InputStream in = getClass().getClassLoader().getResourceAsStream("application.properties");
+
+        if (in == null) {
+            setDefaultProperties();
+            return;
+        }
+
+        try {
+            properties.load(in);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

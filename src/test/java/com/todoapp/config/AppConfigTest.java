@@ -31,7 +31,6 @@ class AppConfigTest {
     void shouldLoadPropertiesFromExistingFile() {
         AppConfig config = AppConfig.getInstance();
         
-        // Test that properties are loaded (type depends on application.properties content)
         assertNotNull(config.getDatabaseType());
         assertEquals("localhost", config.getMongoDbHost());
         assertEquals(27017, config.getMongoDbPort());
