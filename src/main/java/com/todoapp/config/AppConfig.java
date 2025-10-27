@@ -5,11 +5,27 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class AppConfig {
-    
-    private static AppConfig instance;
-    protected final Properties properties;
 
-    protected AppConfig() {
+    /* ---------- constants for  property key ---------- */
+    private static final String KEY_DB_TYPE        = "database.type";
+    private static final String KEY_MONGO_HOST     = "mongodb.host";
+    private static final String KEY_MONGO_PORT     = "mongodb.port";
+    private static final String KEY_MONGO_DATABASE = "mongodb.database";
+    private static final String KEY_MYSQL_URL      = "mysql.url";
+    private static final String KEY_MYSQL_USER     = "mysql.username";
+    private static final String KEY_MYSQL_PASS     = "mysql.password";
+
+    /* ---------- default values ---------- */
+    private static final String DEFAULT_DB_TYPE        = "MONGODB";
+    private static final String DEFAULT_MONGO_HOST     = "localhost";
+    private static final String DEFAULT_MONGO_PORT     = "27017";
+    private static final String DEFAULT_MONGO_DATABASE = "todoapp";
+
+    /* ---------- singleton ---------- */
+    private static AppConfig instance;
+    private final Properties properties;
+
+    private AppConfig() {
         properties = new Properties();
         loadProperties();
     }
@@ -21,58 +37,55 @@ public class AppConfig {
         return instance;
     }
 
-    protected void loadProperties() {
-        try (InputStream input = getClass().getClassLoader()
-                .getResourceAsStream("application.properties")) {
-            if (input != null) {
-                properties.load(input);
+    /* ---------- loading ---------- */
+    
+    private void loadProperties() {
+        try (InputStream in = getClass().getClassLoader()
+                              .getResourceAsStream("application.properties")) {
+            if (in != null) {
+                properties.load(in);
             } else {
                 setDefaultProperties();
             }
-        } catch (IOException e) {
-               }
+        } catch (IOException ignored) {
+            setDefaultProperties();          
+        }
     }
 
-    protected void setDefaultProperties() {
-        properties.setProperty("database.type", "MONGODB");
-        properties.setProperty("mongodb.host", "localhost");
-        properties.setProperty("mongodb.port", "27017");
-        properties.setProperty("mongodb.database", "todoapp");
-        properties.setProperty("mysql.url", "jdbc:mysql://localhost:3306/todoapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-        properties.setProperty("mysql.username", "todouser");
-        properties.setProperty("mysql.password", "todopassword");
+    private void setDefaultProperties() {
+        properties.setProperty(KEY_DB_TYPE,        DEFAULT_DB_TYPE);
+        properties.setProperty(KEY_MONGO_HOST,     DEFAULT_MONGO_HOST);
+        properties.setProperty(KEY_MONGO_PORT,     DEFAULT_MONGO_PORT);
+        properties.setProperty(KEY_MONGO_DATABASE, DEFAULT_MONGO_DATABASE);
+        properties.setProperty(KEY_MYSQL_URL,
+                "jdbc:mysql://localhost:3306/todoapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
+        properties.setProperty(KEY_MYSQL_USER, "todouser");
+        properties.setProperty(KEY_MYSQL_PASS, "todopassword");
     }
 
+    /* ---------- public helpers ---------- */
     public DatabaseType getDatabaseType() {
-        String type = properties.getProperty("database.type", "MONGODB");
+        String type = properties.getProperty(KEY_DB_TYPE, DEFAULT_DB_TYPE);
         return DatabaseType.valueOf(type.toUpperCase());
     }
 
     public void setDatabaseType(DatabaseType type) {
-        properties.setProperty("database.type", type.name());
+        properties.setProperty(KEY_DB_TYPE, type.name());
     }
 
     public String getMongoDbHost() {
-        return properties.getProperty("mongodb.host", "localhost");
+        return properties.getProperty(KEY_MONGO_HOST, DEFAULT_MONGO_HOST);
     }
 
     public int getMongoDbPort() {
-        return Integer.parseInt(properties.getProperty("mongodb.port", "27017"));
+        return Integer.parseInt(properties.getProperty(KEY_MONGO_PORT, DEFAULT_MONGO_PORT));
     }
 
     public String getMongoDbDatabase() {
-        return properties.getProperty("mongodb.database", "todoapp");
+        return properties.getProperty(KEY_MONGO_DATABASE, DEFAULT_MONGO_DATABASE);
     }
 
-    public String getMySqlUrl() {
-        return properties.getProperty("mysql.url");
-    }
-
-    public String getMySqlUsername() {
-        return properties.getProperty("mysql.username");
-    }
-
-    public String getMySqlPassword() {
-        return properties.getProperty("mysql.password");
-    }
+    public String getMySqlUrl()      { return properties.getProperty(KEY_MYSQL_URL);  }
+    public String getMySqlUsername() { return properties.getProperty(KEY_MYSQL_USER); }
+    public String getMySqlPassword() { return properties.getProperty(KEY_MYSQL_PASS); }
 }
