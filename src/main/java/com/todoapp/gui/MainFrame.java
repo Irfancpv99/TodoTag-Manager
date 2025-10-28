@@ -85,10 +85,10 @@ public class MainFrame extends JFrame {
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         
-        // Add todo input row
+        // Add  input row
         topPanel.add(createInputRow("Add Todo:", todoDescriptionField, "addTodoButton", "Add Todo"));
         
-        // Add tag input row
+        // Add  input row
         topPanel.add(createInputRow("Add Tag:", tagNameField, "addTagButton", "Add Tag"));
         
         // Create search panel
@@ -329,8 +329,8 @@ public class MainFrame extends JFrame {
             if (controller.deleteTag(selected.getId())) {
                 SwingUtilities.invokeLater(() -> {
                     refreshTags();
-                    refreshTodos(); // Refresh todos in case any had this tag
-                    tagListModel.clear(); // Clear todo tags display
+                    refreshTodos();
+                    tagListModel.clear(); 
                 });
             }
         }, "Failed to delete tag");
