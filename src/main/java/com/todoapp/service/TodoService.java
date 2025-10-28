@@ -28,7 +28,7 @@ public class TodoService {
         this.repositoryFactory = null; 
     }
 
-    // 				TODO Section
+    // 				 Section
     public List<Todo> getAllTodos() {
         return todoRepository.findAll();
     }
@@ -143,7 +143,7 @@ public class TodoService {
         return tagRepository.findByNameContaining(keyword);
     }
 
-    // 					TODO-TAG Relationship 
+    // 					Model Relationship 
 
     public Todo addTagToTodo(Long todoId, Long tagId) {
         return executeWithTransaction(() -> {

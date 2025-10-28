@@ -132,7 +132,7 @@ class MainFrameE2ETest {
     @Order(3)
     @DisplayName("Search and edit workflow")
     void searchAndEdit() {
-        // Add multiple todo
+        // Add multiple 
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
@@ -152,7 +152,7 @@ class MainFrameE2ETest {
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-     // Edit  todo
+     // Edit  
         window.table("todoTable").selectRows(0);
         window.button("editButton").click();
         Pause.pause(500);
@@ -166,7 +166,7 @@ class MainFrameE2ETest {
     @Order(4)
     @DisplayName("Multiple tags on single todo")
     void multipleTagsWorkflow() {
-        // Add todo
+        // Add 
         window.textBox("todoDescriptionField").enterText("Important meeting");
         window.button("addTodoButton").click();
         Pause.pause(800);
@@ -179,7 +179,7 @@ class MainFrameE2ETest {
         Pause.pause(500);
         assertThat(window.list("availableTagsList").contents()).hasSize(3);
 
-        // Select todo
+        // Select 
         window.table("todoTable").selectRows(0);
         Pause.pause(500);
 
