@@ -86,7 +86,7 @@ class MainFrameE2ETest {
         Pause.pause(1500);
 
         waitForTableUpdate(0);
-        assertThat(window.table("todoTable").rowCount()).isEqualTo(0);
+        assertThat(window.table("todoTable").rowCount()).isZero();
     }
     
     @Test
@@ -263,13 +263,13 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                }
+               }
             });
         } catch (Exception ignored) {
-        }
+         }
     }
 
-    private static void resetSingletons() throws Exception {
+    private static void resetSingletons() {
         resetField("com.todoapp.config.AppConfig", "instance");
         resetField("com.todoapp.repository.RepositoryFactory", "instance");
         resetField("com.todoapp.config.DatabaseManager", "instance");
@@ -290,6 +290,6 @@ class MainFrameE2ETest {
             field.setAccessible(true);
             field.set(null, null);
         } catch (Exception ignored) {
-        }
+             }
     }
 }
