@@ -257,15 +257,18 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
+                    // Intentionally ignored - best effort cleanup
                 }
             });
             service.getAllTags().forEach(tag -> {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
+                    // Intentionally ignored - best effort cleanup
                }
             });
         } catch (Exception ignored) {
+            // Intentionally ignored - cleanup failure should not fail test
          }
     }
 
@@ -290,6 +293,7 @@ class MainFrameE2ETest {
             field.setAccessible(true);
             field.set(null, null);
         } catch (Exception ignored) {
+            // Intentionally ignored - field may not exist or be accessible
              }
     }
 }
