@@ -117,18 +117,18 @@ class MainFrameControllerTest {
     }
 
     @Test
-    void toggleTodoDone_nullId_returnsNull() {
-        assertNull(controller.toggleTodoDone(null));
+    void toggleTodoDone_nullId_returnsFalse() {
+        assertFalse(controller.toggleTodoDone(null));
         verify(service, never()).getTodoById(anyLong());
         verify(service, never()).markTodoComplete(anyLong());
         verify(service, never()).markTodoIncomplete(anyLong());
     }
 
     @Test
-    void toggleTodoDone_todoNotFound_returnsNull() {
+    void toggleTodoDone_todoNotFound_returnsFalse() {
         when(service.getTodoById(1L)).thenReturn(Optional.empty());
 
-        assertNull(controller.toggleTodoDone(1L));
+        assertFalse(controller.toggleTodoDone(1L));
         verify(service).getTodoById(1L);
         verify(service, never()).markTodoComplete(anyLong());
         verify(service, never()).markTodoIncomplete(anyLong());

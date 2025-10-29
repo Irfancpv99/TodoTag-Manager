@@ -1,6 +1,7 @@
 package com.todoapp.gui;
 
 import com.todoapp.model.Tag;
+
 import com.todoapp.model.Todo;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
@@ -8,11 +9,8 @@ import org.assertj.swing.core.Robot;
 import org.assertj.swing.core.BasicRobot;
 import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.junit.jupiter.api.*;
-
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 

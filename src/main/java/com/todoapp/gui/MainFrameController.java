@@ -59,14 +59,14 @@ public class MainFrameController {
         return true;
     }
     
-    public Boolean toggleTodoDone(Long todoId) {
+    public boolean toggleTodoDone(Long todoId) {
         if (todoId == null) {
-            return null;
+            return false;
         }
         
         Optional<Todo> todoOpt = todoService.getTodoById(todoId);
         if (todoOpt.isEmpty()) {
-            return null;
+            return false;
         }
         
         Todo todo = todoOpt.get();
