@@ -57,6 +57,7 @@ class TodoServiceIntegrationTest {
                 todoService.deleteTag(tag.getId());
             }
         } catch (Exception e) {
+            // Intentionally ignored - cleanup failure should not fail test teardown
        }
     }
 
@@ -71,7 +72,7 @@ class TodoServiceIntegrationTest {
             rfInstance.setAccessible(true);
             rfInstance.set(null, null);
         } catch (Exception e) {
-          
+            // Intentionally ignored - RepositoryFactory class may not exist in test context
         }
 
         try {
@@ -80,6 +81,7 @@ class TodoServiceIntegrationTest {
             dmInstance.setAccessible(true);
             dmInstance.set(null, null);
         } catch (Exception e) {
+            // Intentionally ignored - DatabaseManager class may not exist in test context
           }
     }
 
