@@ -226,7 +226,7 @@ class TodoServiceIntegrationTest {
         assertEquals(0, untagged.getTags().size(), "Todo should have no tags after removal");
     }
     
-//  Search Todo with MONGODB
+//  Search  with MONGODB
     
     @Test
     @Order(7)
@@ -248,7 +248,7 @@ class TodoServiceIntegrationTest {
                 "All results should contain 'Buy'");
     }
     
-//  Search Todo with MYSQL
+//  Search  with MYSQL
 
     @Test
     @Order(8)
@@ -270,7 +270,7 @@ class TodoServiceIntegrationTest {
                 "All results should contain 'Buy'");
     }
     
-//    Completed & Incomplete Todo With MongoD
+//    Completed & Incomplete  With MongoD
     
     @Test
     @Order(9)
@@ -303,7 +303,7 @@ class TodoServiceIntegrationTest {
         assertFalse(incomplete.get(0).isDone(), "Incomplete list should contain not-done todos");
     }
   
-//  Completed & Incomplete Todo wITH MYSQL	
+//  Completed & Incomplete  wITH MYSQL	
     
     @Test
     @Order(10)
