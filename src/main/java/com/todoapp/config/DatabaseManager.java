@@ -4,12 +4,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class DatabaseManager {
-    private static DatabaseManager instance;
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;
     private final DatabaseType databaseType;
@@ -21,7 +21,14 @@ public class DatabaseManager {
         if (databaseType == DatabaseType.MYSQL) {
             initializeMySQL(config);
         }
-        // MongoDB initialization is handled elsewhere (no JPA setup needed)
+        }
+
+    private static class SingletonHelper {
+        private static final DatabaseManager INSTANCE = new DatabaseManager();
+    }
+
+    public static DatabaseManager getInstance() {
+        return SingletonHelper.INSTANCE;
     }
 
     private void initializeMySQL(AppConfig config) {
@@ -37,16 +44,11 @@ public class DatabaseManager {
             
             this.entityManagerFactory = Persistence.createEntityManagerFactory("todoapp", properties);
             this.entityManager = entityManagerFactory.createEntityManager();
-        } catch (Exception e) {
-            throw new RuntimeException("Database initialization failed", e);
+        } catch (PersistenceException e) {
+            throw new IllegalStateException("MySQL database initialization failed", e);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Invalid database configuration", e);
         }
-    }
-
-    public static synchronized DatabaseManager getInstance() {
-        if (instance == null) {
-            instance = new DatabaseManager();
-        }
-        return instance;
     }
 
     public EntityManager getEntityManager() {
