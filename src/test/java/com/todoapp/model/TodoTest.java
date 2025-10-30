@@ -62,7 +62,7 @@ class TodoTest {
         Todo todo2 = new Todo("Task2");
         Todo todo3 = new Todo("Task3");
         
-        assertTrue(todo1.equals(todo1));
+        assertEquals(todo1, todo1);
         
         assertNotEquals(todo1, todo2);
         
@@ -76,9 +76,9 @@ class TodoTest {
         assertNotEquals(todo2, todo3);
         assertNotEquals(todo3, todo2);
         
-        assertFalse(todo1.equals(null));
+        assertNotEquals(null, todo1);
         
-        assertFalse(todo1.equals("string"));
+        assertNotEquals(todo1, "string");
     }
     
     @Test
