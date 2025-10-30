@@ -78,7 +78,7 @@ class TodoTest {
         
         assertNotEquals(null, todo1);
         
-        assertNotEquals(todo1, "string");
+        assertNotEquals("string", todo1);
     }
     
     @Test
