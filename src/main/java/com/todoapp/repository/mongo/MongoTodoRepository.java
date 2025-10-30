@@ -21,6 +21,8 @@ import static com.mongodb.client.model.Filters.regex;
 
 public class MongoTodoRepository implements TodoRepository {
     
+    private static final String FIELD_DESCRIPTION = "description";
+    
     private final MongoCollection<Document> collection;
     private final MongoClient mongoClient;
     private final MongoTagRepository tagRepository;
@@ -36,8 +38,7 @@ public class MongoTodoRepository implements TodoRepository {
     }
 
     private void initializeNextId() {
-        // Find the highest ID in existing documents
-        Document lastDoc = collection.find()
+       Document lastDoc = collection.find()
             .sort(new Document("_id", -1))
             .first();
         if (lastDoc != null) {
@@ -97,7 +98,7 @@ public class MongoTodoRepository implements TodoRepository {
     @Override
     public List<Todo> findByDescriptionContaining(String keyword) {
         List<Todo> todos = new ArrayList<>();
-        for (Document doc : collection.find(regex("description", ".*" + keyword + ".*", "i"))) {
+        for (Document doc : collection.find(regex(FIELD_DESCRIPTION, ".*" + keyword + ".*", "i"))) {
             todos.add(documentToTodo(doc));
         }
         return todos;
@@ -112,7 +113,7 @@ public class MongoTodoRepository implements TodoRepository {
     private Document todoToDocument(Todo todo) {
         Document doc = new Document()
             .append("_id", todo.getId())
-            .append("description", todo.getDescription())
+            .append(FIELD_DESCRIPTION, todo.getDescription())
             .append("done", todo.isDone());
 
         // Store tag IDs
@@ -126,7 +127,7 @@ public class MongoTodoRepository implements TodoRepository {
     }
 
     private Todo documentToTodo(Document doc) {
-        Todo todo = new Todo(doc.getString("description"));
+        Todo todo = new Todo(doc.getString(FIELD_DESCRIPTION));
         todo.setId(doc.getLong("_id"));
         todo.setDone(doc.getBoolean("done", false));
 

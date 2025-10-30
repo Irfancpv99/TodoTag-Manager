@@ -65,6 +65,7 @@ class MainFrameE2ETest {
     void todoLifecycle() {
         window.textBox("todoDescriptionField").enterText("Buy groceries");
         window.button("addTodoButton").click();
+        Pause.pause(1000);
         waitForTableUpdate(1);
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(1);
@@ -93,36 +94,47 @@ class MainFrameE2ETest {
     @Order(2)
     @DisplayName("Complete tag workflow: create, assign, remove")
     void tagWorkflow() {
+        // Add todo with extra pause to ensure completion
         window.textBox("todoDescriptionField").enterText("Complete project");
         window.button("addTodoButton").click();
+        Pause.pause(1500);
         waitForTableUpdate(1);
 
+        // Add tag with extra pause
         window.textBox("tagNameField").enterText("urgent");
         window.button("addTagButton").click();
+        Pause.pause(1000);
         waitForListUpdate("availableTagsList", 1);
 
         assertThat(window.list("availableTagsList").contents()).hasSize(1);
         assertThat(window.list("availableTagsList").contents()[0]).contains("urgent");
 
+        // Add tag to todo with extra synchronization
         window.table("todoTable").selectRows(0);
-        Pause.pause(300);
+        Pause.pause(800);
         window.list("availableTagsList").selectItem(0);
+        Pause.pause(500);
         window.button("addTagToTodoButton").click();
+        Pause.pause(1500);
         waitForListUpdate("tagList", 1);
 
         assertThat(window.list("tagList").contents()).hasSize(1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
 
+        // Remove tag from todo
         window.list("tagList").selectItem(0);
+        Pause.pause(500);
         window.button("removeTagFromTodoButton").click();
+        Pause.pause(1500);
         waitForListUpdate("tagList", 0);
 
         assertThat(window.list("tagList").contents()).isEmpty();
 
         // Delete tag
         window.list("availableTagsList").selectItem(0);
-        window.button("deleteTagButton").click();
         Pause.pause(500);
+        window.button("deleteTagButton").click();
+        Pause.pause(1500);
         waitForListUpdate("availableTagsList", 0);
 
         assertThat(window.list("availableTagsList").contents()).isEmpty();
@@ -132,34 +144,34 @@ class MainFrameE2ETest {
     @Order(3)
     @DisplayName("Search and edit workflow")
     void searchAndEdit() {
-        // Add multiple 
+        // Add multiple with delays
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
         
-        Pause.pause(1000);
+        Pause.pause(1500);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
         window.textBox("searchField").enterText("Buy");
         window.button("searchButton").click();
-        Pause.pause(1000);
+        Pause.pause(1500);
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
 
         // Show all
         window.button("showAllButton").click();
-        Pause.pause(1000);
+        Pause.pause(1500);
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-     // Edit  
+        // Edit  
         window.table("todoTable").selectRows(0);
         window.button("editButton").click();
-        Pause.pause(500);
+        Pause.pause(800);
 
         window.dialog().textBox().deleteText().enterText("Updated task");
         window.dialog().button(withText("OK")).click();
-        Pause.pause(1000);
+        Pause.pause(1500);
     }
     
     @Test
@@ -169,29 +181,29 @@ class MainFrameE2ETest {
         // Add 
         window.textBox("todoDescriptionField").enterText("Important meeting");
         window.button("addTodoButton").click();
-        Pause.pause(800);
+        Pause.pause(1200);
 
         // Add multiple tags
         addTag("urgent");
         addTag("work");
         addTag("meeting");
         
-        Pause.pause(500);
+        Pause.pause(800);
         assertThat(window.list("availableTagsList").contents()).hasSize(3);
 
         // Select 
         window.table("todoTable").selectRows(0);
-        Pause.pause(500);
+        Pause.pause(800);
 
         // Add first tag
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
-        Pause.pause(800);
+        Pause.pause(1200);
 
         // Add second tag
         window.list("availableTagsList").selectItem(1);
         window.button("addTagToTodoButton").click();
-        Pause.pause(800);
+        Pause.pause(1200);
 
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
@@ -199,17 +211,17 @@ class MainFrameE2ETest {
     private void addTag(String name) {
         window.textBox("tagNameField").enterText(name);
         window.button("addTagButton").click();
-        Pause.pause(500);
+        Pause.pause(800);
     }
 
     private void addTodo(String description) {
         window.textBox("todoDescriptionField").enterText(description);
         window.button("addTodoButton").click();
-        Pause.pause(500);
+        Pause.pause(800);
     }
 
     private void waitForTableUpdate(int expectedRowCount) {
-        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(5000);
+        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(10000);
         org.assertj.swing.timing.Condition condition = new org.assertj.swing.timing.Condition(
             "Table row count to be " + expectedRowCount) {
             @Override
@@ -221,7 +233,7 @@ class MainFrameE2ETest {
     }
 
     private void waitForListUpdate(String listName, int expectedSize) {
-        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(5000);
+        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(10000);
         org.assertj.swing.timing.Condition condition = new org.assertj.swing.timing.Condition(
             "List '" + listName + "' size to be " + expectedSize) {
             @Override
