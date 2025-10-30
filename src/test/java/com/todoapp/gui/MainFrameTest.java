@@ -315,7 +315,10 @@ class MainFrameTest {
             window.textBox("todoDescriptionField").enterText("Test");
             window.button("addTodoButton").click();
 
-            window.optionPane().requireErrorMessage().okButton().click();
+            var optionPane = window.optionPane();
+            optionPane.requireErrorMessage();
+            assertThat(optionPane.target().getMessage()).asString().contains("Database error");
+            optionPane.okButton().click();
         }
 
         @Test
@@ -330,7 +333,10 @@ class MainFrameTest {
             window.table("todoTable").selectRows(0);
             window.button("deleteButton").click();
 
-            window.optionPane().requireErrorMessage().okButton().click();
+            var optionPane = window.optionPane();
+            optionPane.requireErrorMessage();
+            assertThat(optionPane.target().getMessage()).asString().contains("Delete failed");
+            optionPane.okButton().click();
         }
     }
 }

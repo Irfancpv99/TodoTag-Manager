@@ -62,7 +62,9 @@ class TodoTest {
         Todo todo2 = new Todo("Task2");
         Todo todo3 = new Todo("Task3");
         
+        // Test same reference equality (kills mutant on line 109)
         assertEquals(todo1, todo1);
+        assertTrue(todo1.equals(todo1));
         
         assertNotEquals(todo1, todo2);
         
@@ -77,8 +79,10 @@ class TodoTest {
         assertNotEquals(todo3, todo2);
         
         assertNotEquals(null, todo1);
+        assertFalse(todo1.equals(null));
         
         assertNotEquals("string", todo1);
+        assertFalse(todo1.equals("string"));
     }
     
     @Test

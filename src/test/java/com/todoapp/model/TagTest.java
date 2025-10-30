@@ -47,6 +47,7 @@ class TagTest {
         Tag tag3 = new Tag("personal");
         
         assertEquals(tag1, tag1);
+        assertTrue(tag1.equals(tag1));
         
         assertNotEquals(tag1, tag2);
         
@@ -61,8 +62,10 @@ class TagTest {
         assertNotEquals(tag3, tag2);
         
         assertNotEquals(null, tag1);
+        assertFalse(tag1.equals(null));
         
         assertNotEquals("string", tag1);
+        assertFalse(tag1.equals("string"));
     }
     
     @Test
