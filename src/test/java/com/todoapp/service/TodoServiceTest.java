@@ -346,8 +346,9 @@ class TodoServiceTest {
             when(todoRepository.save(any(Todo.class))).thenThrow(new RuntimeException("DB Error"));
             
             TodoService service = new TodoService();
+            Todo todo = new Todo("Task 1");
             
-            assertThrows(RuntimeException.class, () -> service.saveTodo(new Todo("Task 1")));
+            assertThrows(RuntimeException.class, () -> service.saveTodo(todo));
             
             verify(factory).beginTransaction();
             verify(factory).rollbackTransaction();
