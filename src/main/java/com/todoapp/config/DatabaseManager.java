@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DatabaseManager {
+    private static volatile DatabaseManager instance;
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;
     private final DatabaseType databaseType;
@@ -21,14 +22,17 @@ public class DatabaseManager {
         if (databaseType == DatabaseType.MYSQL) {
             initializeMySQL(config);
         }
-        }
-
-    private static class SingletonHelper {
-        private static final DatabaseManager INSTANCE = new DatabaseManager();
     }
 
     public static DatabaseManager getInstance() {
-        return SingletonHelper.INSTANCE;
+        if (instance == null) {
+            synchronized (DatabaseManager.class) {
+                if (instance == null) {
+                    instance = new DatabaseManager();
+                }
+            }
+        }
+        return instance;
     }
 
     private void initializeMySQL(AppConfig config) {

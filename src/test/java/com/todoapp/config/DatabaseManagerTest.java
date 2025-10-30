@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,13 +101,13 @@ class DatabaseManagerTest {
             
             mockedPersistence.when(() -> Persistence.createEntityManagerFactory(
                 eq("todoapp"), anyMap()
-            )).thenThrow(new RuntimeException("Connection failed"));
+            )).thenThrow(new PersistenceException("Connection failed"));
             
-            RuntimeException exception = assertThrows(RuntimeException.class, 
+            IllegalStateException exception = assertThrows(IllegalStateException.class, 
                 DatabaseManager::getInstance
             );
             
-            assertEquals("Database initialization failed", exception.getMessage());
+            assertEquals("MySQL database initialization failed", exception.getMessage());
         }
     }
 
@@ -119,13 +120,11 @@ class DatabaseManagerTest {
 
             DatabaseManager manager = DatabaseManager.getInstance();
             
-            // Test with null EntityManager
             assertDoesNotThrow(() -> manager.beginTransaction());
             assertDoesNotThrow(() -> manager.commitTransaction());
             assertDoesNotThrow(() -> manager.rollbackTransaction());
             assertDoesNotThrow(() -> manager.close());
             
-            // Test with mock EntityManager
             EntityManager mockEM = mock(EntityManager.class);
             EntityTransaction mockTx = mock(EntityTransaction.class);
             EntityManagerFactory mockEMF = mock(EntityManagerFactory.class);
@@ -143,27 +142,24 @@ class DatabaseManagerTest {
             emfField.setAccessible(true);
             emfField.set(manager, mockEMF);
             
-            // Test all transaction methods
-            manager.beginTransaction();  // isActive=false, should begin
+            manager.beginTransaction(); 
             verify(mockTx).begin();
             
-            manager.commitTransaction(); // isActive=true, should commit
+            manager.commitTransaction();
             verify(mockTx).commit();
             
-            manager.rollbackTransaction(); // isActive=true, should rollback
+            manager.rollbackTransaction(); 
             verify(mockTx).rollback();
             
-            manager.beginTransaction(); // isActive=false again
+            manager.beginTransaction(); 
             verify(mockTx, times(2)).begin();
             
-            // Test close when open
             manager.close();
             verify(mockEM).close();
             verify(mockEMF).close();
             
-            // Test close when not open
-            manager.close();
-            verify(mockEM, times(1)).close(); // Still only once
+             manager.close();
+            verify(mockEM, times(1)).close();
             verify(mockEMF, times(1)).close();
         }
     }
