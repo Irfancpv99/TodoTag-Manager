@@ -168,9 +168,8 @@ class RepositoryFactoryTest {
     @Test
     void testConstructorWithNullDatabaseManager() {
         AppConfig mockConfig = mock(AppConfig.class);
-        EntityManager mockEM = mock(EntityManager.class);
         
-        RepositoryFactory factory = new RepositoryFactory(mockConfig, mockEM);
+        RepositoryFactory factory = new RepositoryFactory(mockConfig);
         
         assertNull(factory.getEntityManager());
         assertDoesNotThrow(() -> {

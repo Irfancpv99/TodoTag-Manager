@@ -23,7 +23,7 @@ public class RepositoryFactory {
     /**
      * Constructor for testing with specific config and entity manager
      */
-    public RepositoryFactory(AppConfig config, EntityManager entityManager) {
+    public RepositoryFactory(AppConfig config) {
         this.config = config;
         this.databaseManager = null; // For testing
     }
