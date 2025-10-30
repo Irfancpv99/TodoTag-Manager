@@ -76,7 +76,7 @@ class TodoTest {
         assertNotEquals(todo2, todo3);
         assertNotEquals(todo3, todo2);
         
-       \ assertFalse(todo1.equals(null));
+        assertFalse(todo1.equals(null));
         
         assertFalse(todo1.equals("string"));
     }
@@ -96,7 +96,7 @@ class TodoTest {
         
         todo1.setId(1L);
         todo2.setId(2L);
-        assertEquals(todo1.hashCode(), todo2.hashCode()); // Still same because same description
+        assertEquals(todo1.hashCode(), todo2.hashCode());
     }
     
     @Test
