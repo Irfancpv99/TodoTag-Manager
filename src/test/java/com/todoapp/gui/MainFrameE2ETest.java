@@ -94,7 +94,7 @@ class MainFrameE2ETest {
     @Order(2)
     @DisplayName("Complete tag workflow: create, assign, remove")
     void tagWorkflow() {
-        // Add todo with extra pause to ensure completion
+        // Add with extra pause to ensure completion
         window.textBox("todoDescriptionField").enterText("Complete project");
         window.button("addTodoButton").click();
         Pause.pause(1500);
@@ -109,7 +109,7 @@ class MainFrameE2ETest {
         assertThat(window.list("availableTagsList").contents()).hasSize(1);
         assertThat(window.list("availableTagsList").contents()[0]).contains("urgent");
 
-        // Add tag to todo with extra synchronization
+        // Add tag 
         window.table("todoTable").selectRows(0);
         Pause.pause(800);
         window.list("availableTagsList").selectItem(0);
@@ -121,7 +121,7 @@ class MainFrameE2ETest {
         assertThat(window.list("tagList").contents()).hasSize(1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
 
-        // Remove tag from todo
+        // Remove tag 
         window.list("tagList").selectItem(0);
         Pause.pause(500);
         window.button("removeTagFromTodoButton").click();
