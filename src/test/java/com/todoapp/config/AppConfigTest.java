@@ -3,102 +3,119 @@ package com.todoapp.config;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.net.URL;
+import java.io.*;
+import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AppConfigTest {
 
-    @AfterEach
-    void resetSingleton() throws Exception {
-        Field instance = AppConfig.class.getDeclaredField("instance");
-        instance.setAccessible(true);
-        instance.set(null, null);
+//     helpers 
+
+    private Properties minimalProps(String dbType) {
+        Properties p = new Properties();
+        p.setProperty("database.type", dbType);
+        p.setProperty("mongodb.host", "mh");
+        p.setProperty("mongodb.port", "1234");
+        p.setProperty("mongodb.database", "mdb");
+        p.setProperty("mysql.url", "jdbc:mysql://localhost:3306/todoapp");
+        p.setProperty("mysql.username", "u");
+        p.setProperty("mysql.password", "p");
+        return p;
     }
 
     @Test
-    void shouldReturnSingletonInstance() {
-        AppConfig instance1 = AppConfig.getInstance();
-        AppConfig instance2 = AppConfig.getInstance();
-        
-        assertSame(instance1, instance2);
+    void defaultConstructor_usesRealFile() {
+    	AppConfig cut = new AppConfig();
+        assertThat(cut.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
+        assertThat(cut.getMongoDbHost()).isEqualTo("localhost");
+        assertThat(cut.getMongoDbPort()).isEqualTo(27017);
+        assertThat(cut.getMongoDbDatabase()).isEqualTo("todoapp");
+        assertThat(cut.getMySqlUrl())
+                .isEqualTo("jdbc:mysql://localhost:3307/todoapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
+        assertThat(cut.getMySqlUsername()).isEqualTo("todouser");
+        assertThat(cut.getMySqlPassword()).isEqualTo("todopassword");
     }
 
     @Test
-    void shouldLoadPropertiesFromExistingFile() {
-        AppConfig config = AppConfig.getInstance();
-        
-        // Test that properties are loaded (type depends on application.properties content)
-        assertNotNull(config.getDatabaseType());
-        assertEquals("localhost", config.getMongoDbHost());
-        assertEquals(27017, config.getMongoDbPort());
-        assertEquals("todoapp", config.getMongoDbDatabase());
-        assertNotNull(config.getMySqlUrl());
-        assertEquals("todouser", config.getMySqlUsername());
-        assertEquals("todopassword", config.getMySqlPassword());
+    void customPropertiesConstructor_usesGivenProps() {
+        Properties p = minimalProps("mysql");
+        AppConfig cut = new AppConfig(p);
+        assertThat(cut.getDatabaseType()).isEqualTo(DatabaseType.MYSQL);
+        assertThat(cut.getMySqlUsername()).isEqualTo("u");
     }
 
     @Test
-    void shouldSetDatabaseType() {
-        AppConfig config = AppConfig.getInstance();
-        
-        config.setDatabaseType(DatabaseType.MYSQL);
-        
-        assertEquals(DatabaseType.MYSQL, config.getDatabaseType());
+    void setDatabaseType_mutatesInternalState() {
+        AppConfig cut = new AppConfig();
+        cut.setDatabaseType(DatabaseType.MYSQL);
+        assertThat(cut.getDatabaseType()).isEqualTo(DatabaseType.MYSQL);
     }
 
     @Test
-    void shouldLoadDefaultPropertiesWhenFileNotFound() throws Exception {
-        URL resource = getClass().getClassLoader().getResource("application.properties");
-        assertNotNull(resource, "application.properties must exist");
-        
-        File originalFile = new File(resource.toURI());
-        File backupFile = new File(originalFile.getParent(), "application.properties.backup." + System.currentTimeMillis());
-        
-        assertTrue(originalFile.renameTo(backupFile), "Failed to rename file");
-        
-        try {
-            resetSingleton();
-            AppConfig config = AppConfig.getInstance();
-            
-            assertEquals(DatabaseType.MONGODB, config.getDatabaseType());
-            assertEquals("localhost", config.getMongoDbHost());
-            assertEquals(27017, config.getMongoDbPort());
-            assertEquals("todoapp", config.getMongoDbDatabase());
-            assertEquals("jdbc:mysql://localhost:3306/todoapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true", config.getMySqlUrl());
-            assertEquals("todouser", config.getMySqlUsername());
-            assertEquals("todopassword", config.getMySqlPassword());
-        } finally {
-            if (backupFile.exists()) {
-                assertTrue(backupFile.renameTo(originalFile), "Failed to restore file");
+    void constructor_withNullProps_fallsBackToFile() {
+        AppConfig cut = new AppConfig((Properties) null);
+        assertThat(cut.getMySqlUrl()).contains("3307");
+    }
+
+    @Test
+    void loadProperties_ioException_wrapsInUnchecked() {
+    	ClassLoader brokenCl = new ClassLoader(getClass().getClassLoader()) {
+            @Override
+            public InputStream getResourceAsStream(String name) {
+                if ("application.properties".equals(name)) {
+                    return new InputStream() {
+                        @Override
+                        public int read() throws IOException {
+                            throw new IOException("boom");
+                        }
+                    };
+                }
+                return super.getResourceAsStream(name);
             }
-        }
+        };
+
+        Thread.currentThread().setContextClassLoader(brokenCl);
+        assertThatThrownBy(AppConfig::new)
+                .isInstanceOf(UncheckedIOException.class)
+                .hasCauseInstanceOf(IOException.class);
+    }
+    
+    @Test
+    void whenResourceIsMissing_defaultsAreLoaded() {
+        ClassLoader noResourceCl = new ClassLoader(getClass().getClassLoader()) {
+            @Override
+            public InputStream getResourceAsStream(String name) {
+                return null;    
+                }
+        };
+
+        Thread.currentThread().setContextClassLoader(noResourceCl);
+        try {
+            AppConfig cfg = new AppConfig();          // must use defaults
+            assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
+            assertThat(cfg.getMongoDbHost()).isEqualTo("localhost");
+            assertThat(cfg.getMongoDbPort()).isEqualTo(27017);
+            assertThat(cfg.getMongoDbDatabase()).isEqualTo("todoapp");
+            assertThat(cfg.getMySqlUrl()).contains("3306");   // default MySQL port
+            assertThat(cfg.getMySqlUsername()).isEqualTo("todouser");
+            assertThat(cfg.getMySqlPassword()).isEqualTo("todopassword");
+        } finally {
+            resetContextLoader();   
+            }
     }
 
     @Test
-    void shouldCallSetDefaultPropertiesCorrectly() throws Exception {
-        AppConfig config = new AppConfig();
-        
-        Method setDefaultProps = AppConfig.class.getDeclaredMethod("setDefaultProperties");
-        setDefaultProps.setAccessible(true);
-        
-        Field propsField = AppConfig.class.getDeclaredField("properties");
-        propsField.setAccessible(true);
-        java.util.Properties props = (java.util.Properties) propsField.get(config);
-        
-        props.clear();
-        setDefaultProps.invoke(config);
+    void getProperties_exposesInternalPropertiesInstance() {
+        Properties p = minimalProps("mysql");
+        AppConfig cfg = new AppConfig(p);
+       assertThat(cfg.getProperties()).isSameAs(cfg.getProperties()); // same instance
+        assertThat(cfg.getProperties()).containsEntry("database.type", "mysql");
+    }
 
-        assertEquals("MONGODB", props.getProperty("database.type"));
-        assertEquals("localhost", props.getProperty("mongodb.host"));
-        assertEquals("27017", props.getProperty("mongodb.port"));
-        assertEquals("todoapp", props.getProperty("mongodb.database"));
-        assertEquals("jdbc:mysql://localhost:3306/todoapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true", 
-                     props.getProperty("mysql.url"));
-        assertEquals("todouser", props.getProperty("mysql.username"));
-        assertEquals("todopassword", props.getProperty("mysql.password"));
+    @AfterEach
+    void resetContextLoader() {
+         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
     }
 }

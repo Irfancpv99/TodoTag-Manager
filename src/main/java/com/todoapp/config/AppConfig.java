@@ -7,7 +7,7 @@ import java.util.Properties;
 
 public class AppConfig {
 
-    /* ---------- constants for  property key ---------- */
+    /* ---------- constants for property key ---------- */
     private static final String KEY_DB_TYPE        = "database.type";
     private static final String KEY_MONGO_HOST     = "mongodb.host";
     private static final String KEY_MONGO_PORT     = "mongodb.port";
@@ -22,33 +22,34 @@ public class AppConfig {
     private static final String DEFAULT_MONGO_PORT     = "27017";
     private static final String DEFAULT_MONGO_DATABASE = "todoapp";
 
-    /* ---------- singleton ---------- */
-    private static AppConfig instance;
     private final Properties properties;
 
-    AppConfig() {
+    public AppConfig() {
         properties = new Properties();
         loadProperties();
     }
 
-    public static AppConfig getInstance() {
-        if (instance == null) {
-            instance = new AppConfig();
+    public AppConfig(Properties customProperties) {
+        this.properties = new Properties();
+        if (customProperties != null) {
+            this.properties.putAll(customProperties);
+        } else {
+            loadProperties();
         }
-        return instance;
     }
 
     /* ---------- loading ---------- */
-    
+
     private void loadProperties() {
-        InputStream in = getClass().getClassLoader().getResourceAsStream("application.properties");
+      
+        try (InputStream in = Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResourceAsStream("application.properties")) {
 
-        if (in == null) {
-            setDefaultProperties();
-            return;
-        }
-
-        try {
+            if (in == null) {          
+                setDefaultProperties();
+                return;
+            }
             properties.load(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -91,4 +92,9 @@ public class AppConfig {
     public String getMySqlUrl()      { return properties.getProperty(KEY_MYSQL_URL);  }
     public String getMySqlUsername() { return properties.getProperty(KEY_MYSQL_USER); }
     public String getMySqlPassword() { return properties.getProperty(KEY_MYSQL_PASS); }
+
+  
+    Properties getProperties() {
+        return properties;
+    }
 }

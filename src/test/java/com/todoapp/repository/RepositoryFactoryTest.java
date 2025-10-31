@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
-import org.mockito.MockedStatic;
 
 import java.lang.reflect.Field;
 
@@ -36,14 +35,6 @@ class RepositoryFactoryTest {
             Field instance = RepositoryFactory.class.getDeclaredField("instance");
             instance.setAccessible(true);
             instance.set(null, null);
-            
-            Field acInstance = AppConfig.class.getDeclaredField("instance");
-            acInstance.setAccessible(true);
-            acInstance.set(null, null);
-            
-            Field dmInstance = DatabaseManager.class.getDeclaredField("instance");
-            dmInstance.setAccessible(true);
-            dmInstance.set(null, null);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -51,21 +42,18 @@ class RepositoryFactoryTest {
 
     @Test
     void testSingletonAndMySQL() {
-        try (MockedStatic<AppConfig> mockedAppConfig = mockStatic(AppConfig.class);
-             MockedStatic<DatabaseManager> mockedDbManager = mockStatic(DatabaseManager.class)) {
+        try (MockedConstruction<DatabaseManager> mockedDbManager = mockConstruction(DatabaseManager.class,
+            (mock, context) -> {
+                EntityManager mockEM = mock(EntityManager.class);
+                when(mock.getEntityManager()).thenReturn(mockEM);
+            })) {
             
             AppConfig mockConfig = mock(AppConfig.class);
-            DatabaseManager mockDbMgr = mock(DatabaseManager.class);
-            EntityManager mockEM = mock(EntityManager.class);
             
             when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MYSQL);
-            when(mockDbMgr.getEntityManager()).thenReturn(mockEM);
             
-            mockedAppConfig.when(AppConfig::getInstance).thenReturn(mockConfig);
-            mockedDbManager.when(DatabaseManager::getInstance).thenReturn(mockDbMgr);
-            
-            RepositoryFactory instance1 = RepositoryFactory.getInstance();
-            RepositoryFactory instance2 = RepositoryFactory.getInstance();
+            RepositoryFactory instance1 = RepositoryFactory.getInstance(mockConfig);
+            RepositoryFactory instance2 = RepositoryFactory.getInstance(mockConfig);
             
             assertSame(instance1, instance2);
             assertNotNull(instance1);
@@ -77,35 +65,33 @@ class RepositoryFactoryTest {
             assertInstanceOf(MySqlTagRepository.class, tagRepo);
             
             EntityManager em = instance1.getEntityManager();
-            assertSame(mockEM, em);
+            assertNotNull(em);
             
             instance1.beginTransaction();
             instance1.commitTransaction();
             instance1.rollbackTransaction();
             instance1.close();
             
-            verify(mockDbMgr, times(1)).beginTransaction();
-            verify(mockDbMgr, times(1)).commitTransaction();
-            verify(mockDbMgr, times(1)).rollbackTransaction();
-            verify(mockDbMgr, times(1)).close();
+            DatabaseManager dbManager = mockedDbManager.constructed().get(0);
+            verify(dbManager, times(1)).beginTransaction();
+            verify(dbManager, times(1)).commitTransaction();
+            verify(dbManager, times(1)).rollbackTransaction();
+            verify(dbManager, times(1)).close();
         }
     }
 
     @Test
     void testMySQLWithNullEntityManager() {
-        try (MockedStatic<AppConfig> mockedAppConfig = mockStatic(AppConfig.class);
-             MockedStatic<DatabaseManager> mockedDbManager = mockStatic(DatabaseManager.class)) {
+        try (MockedConstruction<DatabaseManager> mockedDbManager = mockConstruction(DatabaseManager.class,
+            (mock, context) -> {
+                when(mock.getEntityManager()).thenReturn(null);
+            })) {
             
             AppConfig mockConfig = mock(AppConfig.class);
-            DatabaseManager mockDbMgr = mock(DatabaseManager.class);
             
             when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MYSQL);
-            when(mockDbMgr.getEntityManager()).thenReturn(null);
             
-            mockedAppConfig.when(AppConfig::getInstance).thenReturn(mockConfig);
-            mockedDbManager.when(DatabaseManager::getInstance).thenReturn(mockDbMgr);
-            
-            RepositoryFactory factory = RepositoryFactory.getInstance();
+            RepositoryFactory factory = RepositoryFactory.getInstance(mockConfig);
             
             assertThrows(IllegalStateException.class, factory::createTodoRepository);
             assertThrows(IllegalStateException.class, factory::createTagRepository);
@@ -114,24 +100,19 @@ class RepositoryFactoryTest {
 
     @Test
     void testMongoDB() {
-        try (MockedStatic<AppConfig> mockedAppConfig = mockStatic(AppConfig.class);
-             MockedStatic<DatabaseManager> mockedDbManager = mockStatic(DatabaseManager.class)) {
+        try (MockedConstruction<DatabaseManager> mockedDbManagerConstruction = mockConstruction(DatabaseManager.class)) {
             
             AppConfig mockConfig = mock(AppConfig.class);
-            DatabaseManager mockDbMgr = mock(DatabaseManager.class);
             
             when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
             when(mockConfig.getMongoDbHost()).thenReturn("localhost");
             when(mockConfig.getMongoDbPort()).thenReturn(27017);
             when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
             
-            mockedAppConfig.when(AppConfig::getInstance).thenReturn(mockConfig);
-            mockedDbManager.when(DatabaseManager::getInstance).thenReturn(mockDbMgr);
-            
             try (MockedConstruction<MongoTagRepository> mockedTagRepo = mockConstruction(MongoTagRepository.class);
                  MockedConstruction<MongoTodoRepository> mockedTodoRepo = mockConstruction(MongoTodoRepository.class)) {
                 
-                RepositoryFactory factory = RepositoryFactory.getInstance();
+                RepositoryFactory factory = RepositoryFactory.getInstance(mockConfig);
                 
                 TodoRepository todoRepo = factory.createTodoRepository();
                 TagRepository tagRepo = factory.createTagRepository();
@@ -147,18 +128,13 @@ class RepositoryFactoryTest {
 
     @Test
     void testUnsupportedDatabaseType() {
-        try (MockedStatic<AppConfig> mockedAppConfig = mockStatic(AppConfig.class);
-             MockedStatic<DatabaseManager> mockedDbManager = mockStatic(DatabaseManager.class)) {
+        try (MockedConstruction<DatabaseManager> mockedDbManager = mockConstruction(DatabaseManager.class)) {
             
             AppConfig mockConfig = mock(AppConfig.class);
-            DatabaseManager mockDbMgr = mock(DatabaseManager.class);
             
             when(mockConfig.getDatabaseType()).thenReturn(null);
             
-            mockedAppConfig.when(AppConfig::getInstance).thenReturn(mockConfig);
-            mockedDbManager.when(DatabaseManager::getInstance).thenReturn(mockDbMgr);
-            
-            RepositoryFactory factory = RepositoryFactory.getInstance();
+            RepositoryFactory factory = RepositoryFactory.getInstance(mockConfig);
             
             assertThrows(IllegalArgumentException.class, factory::createTodoRepository);
             assertThrows(IllegalArgumentException.class, factory::createTagRepository);
@@ -166,10 +142,13 @@ class RepositoryFactoryTest {
     }
 
     @Test
-    void testConstructorWithNullDatabaseManager() {
+    void testConstructorWithDatabaseManager() {
         AppConfig mockConfig = mock(AppConfig.class);
+        DatabaseManager mockDbManager = mock(DatabaseManager.class);
         
-        RepositoryFactory factory = new RepositoryFactory(mockConfig);
+        RepositoryFactory factory = new RepositoryFactory(mockConfig, mockDbManager);
+        
+        when(mockDbManager.getEntityManager()).thenReturn(null);
         
         assertNull(factory.getEntityManager());
         assertDoesNotThrow(() -> {
@@ -178,5 +157,102 @@ class RepositoryFactoryTest {
             factory.rollbackTransaction();
             factory.close();
         });
+        
+        verify(mockDbManager).getEntityManager();
+        verify(mockDbManager).beginTransaction();
+        verify(mockDbManager).commitTransaction();
+        verify(mockDbManager).rollbackTransaction();
+        verify(mockDbManager).close();
+    }
+
+    @Test
+    void testConstructorWithNullDatabaseManager() {
+        AppConfig mockConfig = mock(AppConfig.class);
+        
+        RepositoryFactory factory = new RepositoryFactory(mockConfig, null);
+        
+        assertNull(factory.getEntityManager());
+        assertDoesNotThrow(() -> {
+            factory.beginTransaction();
+            factory.commitTransaction();
+            factory.rollbackTransaction();
+            factory.close();
+        });
+    }
+
+    @Test
+    void testMySQLRepositoryCreation() {
+        AppConfig mockConfig = mock(AppConfig.class);
+        DatabaseManager mockDbManager = mock(DatabaseManager.class);
+        EntityManager mockEM = mock(EntityManager.class);
+        
+        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MYSQL);
+        when(mockDbManager.getEntityManager()).thenReturn(mockEM);
+        
+        RepositoryFactory factory = new RepositoryFactory(mockConfig, mockDbManager);
+        
+        TodoRepository todoRepo = factory.createTodoRepository();
+        TagRepository tagRepo = factory.createTagRepository();
+        
+        assertInstanceOf(MySqlTodoRepository.class, todoRepo);
+        assertInstanceOf(MySqlTagRepository.class, tagRepo);
+    }
+
+    @Test
+    void testMongoDBRepositoryCreation() {
+        AppConfig mockConfig = mock(AppConfig.class);
+        DatabaseManager mockDbManager = mock(DatabaseManager.class);
+        
+        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
+        when(mockConfig.getMongoDbHost()).thenReturn("localhost");
+        when(mockConfig.getMongoDbPort()).thenReturn(27017);
+        when(mockConfig.getMongoDbDatabase()).thenReturn("testdb");
+        
+        try (MockedConstruction<MongoTagRepository> mockedTagRepo = mockConstruction(MongoTagRepository.class);
+             MockedConstruction<MongoTodoRepository> mockedTodoRepo = mockConstruction(MongoTodoRepository.class)) {
+            
+            RepositoryFactory factory = new RepositoryFactory(mockConfig, mockDbManager);
+            
+            TodoRepository todoRepo = factory.createTodoRepository();
+            TagRepository tagRepo = factory.createTagRepository();
+            
+            assertInstanceOf(MongoTodoRepository.class, todoRepo);
+            assertInstanceOf(MongoTagRepository.class, tagRepo);
+            
+            assertEquals(2, mockedTagRepo.constructed().size());
+            assertEquals(1, mockedTodoRepo.constructed().size());
+        }
+    }
+
+    @Test
+    void testTransactionManagementWithValidDatabaseManager() {
+        AppConfig mockConfig = mock(AppConfig.class);
+        DatabaseManager mockDbManager = mock(DatabaseManager.class);
+        
+        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
+        
+        RepositoryFactory factory = new RepositoryFactory(mockConfig, mockDbManager);
+        
+        factory.beginTransaction();
+        factory.commitTransaction();
+        factory.rollbackTransaction();
+        
+        verify(mockDbManager).beginTransaction();
+        verify(mockDbManager).commitTransaction();
+        verify(mockDbManager).rollbackTransaction();
+    }
+
+    @Test
+    void testCloseWithValidDatabaseManager() {
+        AppConfig mockConfig = mock(AppConfig.class);
+        DatabaseManager mockDbManager = mock(DatabaseManager.class);
+        
+        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
+        
+        RepositoryFactory factory = new RepositoryFactory(mockConfig, mockDbManager);
+        
+        factory.close();
+        
+        verify(mockDbManager).close();
     }
 }

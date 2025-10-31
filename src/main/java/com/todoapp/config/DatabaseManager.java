@@ -10,29 +10,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DatabaseManager {
-    private static volatile DatabaseManager instance;
     private EntityManagerFactory entityManagerFactory;
     private EntityManager entityManager;
     private final DatabaseType databaseType;
 
-    private DatabaseManager() {
-        AppConfig config = AppConfig.getInstance();
+    public DatabaseManager(AppConfig config) {
         this.databaseType = config.getDatabaseType();
         
         if (databaseType == DatabaseType.MYSQL) {
             initializeMySQL(config);
         }
-    }
-
-    public static DatabaseManager getInstance() {
-        if (instance == null) {
-            synchronized (DatabaseManager.class) {
-                if (instance == null) {
-                    instance = new DatabaseManager();
-                }
-            }
-        }
-        return instance;
     }
 
     private void initializeMySQL(AppConfig config) {

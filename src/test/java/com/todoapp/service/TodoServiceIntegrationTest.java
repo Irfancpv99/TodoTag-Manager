@@ -1,7 +1,6 @@
 package com.todoapp.service;
 
 import com.todoapp.config.AppConfig;
-import com.todoapp.config.DatabaseType;
 import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import org.junit.jupiter.api.*;
@@ -14,6 +13,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,6 +31,7 @@ class TodoServiceIntegrationTest {
             .withPassword("test");
 
     private TodoService todoService;
+    private AppConfig appConfig;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -62,10 +63,6 @@ class TodoServiceIntegrationTest {
     }
 
     private void resetSingletons() throws Exception {
-        Field acInstance = AppConfig.class.getDeclaredField("instance");
-        acInstance.setAccessible(true);
-        acInstance.set(null, null);
-
         try {
             Field rfInstance = Class.forName("com.todoapp.repository.RepositoryFactory")
                     .getDeclaredField("instance");
@@ -74,15 +71,6 @@ class TodoServiceIntegrationTest {
         } catch (Exception e) {
             // Intentionally ignored - RepositoryFactory class may not exist in test context
         }
-
-        try {
-            Field dmInstance = Class.forName("com.todoapp.config.DatabaseManager")
-                    .getDeclaredField("instance");
-            dmInstance.setAccessible(true);
-            dmInstance.set(null, null);
-        } catch (Exception e) {
-            // Intentionally ignored - DatabaseManager class may not exist in test context
-          }
     }
 
     
@@ -91,12 +79,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(1)
     void shouldCreateAndRetrieveTodoWithMongoDB() {
-
-    	
-    	 AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MONGODB);
-        setMongoDBProperties(config);
-        todoService = new TodoService();
+        appConfig = createMongoDBConfig();
+        todoService = new TodoService(appConfig);
 
         Todo created = todoService.createTodo("Test MongoDB Task");
 
@@ -115,10 +99,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(2)
     void shouldCreateAndRetrieveTodoWithMySQL() {
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MYSQL);
-        setMySQLProperties(config);
-        todoService = new TodoService();
+        appConfig = createMySQLConfig();
+        todoService = new TodoService(appConfig);
 
         Todo created = todoService.createTodo("Test MySQL Task");
 
@@ -137,10 +119,9 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(3)
     void shouldManageTodoLifecycleWithMongoDB() {
-        AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MONGODB);
-        setMongoDBProperties(config);
-        todoService = new TodoService();
+        appConfig = createMongoDBConfig();
+        todoService = new TodoService(appConfig);
+        
         Todo todo = todoService.createTodo("Task to complete");
         
         assertFalse(todo.isDone(), "Initial todo should not be done");
@@ -159,11 +140,9 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(4)
     void shouldManageTodoLifecycleWithMySQL() {
-    
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MYSQL);
-        setMySQLProperties(config);
-        todoService = new TodoService();
+        appConfig = createMySQLConfig();
+        todoService = new TodoService(appConfig);
+        
         Todo todo = todoService.createTodo("Task to complete");
 
         assertFalse(todo.isDone(), "Initial todo should not be done");
@@ -182,11 +161,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(5)
     void shouldManageTagsAndRelationshipsWithMongoDB() {
-       
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MONGODB);
-        setMongoDBProperties(config);
-        todoService = new TodoService();
+        appConfig = createMongoDBConfig();
+        todoService = new TodoService(appConfig);
 
         Tag tag = todoService.createTag("urgent");
         Todo todo = todoService.createTodo("Important task");
@@ -210,11 +186,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(6)
     void shouldManageTagsAndRelationshipsWithMySQL() {
-     
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MYSQL);
-        setMySQLProperties(config);
-        todoService = new TodoService();
+        appConfig = createMySQLConfig();
+        todoService = new TodoService(appConfig);
 
         Tag tag = todoService.createTag("work");
         Todo todo = todoService.createTodo("Work task");
@@ -233,11 +206,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(7)
     void shouldSearchTodosWithMongoDB() {
-
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MONGODB);
-        setMongoDBProperties(config);
-        todoService = new TodoService();
+        appConfig = createMongoDBConfig();
+        todoService = new TodoService(appConfig);
 
         todoService.createTodo("Buy groceries");
         todoService.createTodo("Buy tickets");
@@ -255,11 +225,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(8)
     void shouldSearchTodosWithMySQL() {
-
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MYSQL);
-        setMySQLProperties(config);
-        todoService = new TodoService();
+        appConfig = createMySQLConfig();
+        todoService = new TodoService(appConfig);
 
         todoService.createTodo("Buy groceries");
         todoService.createTodo("Buy tickets");
@@ -277,11 +244,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(9)
     void shouldFilterCompletedAndIncompleteTodosWithMongoDB() {
-
-        AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MONGODB);
-        setMongoDBProperties(config);
-        todoService = new TodoService();
+        appConfig = createMongoDBConfig();
+        todoService = new TodoService(appConfig);
 
         Todo todo1 = todoService.createTodo("Task 1");
         Todo todo2 = todoService.createTodo("Task 2");
@@ -310,10 +274,8 @@ class TodoServiceIntegrationTest {
     @Test
     @Order(10)
     void shouldFilterCompletedAndIncompleteTodosWithMySQL() {
-    	AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MYSQL);
-        setMySQLProperties(config);
-        todoService = new TodoService();
+        appConfig = createMySQLConfig();
+        todoService = new TodoService(appConfig);
 
         Todo todo1 = todoService.createTodo("Task 1");
         Todo todo2 = todoService.createTodo("Task 2");
@@ -338,40 +300,31 @@ class TodoServiceIntegrationTest {
         assertFalse(incomplete.get(0).isDone(), "Incomplete list should have not-done todos");
     }
 
-
-
-    	// Helper Method
+    // Helper Methods
     
-    private void setMongoDBProperties(AppConfig config) {
-        try {
-            Field propsField = AppConfig.class.getDeclaredField("properties");
-            propsField.setAccessible(true);
-            java.util.Properties props = (java.util.Properties) propsField.get(config);
-            
-            String connectionString = mongoDBContainer.getReplicaSetUrl();
-            String[] parts = connectionString.replace("mongodb://", "").split(":");
-            String host = parts[0];
-            String port = parts[1].split("/")[0];
+    private AppConfig createMongoDBConfig() {
+        Properties props = new Properties();
+        props.setProperty("database.type", "MONGODB");
+        
+        String connectionString = mongoDBContainer.getReplicaSetUrl();
+        String[] parts = connectionString.replace("mongodb://", "").split(":");
+        String host = parts[0];
+        String port = parts[1].split("/")[0];
 
-            props.setProperty("mongodb.host", host);
-            props.setProperty("mongodb.port", port);
-            props.setProperty("mongodb.database", "testdb_" + System.currentTimeMillis());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to configure MongoDB properties", e);
-        }
+        props.setProperty("mongodb.host", host);
+        props.setProperty("mongodb.port", port);
+        props.setProperty("mongodb.database", "testdb_" + System.currentTimeMillis());
+        
+        return new AppConfig(props);
     }
 
-    private void setMySQLProperties(AppConfig config) {
-        try {
-            Field propsField = AppConfig.class.getDeclaredField("properties");
-            propsField.setAccessible(true);
-            java.util.Properties props = (java.util.Properties) propsField.get(config);
-
-            props.setProperty("mysql.url", mySQLContainer.getJdbcUrl());
-            props.setProperty("mysql.username", mySQLContainer.getUsername());
-            props.setProperty("mysql.password", mySQLContainer.getPassword());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to configure MySQL properties", e);
-        }
+    private AppConfig createMySQLConfig() {
+        Properties props = new Properties();
+        props.setProperty("database.type", "MYSQL");
+        props.setProperty("mysql.url", mySQLContainer.getJdbcUrl());
+        props.setProperty("mysql.username", mySQLContainer.getUsername());
+        props.setProperty("mysql.password", mySQLContainer.getPassword());
+        
+        return new AppConfig(props);
     }
 }

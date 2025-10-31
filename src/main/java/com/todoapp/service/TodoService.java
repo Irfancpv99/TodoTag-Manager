@@ -1,5 +1,6 @@
 package com.todoapp.service;
 
+import com.todoapp.config.AppConfig;
 import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import com.todoapp.repository.RepositoryFactory;
@@ -15,9 +16,9 @@ public class TodoService {
     private final TagRepository tagRepository;
     private final RepositoryFactory repositoryFactory;
 
-    
-    public TodoService() {
-        this.repositoryFactory = RepositoryFactory.getInstance();
+    public TodoService(AppConfig config) {
+        // Changed from getInstance() to direct instantiation for better testability
+        this.repositoryFactory = new RepositoryFactory(config);
         this.todoRepository = repositoryFactory.createTodoRepository();
         this.tagRepository = repositoryFactory.createTagRepository();
     }
@@ -174,7 +175,6 @@ public class TodoService {
             throw new IllegalArgumentException("Todo or Tag not found");
         });
     }
-
     /**
      * Execute an operation within a transaction (for MySQL) or directly (for MongoDB)
      */

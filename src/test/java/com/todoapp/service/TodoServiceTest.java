@@ -1,5 +1,6 @@
 package com.todoapp.service;
 
+import com.todoapp.config.AppConfig;
 import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import com.todoapp.repository.RepositoryFactory;
@@ -7,7 +8,7 @@ import com.todoapp.repository.TagRepository;
 import com.todoapp.repository.TodoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
+import org.mockito.MockedConstruction;
 
 import java.util.List;
 import java.util.Optional;
@@ -317,39 +318,47 @@ class TodoServiceTest {
 
     @Test
     void shouldExecuteWithTransactionOnSuccess() {
-        try (MockedStatic<RepositoryFactory> mockedFactory = mockStatic(RepositoryFactory.class)) {
-            RepositoryFactory factory = mock(RepositoryFactory.class);
-            when(factory.createTodoRepository()).thenReturn(todoRepository);
-            when(factory.createTagRepository()).thenReturn(tagRepository);
-            mockedFactory.when(RepositoryFactory::getInstance).thenReturn(factory);
+        AppConfig mockConfig = mock(AppConfig.class);
+        
+        try (MockedConstruction<RepositoryFactory> mockedFactory = mockConstruction(RepositoryFactory.class,
+                (mock, context) -> {
+                    when(mock.createTodoRepository()).thenReturn(todoRepository);
+                    when(mock.createTagRepository()).thenReturn(tagRepository);
+                })) {
             
             Todo todo = new Todo("Task 1");
             when(todoRepository.save(any(Todo.class))).thenReturn(todo);
             
-            TodoService service = new TodoService();
+            TodoService service = new TodoService(mockConfig);
             Todo result = service.saveTodo(todo);
             
             assertNotNull(result);
+            RepositoryFactory factory = mockedFactory.constructed().get(0);
             verify(factory).beginTransaction();
             verify(factory).commitTransaction();
             verify(factory, never()).rollbackTransaction();
         }
     }
+    
     @Test
     void shouldExecuteWithTransactionOnFailure() {
-        try (MockedStatic<RepositoryFactory> mockedFactory = mockStatic(RepositoryFactory.class)) {
-            RepositoryFactory factory = mock(RepositoryFactory.class);
-            when(factory.createTodoRepository()).thenReturn(todoRepository);
-            when(factory.createTagRepository()).thenReturn(tagRepository);
-            mockedFactory.when(RepositoryFactory::getInstance).thenReturn(factory);
+        AppConfig mockConfig = mock(AppConfig.class);
+        
+        try (MockedConstruction<RepositoryFactory> mockedFactory = mockConstruction(RepositoryFactory.class,
+                (mock, context) -> {
+                    TodoRepository failingRepository = mock(TodoRepository.class);
+                    when(failingRepository.save(any(Todo.class))).thenThrow(new RuntimeException("DB Error"));
+                    
+                    when(mock.createTodoRepository()).thenReturn(failingRepository);
+                    when(mock.createTagRepository()).thenReturn(tagRepository);
+                })) {
             
-            when(todoRepository.save(any(Todo.class))).thenThrow(new RuntimeException("DB Error"));
-            
-            TodoService service = new TodoService();
+            TodoService service = new TodoService(mockConfig);
             Todo todo = new Todo("Task 1");
             
             assertThrows(RuntimeException.class, () -> service.saveTodo(todo));
             
+            RepositoryFactory factory = mockedFactory.constructed().get(0);
             verify(factory).beginTransaction();
             verify(factory).rollbackTransaction();
             verify(factory, never()).commitTransaction();

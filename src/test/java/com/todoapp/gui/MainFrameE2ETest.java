@@ -1,7 +1,6 @@
 package com.todoapp.gui;
 
 import com.todoapp.config.AppConfig;
-import com.todoapp.config.DatabaseType;
 import com.todoapp.service.TodoService;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.edt.GuiActionRunner;
@@ -16,6 +15,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.lang.reflect.Field;
+import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,22 +29,23 @@ class MainFrameE2ETest {
     private FrameFixture window;
     private MainFrame frame;
     private Robot robot;
+    private static AppConfig appConfig;
 
     @BeforeAll
     static void setupDatabase() throws Exception {
         resetSingletons();
-        configureMongoDB();
+        appConfig = createMongoDBConfig();
     }
 
     @BeforeEach
     void setUp() throws Exception {
         cleanDatabase();
         resetSingletons();
-        configureMongoDB();
+        appConfig = createMongoDBConfig();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
         frame = GuiActionRunner.execute(() -> {
-            TodoService service = new TodoService();
+            TodoService service = new TodoService(appConfig);
             MainFrameController controller = new MainFrameController(service);
             return new MainFrame(controller);
         });
@@ -244,14 +245,10 @@ class MainFrameE2ETest {
         Pause.pause(condition, timeout);
     }
 
-    private static void configureMongoDB() throws Exception {
-        AppConfig config = AppConfig.getInstance();
-        config.setDatabaseType(DatabaseType.MONGODB);
-
-        Field propsField = AppConfig.class.getDeclaredField("properties");
-        propsField.setAccessible(true);
-        java.util.Properties props = (java.util.Properties) propsField.get(config);
-
+    private static AppConfig createMongoDBConfig() {
+        Properties props = new Properties();
+        props.setProperty("database.type", "MONGODB");
+        
         String connectionString = mongoDBContainer.getReplicaSetUrl();
         String[] parts = connectionString.replace("mongodb://", "").split(":");
         String host = parts[0];
@@ -260,11 +257,13 @@ class MainFrameE2ETest {
         props.setProperty("mongodb.host", host);
         props.setProperty("mongodb.port", port);
         props.setProperty("mongodb.database", "e2e_test");
+        
+        return new AppConfig(props);
     }
 
     private void cleanDatabase() {
         try {
-            TodoService service = new TodoService();
+            TodoService service = new TodoService(appConfig);
             service.getAllTodos().forEach(todo -> {
                 try {
                     service.deleteTodo(todo.getId());
@@ -285,9 +284,7 @@ class MainFrameE2ETest {
     }
 
     private static void resetSingletons() {
-        resetField("com.todoapp.config.AppConfig", "instance");
         resetField("com.todoapp.repository.RepositoryFactory", "instance");
-        resetField("com.todoapp.config.DatabaseManager", "instance");
     }
     
     private org.assertj.swing.core.GenericTypeMatcher<javax.swing.JButton> withText(String text) {

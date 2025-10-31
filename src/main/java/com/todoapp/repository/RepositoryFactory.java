@@ -15,22 +15,25 @@ public class RepositoryFactory {
     private final AppConfig config;
     private final DatabaseManager databaseManager;
 
-    private RepositoryFactory() {
-        this.config = AppConfig.getInstance();
-        this.databaseManager = DatabaseManager.getInstance();
-    }
-
     /**
-     * Constructor for testing with specific config and entity manager
+     * Constructor with AppConfig
      */
     public RepositoryFactory(AppConfig config) {
         this.config = config;
-        this.databaseManager = null; // For testing
+        this.databaseManager = new DatabaseManager(config);
     }
 
-    public static synchronized RepositoryFactory getInstance() {
+    /**
+     * Constructor for testing with specific config and database manager
+     */
+    public RepositoryFactory(AppConfig config, DatabaseManager databaseManager) {
+        this.config = config;
+        this.databaseManager = databaseManager;
+    }
+
+    public static synchronized RepositoryFactory getInstance(AppConfig config) {
         if (instance == null) {
-            instance = new RepositoryFactory();
+            instance = new RepositoryFactory(config);
         }
         return instance;
     }
