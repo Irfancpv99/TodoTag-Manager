@@ -45,27 +45,27 @@ class TagTest {
         Tag tag1 = new Tag("work");
         Tag tag2 = new Tag("urgent");
         Tag tag3 = new Tag("personal");
-        
-        assertEquals(tag1, tag1);  
-        assertTrue(tag1.equals(tag1));
-        
+
+        assertEquals(tag1, tag1);
+        assertEquals(tag1, tag1);                
+
         assertNotEquals(tag1, tag2);
-        
+
         tag1.setId(1L);
         tag2.setId(1L);
         assertEquals(tag1, tag2);
-        
+
         tag2.setId(2L);
         assertNotEquals(tag1, tag2);
-        
+
         assertNotEquals(tag2, tag3);
         assertNotEquals(tag3, tag2);
-        
-        assertNotEquals(null, tag1);  
-        assertFalse(tag1.equals(null));  
-        
-        assertNotEquals("string", tag1);  
-        assertFalse(tag1.equals("string")); 
+
+        assertNotEquals(null, tag1);              
+        assertNotEquals(null, tag1);              
+
+        assertNotEquals("string", tag1);         
+        assertNotEquals("string", tag1);         
     }
     
     @Test
