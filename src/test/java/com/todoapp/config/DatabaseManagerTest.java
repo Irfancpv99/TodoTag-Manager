@@ -19,30 +19,15 @@ class DatabaseManagerTest {
 
     @BeforeEach
     @AfterEach
-    void resetSingleton() {
-        // No singleton reset needed anymore
-    }
 
     @Test
     void shouldInitializeWithMongoDB() {
-        AppConfig mockConfig = mock(AppConfig.class);
-        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
-
-        DatabaseManager manager = new DatabaseManager(mockConfig);
-        
-        assertNull(manager.getEntityManager());
-        verify(mockConfig).getDatabaseType();
+        assertMongoDBInitializationWorks();
     }
 
     @Test
     void shouldInitializeWithMongoDBUsingConstructor() {
-        AppConfig mockConfig = mock(AppConfig.class);
-        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
-
-        DatabaseManager manager = new DatabaseManager(mockConfig);
-        
-        assertNull(manager.getEntityManager());
-        verify(mockConfig).getDatabaseType();
+        assertMongoDBInitializationWorks(); 
     }
 
     @Test
@@ -196,5 +181,17 @@ class DatabaseManagerTest {
         assertNotNull(instance1);
         assertNotNull(instance2);
         assertNotSame(instance1, instance2, "Should create different instances");
+    }
+    
+//    		helper
+    
+    private void assertMongoDBInitializationWorks() {
+        AppConfig mockConfig = mock(AppConfig.class);
+        when(mockConfig.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
+
+        DatabaseManager manager = new DatabaseManager(mockConfig);
+
+        assertNull(manager.getEntityManager());
+        verify(mockConfig).getDatabaseType();
     }
 }

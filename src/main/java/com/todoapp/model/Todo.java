@@ -106,12 +106,19 @@ public class Todo {
     
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Todo)) {
+            return false;
+        }
         Todo todo = (Todo) obj;
         
-        // Only equal if both have IDs and they match
-        return id != null && todo.id != null && Objects.equals(id, todo.id);
+       if (id == null || todo.id == null) {
+            return false;
+        }
+        
+        return Objects.equals(id, todo.id);
     }
     
     @Override
