@@ -32,15 +32,14 @@ class MainFrameE2ETest {
     private static AppConfig appConfig;
 
     @BeforeAll
-    static void setupDatabase() throws Exception {
+    static void setupDatabase() {
         resetSingletons();
         appConfig = createMongoDBConfig();
     }
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         cleanDatabase();
-        resetSingletons();
         appConfig = createMongoDBConfig();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
@@ -66,7 +65,7 @@ class MainFrameE2ETest {
     void todoLifecycle() {
         window.textBox("todoDescriptionField").enterText("Buy groceries");
         window.button("addTodoButton").click();
-        Pause.pause(1000);
+        Pause.pause(2000);
         waitForTableUpdate(1);
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(1);

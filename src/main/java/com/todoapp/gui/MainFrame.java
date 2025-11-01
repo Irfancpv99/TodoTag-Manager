@@ -19,7 +19,7 @@ public class MainFrame extends JFrame {
     private JTextField todoDescriptionField;
     private JTextField searchField;
     private JTextField tagNameField;
-    private JTable todoTable;
+    JTable todoTable;
     private TodoTableModel todoTableModel;
     
     // Tag components
