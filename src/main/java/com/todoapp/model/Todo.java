@@ -45,6 +45,7 @@ public class Todo {
         this.description = description;
         this.done = false;
     }
+    
     public Todo(String description, boolean done) {
         if (description == null) {
             throw new IllegalArgumentException("Description cannot be null");
@@ -84,7 +85,6 @@ public class Todo {
         return new HashSet<>(tags);
     }
     
-
     public void setTags(Set<Tag> tags) {
         this.tags = tags != null ? new HashSet<>(tags) : new HashSet<>();
     }
@@ -103,7 +103,6 @@ public class Todo {
         }
     }
     
-    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -114,7 +113,7 @@ public class Todo {
         }
         Todo todo = (Todo) obj;
         
-       if (id == null || todo.id == null) {
+        if (id == null || todo.id == null) {
             return false;
         }
         
@@ -123,7 +122,7 @@ public class Todo {
     
     @Override
     public int hashCode() {
-       return description != null ? Objects.hash(description) : 0;
+        return description != null ? Objects.hash(description) : 0;
     }
     
     @Override

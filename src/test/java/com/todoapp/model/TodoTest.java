@@ -62,39 +62,48 @@ class TodoTest {
         Todo todo2 = new Todo("Task2");
         Todo todo3 = new Todo("Task3");
 
-        // Test same reference
         assertEquals(todo1, todo1);
-        assertTrue(todo1.equals(todo1));
 
-        // Test two todos with null IDs - should NOT be equal
-        assertFalse(todo1.equals(todo2));
         assertNotEquals(todo1, todo2);
 
-        // Test todos with same ID - should be equal
         todo1.setId(1L);
         todo2.setId(1L);
-        assertTrue(todo1.equals(todo2));
         assertEquals(todo1, todo2);
 
-        // Test todos with different IDs - should NOT be equal
         todo2.setId(2L);
-        assertFalse(todo1.equals(todo2));
         assertNotEquals(todo1, todo2);
 
-        // Test one with ID, one without - should NOT be equal
-        assertFalse(todo2.equals(todo3));
-        assertFalse(todo3.equals(todo2));
         assertNotEquals(todo2, todo3);
         assertNotEquals(todo3, todo2);
 
-        // CRITICAL: Direct calls to equals with null
+        assertNotEquals(todo1, null);
+        
+        assertNotEquals(todo1, "string");
+        assertNotEquals(todo1, new Object());
+    }
+    
+    @Test 
+    void shouldHandleEqualsEdgeCasesForMutationTesting() {
+        Todo todo1 = new Todo("Task1");
+        Todo todo2 = new Todo("Task2");
+        
+       
+        assertTrue(todo1.equals(todo1));
+        
+        assertFalse(todo1.equals(todo2));
+        
+        todo1.setId(1L);
+        todo2.setId(1L);
+        assertTrue(todo1.equals(todo2));
+        
+        todo2.setId(2L);
+        assertFalse(todo1.equals(todo2));
+        
         assertFalse(todo1.equals(null));
         
-        // CRITICAL: Direct calls to equals with different type
-        assertFalse(todo1.equals("string"));
         assertFalse(todo1.equals("not a Todo"));
-        assertFalse(todo1.equals(new Object()));
         assertFalse(todo1.equals(Integer.valueOf(42)));
+        assertFalse(todo1.equals(new Object()));
     }
     
     @Test
