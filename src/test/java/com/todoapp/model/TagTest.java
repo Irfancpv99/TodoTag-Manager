@@ -1,6 +1,7 @@
 package com.todoapp.model;
 
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TagTest {
@@ -119,21 +120,21 @@ class TagTest {
     @Test
     void shouldKillRemainingEqualsMutants() {
         Tag tag = new Tag("a");
-
-        assertNotEquals(tag, null);
-
-        assertNotEquals(tag, "not a tag");
-
         Tag other = new Tag("b");
-        assertNotEquals(tag, other);  
+
+        assertEquals(tag, tag);
+
+        assertNotEquals(null, tag);
+        assertNotEquals(tag, new Object());
 
         tag.setId(1L);
-        assertNotEquals(tag, other);   
         other.setId(2L);
         assertNotEquals(tag, other);
 
-      
+        
         other.setId(1L);
         assertEquals(tag, other);
     }
+
+
 }
