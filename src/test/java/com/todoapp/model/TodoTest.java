@@ -72,15 +72,15 @@ class TodoTest {
 
         todo2.setId(2L);
         assertNotEquals(todo1, todo2);
-
         assertNotEquals(todo2, todo3);
         assertNotEquals(todo3, todo2);
 
         assertNotEquals(todo1, null);
-        
         assertNotEquals(todo1, "string");
         assertNotEquals(todo1, new Object());
     }
+
+
     
     @Test
     void shouldHandleEqualsEdgeCasesForMutationTesting() {
