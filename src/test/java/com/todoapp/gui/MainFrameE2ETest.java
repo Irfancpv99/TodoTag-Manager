@@ -144,35 +144,31 @@ class MainFrameE2ETest {
     @Order(3)
     @DisplayName("Search and edit workflow")
     void searchAndEdit() {
-        // Add multiple with delays
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
-        
-        Pause.pause(1500);
+
+        waitForTableUpdate(3);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
         window.textBox("searchField").enterText("Buy");
         window.button("searchButton").click();
-        Pause.pause(1500);
-
+        waitForTableUpdate(2);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
 
-        // Show all
         window.button("showAllButton").click();
-        Pause.pause(1500);
-
+        waitForTableUpdate(3);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        // Edit  
+        // Edit
         window.table("todoTable").selectRows(0);
         window.button("editButton").click();
         Pause.pause(800);
-
         window.dialog().textBox().deleteText().enterText("Updated task");
         window.dialog().button(withText("OK")).click();
         Pause.pause(1500);
     }
+
     
     @Test
     @Order(4)

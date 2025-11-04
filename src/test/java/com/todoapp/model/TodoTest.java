@@ -82,29 +82,28 @@ class TodoTest {
         assertNotEquals(todo1, new Object());
     }
     
-    @Test 
+    @Test
     void shouldHandleEqualsEdgeCasesForMutationTesting() {
         Todo todo1 = new Todo("Task1");
         Todo todo2 = new Todo("Task2");
-        
-       
-        assertTrue(todo1.equals(todo1));
-        
-        assertFalse(todo1.equals(todo2));
-        
+
+        assertEquals(todo1, todo1);
+
+        assertNotEquals(todo1, todo2);
+
         todo1.setId(1L);
         todo2.setId(1L);
-        assertTrue(todo1.equals(todo2));
-        
+        assertEquals(todo1, todo2);
+
         todo2.setId(2L);
-        assertFalse(todo1.equals(todo2));
-        
-        assertFalse(todo1.equals(null));
-        
-        assertFalse(todo1.equals("not a Todo"));
-        assertFalse(todo1.equals(Integer.valueOf(42)));
-        assertFalse(todo1.equals(new Object()));
+        assertNotEquals(todo1, todo2);
+
+        assertNotEquals(null, todo1);
+        assertNotEquals("not a Todo", todo1);
+        assertNotEquals(Integer.valueOf(42), todo1);
+        assertNotEquals(new Object(), todo1);
     }
+
     
     @Test
     void shouldCalculateHashCodeBasedOnDescription() {
