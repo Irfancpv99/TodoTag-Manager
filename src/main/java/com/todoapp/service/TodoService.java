@@ -17,8 +17,8 @@ public class TodoService {
     private final RepositoryFactory repositoryFactory;
 
     public TodoService(AppConfig config) {
-        // Changed from getInstance() to direct instantiation for better testability
-        this.repositoryFactory = new RepositoryFactory(config);
+       
+    	this.repositoryFactory = new RepositoryFactory(config);
         this.todoRepository = repositoryFactory.createTodoRepository();
         this.tagRepository = repositoryFactory.createTagRepository();
     }
