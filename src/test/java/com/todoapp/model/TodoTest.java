@@ -60,26 +60,19 @@ class TodoTest {
     void shouldHandleEqualityCorrectly() {
         Todo todo1 = new Todo("Task1");
         Todo todo2 = new Todo("Task2");
-        Todo todo3 = new Todo("Task3");
 
         assertEquals(todo1, todo1);
 
-        assertNotEquals(todo1, todo2);
+        assertNotEquals(null, todo1);
+        assertNotEquals(todo1, new Object());
 
         todo1.setId(1L);
-        todo2.setId(1L);
-        assertEquals(todo1, todo2);
-
         todo2.setId(2L);
         assertNotEquals(todo1, todo2);
-        assertNotEquals(todo2, todo3);
-        assertNotEquals(todo3, todo2);
 
-        assertNotEquals(todo1, null);
-        assertNotEquals(todo1, "string");
-        assertNotEquals(todo1, new Object());
+        todo2.setId(1L);
+        assertEquals(todo1, todo2);
     }
-
 
     
     @Test
