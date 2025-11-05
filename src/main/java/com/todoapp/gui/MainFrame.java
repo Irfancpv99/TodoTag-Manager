@@ -28,7 +28,7 @@ public class MainFrame extends JFrame {
     private DefaultListModel<Tag> tagListModel;
     private DefaultListModel<Tag> availableTagsListModel;
   
-    private MainFrameController controller;
+    private transient MainFrameController controller;
 
     public MainFrame(MainFrameController controller) {
         super(WINDOW_TITLE);

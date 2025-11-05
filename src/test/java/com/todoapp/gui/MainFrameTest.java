@@ -142,9 +142,11 @@ class MainFrameTest {
         }
         @Test
         void searchTodos_viaButton_filtersResults() {
-            when(mockController.searchTodos("Buy")).thenReturn(
-                List.of(new Todo("Buy milk"), new Todo("Buy eggs"))
-            );
+            
+        	window.textBox("searchField").setText("");
+
+            when(mockController.searchTodos("Buy"))
+                    .thenReturn(List.of(new Todo("Buy milk"), new Todo("Buy eggs")));
 
             window.textBox("searchField").enterText("Buy");
             window.button("searchButton").click();
