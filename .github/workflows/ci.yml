@@ -134,7 +134,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           mvn sonar:sonar \
-            -Dsonar.projectKey=irfancpv99_TodoTag-Manager \
+            -Dsonar.projectKey=Irfancpv99_TodoTag-Manager \
             -Dsonar.organization=irfancpv99-1 \
             -Dsonar.host.url=https://sonarcloud.io
 
