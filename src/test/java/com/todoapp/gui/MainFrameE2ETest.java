@@ -58,6 +58,8 @@ class MainFrameE2ETest {
         if (robot != null) robot.cleanUp();
         cleanDatabase();
     }
+    
+    //		 E2E test
 
     @Test
     @Order(1)
