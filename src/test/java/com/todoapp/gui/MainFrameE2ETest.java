@@ -36,6 +36,7 @@ class MainFrameE2ETest {
         resetSingletons();
         appConfig = createMongoDBConfig();
     }
+    
     @BeforeEach
     void setUp() {
         cleanDatabase();
