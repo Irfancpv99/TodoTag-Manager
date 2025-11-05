@@ -135,7 +135,7 @@ jobs:
         run: |
           mvn sonar:sonar \
             -Dsonar.projectKey=irfancpv99_TodoTag-Manager \
-            -Dsonar.organization=irfancpv99-1 \
+            -Dsonar.organization=irfancpv99 \
             -Dsonar.host.url=https://sonarcloud.io
 
       - name: Upload Test Results
