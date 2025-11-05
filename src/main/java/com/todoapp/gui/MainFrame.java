@@ -479,7 +479,7 @@ public class MainFrame extends JFrame {
         return selectedRow >= 0 ? todoTableModel.getTodoAt(selectedRow) : null;
     }
 
-    // TodoTableModel 
+    // TodoTable-Model 
     static class TodoTableModel extends AbstractTableModel {
         private static final long serialVersionUID = 1L;
         private final String[] columnNames = {"ID", "Description", "Done"};
