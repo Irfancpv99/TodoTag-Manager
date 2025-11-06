@@ -154,14 +154,14 @@ class MongoTodoRepositoryTest {
         
         todoRepository.save(new Todo("test"));
         
-        assertDoesNotThrow(() -> todoRepository.close());
+        assertDoesNotThrow(todoRepository::close);
         
         assertThrows(Exception.class, () -> todoRepository.save(new Todo("after-close")));
         
         MongoTodoRepository testRepo = new MongoTodoRepository(connectionString, "temp_db", tagRepository);
         testRepo.close();
         
-        assertDoesNotThrow(() -> testRepo.close());
+        assertDoesNotThrow(testRepo::close);
     }
     
     @Test

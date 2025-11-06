@@ -166,10 +166,10 @@ class MongoTagRepositoryTest {
         MongoTagRepository testRepo = new MongoTagRepository(connectionString, tempDb);
         testRepo.save(new Tag("test"));
         
-        assertDoesNotThrow(() -> testRepo.close());
+        assertDoesNotThrow(testRepo::close);
         
         assertThrows(Exception.class, () -> testRepo.save(new Tag("after-close")));
         
-        assertDoesNotThrow(() -> testRepo.close());
+        assertDoesNotThrow(testRepo::close);
     }
 }

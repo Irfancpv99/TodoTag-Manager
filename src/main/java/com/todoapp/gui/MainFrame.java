@@ -419,12 +419,10 @@ public class MainFrame extends JFrame {
     }
 
     public void showAllTodos() {
-        executeAction(() -> {
-            SwingUtilities.invokeLater(() -> {
-                refreshTodos();
-                searchField.setText("");
-            });
-        }, "Failed to show all todos");
+        executeAction(() -> SwingUtilities.invokeLater(() -> {
+            refreshTodos();
+            searchField.setText("");
+        }), "Failed to show all todos");
     }
 
     public void refreshTodos() {

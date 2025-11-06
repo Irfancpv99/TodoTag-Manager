@@ -127,10 +127,10 @@ class DatabaseManagerTest {
 
         DatabaseManager manager = new DatabaseManager(mockConfig);
         
-        assertDoesNotThrow(() -> manager.beginTransaction());
-        assertDoesNotThrow(() -> manager.commitTransaction());
-        assertDoesNotThrow(() -> manager.rollbackTransaction());
-        assertDoesNotThrow(() -> manager.close());
+        assertDoesNotThrow(manager::beginTransaction);
+        assertDoesNotThrow(manager::commitTransaction);
+        assertDoesNotThrow(manager::rollbackTransaction);
+        assertDoesNotThrow(manager::close);
         
         EntityManager mockEM = mock(EntityManager.class);
         EntityTransaction mockTx = mock(EntityTransaction.class);
