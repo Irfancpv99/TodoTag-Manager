@@ -182,6 +182,44 @@ class DatabaseManagerTest {
         assertNotNull(instance2);
         assertNotSame(instance1, instance2, "Should create different instances");
     }
+    @Test
+    void shouldThrowExceptionOnInvalidConfiguration() {
+        try (MockedStatic<Persistence> mocked = mockStatic(Persistence.class)) {
+            AppConfig config = mock(AppConfig.class);
+            when(config.getDatabaseType()).thenReturn(DatabaseType.MYSQL);
+            when(config.getMySqlUrl()).thenReturn("jdbc:mysql://localhost:3306/test");
+            when(config.getMySqlUsername()).thenReturn("user");
+            when(config.getMySqlPassword()).thenReturn("pass");
+            
+            mocked.when(() -> Persistence.createEntityManagerFactory(eq("todoapp"), anyMap()))
+                  .thenThrow(new IllegalArgumentException("Invalid config"));
+            
+            IllegalStateException ex = assertThrows(IllegalStateException.class, 
+                () -> new DatabaseManager(config));
+            assertEquals("Invalid database configuration", ex.getMessage());
+        }
+    }
+    @Test
+    void shouldHandleTransactionWhenConditionsNotMet() throws Exception {
+        AppConfig config = mock(AppConfig.class);
+        when(config.getDatabaseType()).thenReturn(DatabaseType.MONGODB);
+        DatabaseManager manager = new DatabaseManager(config);
+        
+        EntityManager mockEM = mock(EntityManager.class);
+        EntityTransaction mockTx = mock(EntityTransaction.class);
+        when(mockEM.getTransaction()).thenReturn(mockTx);
+        injectMock(manager, "entityManager", mockEM);
+        
+        when(mockTx.isActive()).thenReturn(true);
+        manager.beginTransaction();
+        verify(mockTx, never()).begin();
+        
+        when(mockTx.isActive()).thenReturn(false);
+        manager.commitTransaction();
+        manager.rollbackTransaction();
+        verify(mockTx, never()).commit();
+        verify(mockTx, never()).rollback();
+    }
     
 //    		helper
     
@@ -193,5 +231,10 @@ class DatabaseManagerTest {
 
         assertNull(manager.getEntityManager());
         verify(mockConfig).getDatabaseType();
+    }
+    private void injectMock(Object target, String fieldName, Object mock) throws Exception {
+        Field field = DatabaseManager.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, mock);
     }
 }

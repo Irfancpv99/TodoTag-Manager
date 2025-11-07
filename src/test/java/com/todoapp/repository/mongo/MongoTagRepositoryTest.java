@@ -6,7 +6,7 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
-
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
@@ -169,6 +169,29 @@ class MongoTagRepositoryTest {
         assertDoesNotThrow(testRepo::close);
         
         assertThrows(Exception.class, () -> testRepo.save(new Tag("after-close")));
+        
+        assertDoesNotThrow(testRepo::close);
+    }
+    
+    @Test
+    void testDeleteTagWithNullId() {
+        // Covers: delete() when tag.getId() == null
+        Tag tag = new Tag("NoId"); // ID is null
+        assertDoesNotThrow(() -> repository.delete(tag));
+    }
+
+    @Test
+    void testCloseWithNullMongoClient() throws Exception {
+        // Covers: close() when mongoClient is null
+        String tempDb = "temp_close_test_" + System.currentTimeMillis();
+        MongoTagRepository testRepo = new MongoTagRepository(
+            mongoDBContainer.getReplicaSetUrl(), tempDb
+        );
+        
+        // Use reflection to set private field to null
+        Field field = MongoTagRepository.class.getDeclaredField("mongoClient");
+        field.setAccessible(true);
+        field.set(testRepo, null);
         
         assertDoesNotThrow(testRepo::close);
     }

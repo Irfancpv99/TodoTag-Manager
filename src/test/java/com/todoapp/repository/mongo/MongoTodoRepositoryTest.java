@@ -1,7 +1,11 @@
 package com.todoapp.repository.mongo;
 
 import com.todoapp.model.Tag;
+
 import com.todoapp.model.Todo;
+import org.bson.Document;
+import java.lang.reflect.Field;
+import com.mongodb.client.MongoCollection;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -176,4 +180,44 @@ class MongoTodoRepositoryTest {
         assertTrue(fetched.isPresent());
         assertEquals(123L, fetched.get().getId());
     }
+    
+    @Test
+    void testFindTodoWithoutTagIdsField() throws Exception {
+        // Covers: documentToTodo() when tagIds field is missing (returns null)
+        Field collectionField = MongoTodoRepository.class.getDeclaredField("collection");
+        collectionField.setAccessible(true);
+        MongoCollection<Document> collection = (MongoCollection<Document>) collectionField.get(todoRepository);
+        
+        // Insert document directly without tagIds field
+        Document doc = new Document("_id", 999L)
+            .append("description", "Task without tags")
+            .append("done", false);
+        collection.insertOne(doc);
+        
+        Optional<Todo> found = todoRepository.findById(999L);
+        assertTrue(found.isPresent());
+        assertTrue(found.get().getTags().isEmpty()); // Should handle null gracefully
+        
+        todoRepository.deleteById(999L); // Cleanup
+    }
+
+    @Test
+    void testCloseWithNullMongoClient() throws Exception {
+        // Covers: close() when mongoClient is null
+        String tempDb = "temp_close_test_" + System.currentTimeMillis();
+        MongoTagRepository tempTagRepo = new MongoTagRepository(
+            mongoDBContainer.getReplicaSetUrl(), tempDb
+        );
+        MongoTodoRepository testRepo = new MongoTodoRepository(
+            mongoDBContainer.getReplicaSetUrl(), tempDb, tempTagRepo
+        );
+        
+        Field field = MongoTodoRepository.class.getDeclaredField("mongoClient");
+        field.setAccessible(true);
+        field.set(testRepo, null);
+        
+        assertDoesNotThrow(testRepo::close);
+        tempTagRepo.close();
+    }
+    
 }
