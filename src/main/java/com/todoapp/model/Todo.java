@@ -114,11 +114,7 @@ public class Todo {
         }
         Todo todo = (Todo) obj;
         
-        if (id == null || todo.id == null) {
-            return false;
-        }
-        
-        return Objects.equals(id, todo.id);
+        return id != null && todo.id != null && Objects.equals(id, todo.id);
     }
     
     @Override

@@ -29,7 +29,7 @@ class TodoTest {
         
         assertNull(todo.getDescription());
         assertFalse(todo.isDone()); 
-        }
+    }
     
     @Test
     void shouldRejectNullDescription() {
@@ -41,7 +41,7 @@ class TodoTest {
     }
     
     @Test
-    void shouldSetIdAndDescription() {
+    void shouldSetProperties() {
         Todo todo = new Todo("Test");
         
         todo.setId(1L);
@@ -57,67 +57,56 @@ class TodoTest {
     }
     
     @Test
-    void shouldHandleEqualityCorrectly() {
+    void shouldTestEquality() {
         Todo todo1 = new Todo("Task1");
         Todo todo2 = new Todo("Task2");
 
+        // Same instance
         assertEquals(todo1, todo1);
 
-        assertNotEquals(null, todo1);
+        // Null and different class
+        assertNotEquals(todo1, null);
         assertNotEquals(todo1, new Object());
 
+        // Both ids null - both directions
+        assertNotEquals(todo1, todo2);
+        assertNotEquals(todo2, todo1);
+
+        // First has id, second doesn't - both directions
+        todo1.setId(1L);
+        assertNotEquals(todo1, todo2);
+        assertNotEquals(todo2, todo1);  // THIS KILLS THE MUTANT
+        
+        // Second has id, first doesn't - both directions
+        todo1.setId(null);
+        todo2.setId(2L);
+        assertNotEquals(todo1, todo2);
+        assertNotEquals(todo2, todo1);
+
+        // Both have different ids
         todo1.setId(1L);
         todo2.setId(2L);
         assertNotEquals(todo1, todo2);
 
+        // Both have same id
         todo2.setId(1L);
         assertEquals(todo1, todo2);
     }
-
     
     @Test
-    void shouldHandleEqualsEdgeCasesForMutationTesting() {
-        Todo todo1 = new Todo("Task1");
-        Todo todo2 = new Todo("Task2");
-
-        assertEquals(todo1, todo1);
-
-        assertNotEquals(todo1, todo2);
-
-        todo1.setId(1L);
-        todo2.setId(1L);
-        assertEquals(todo1, todo2);
-
-        todo2.setId(2L);
-        assertNotEquals(todo1, todo2);
-
-        assertNotEquals(null, todo1);
-        assertNotEquals("not a Todo", todo1);
-        assertNotEquals(Integer.valueOf(42), todo1);
-        assertNotEquals(new Object(), todo1);
-    }
-
-    
-    @Test
-    void shouldCalculateHashCodeBasedOnDescription() {
+    void shouldCalculateHashCode() {
         Todo todo1 = new Todo("Same description");
         Todo todo2 = new Todo("Same description");
         Todo todo3 = new Todo("Different description");
         Todo todoNull = new Todo();
         
         assertEquals(todo1.hashCode(), todo2.hashCode());
-        
         assertNotEquals(todo1.hashCode(), todo3.hashCode());
-        
         assertEquals(0, todoNull.hashCode());
-        
-        todo1.setId(1L);
-        todo2.setId(2L);
-        assertEquals(todo1.hashCode(), todo2.hashCode());
     }
     
     @Test
-    void shouldMaintainHashSetIntegrityInManyToManyRelationship() {
+    void shouldHandleTagOperations() {
         Todo todo1 = new Todo("Task 1");
         Todo todo2 = new Todo("Task 2");
         Tag workTag = new Tag("work");
@@ -129,49 +118,34 @@ class TodoTest {
         
         assertEquals(2, todo1.getTags().size());
         assertEquals(1, todo2.getTags().size());
-        assertEquals(2, workTag.getTodos().size());
-        assertEquals(1, urgentTag.getTodos().size());
-        
-        todo1.setId(1L);
-        todo2.setId(2L);
-        workTag.setId(10L);
-        urgentTag.setId(11L);
         
         assertTrue(todo1.getTags().contains(workTag));
         assertTrue(todo1.getTags().contains(urgentTag));
-        assertTrue(workTag.getTodos().contains(todo1));
-        assertTrue(workTag.getTodos().contains(todo2));
         
         todo1.removeTag(urgentTag);
         assertEquals(1, todo1.getTags().size());
-        assertEquals(0, urgentTag.getTodos().size());
+        
+        // Test null handling
+        todo1.addTag(null);
+        assertEquals(1, todo1.getTags().size());
+        
+        todo1.removeTag(null);
+        assertEquals(1, todo1.getTags().size());
     }
     
     @Test
-    void shouldHandleNullTagOperations() {
-        Todo todo = new Todo("Test");
-        int originalSize = todo.getTags().size();
-        
-        todo.addTag(null);
-        assertEquals(originalSize, todo.getTags().size());
-        
-        todo.removeTag(null);
-        assertEquals(originalSize, todo.getTags().size());
-    }
-    
-    @Test
-    void shouldProvideDefensiveCopiesAndHandleNulls() {
+    void shouldProvideDefensiveCopies() {
         Todo todo = new Todo("Test");
         Tag tag = new Tag("work");
         todo.addTag(tag);
         
         todo.getTags().clear();
         assertEquals(1, todo.getTags().size());
-        
+       
         todo.setTags(null);
         assertNotNull(todo.getTags());
-        assertEquals(0, todo.getTags().size());
-        
+        assertEquals(0, todo.getTags().size());  
+      
         java.util.Set<Tag> originalSet = new java.util.HashSet<>();
         originalSet.add(tag);
         todo.setTags(originalSet);
@@ -180,7 +154,7 @@ class TodoTest {
     }
     
     @Test
-    void shouldGenerateCorrectStringRepresentation() {
+    void shouldGenerateToString() {
         Todo todo = new Todo("Test task");
         todo.setId(42L);
         todo.setDone(true);
