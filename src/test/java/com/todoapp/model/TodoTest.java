@@ -72,13 +72,11 @@ class TodoTest {
         assertNotEquals(todo1, todo2);
         assertNotEquals(todo2, todo1);
 
-        // First has id, second doesn't - both directions
         todo1.setId(1L);
         assertNotEquals(todo1, todo2);
-        assertNotEquals(todo2, todo1);  // THIS KILLS THE MUTANT
+        assertNotEquals(todo2, todo1);  
         
-        // Second has id, first doesn't - both directions
-        todo1.setId(null);
+       todo1.setId(null);
         todo2.setId(2L);
         assertNotEquals(todo1, todo2);
         assertNotEquals(todo2, todo1);

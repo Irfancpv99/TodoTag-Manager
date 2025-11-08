@@ -41,18 +41,24 @@ public class AppConfig {
     /* ---------- loading ---------- */
 
     private void loadProperties() {
-      
-        try (InputStream in = Thread.currentThread()
-                                    .getContextClassLoader()
-                                    .getResourceAsStream("application.properties")) {
+        InputStream in = Thread.currentThread()
+                                .getContextClassLoader()
+                                .getResourceAsStream("application.properties");
 
-            if (in == null) {          
-                setDefaultProperties();
-                return;
-            }
+        if (in == null) {
+            setDefaultProperties();
+            return;
+        }
+
+        try {
             properties.load(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ignored) {
+                  }
         }
     }
 
