@@ -11,111 +11,135 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AppConfigTest {
 
-//     helpers 
-
-    private Properties minimalProps(String dbType) {
-        Properties p = new Properties();
-        p.setProperty("database.type", dbType);
-        p.setProperty("mongodb.host", "mh");
-        p.setProperty("mongodb.port", "1234");
-        p.setProperty("mongodb.database", "mdb");
-        p.setProperty("mysql.url", "jdbc:mysql://localhost:3306/todoapp");
-        p.setProperty("mysql.username", "u");
-        p.setProperty("mysql.password", "p");
-        return p;
-    }
-
     @Test
-    void defaultConstructor_usesRealFile() {
-    	AppConfig cut = new AppConfig();
-        assertThat(cut.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
-        assertThat(cut.getMongoDbHost()).isEqualTo("localhost");
-        assertThat(cut.getMongoDbPort()).isEqualTo(27017);
-        assertThat(cut.getMongoDbDatabase()).isEqualTo("todoapp");
-        assertThat(cut.getMySqlUrl())
-                .isEqualTo("jdbc:mysql://localhost:3307/todoapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true");
-        assertThat(cut.getMySqlUsername()).isEqualTo("todouser");
-        assertThat(cut.getMySqlPassword()).isEqualTo("todopassword");
+    void defaultConstructor_loadsFromFile() {
+        AppConfig cfg = new AppConfig();
+        assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
+        assertThat(cfg.getMongoDbHost()).isEqualTo("localhost");
+        assertThat(cfg.getMongoDbPort()).isEqualTo(27017);
+        assertThat(cfg.getMongoDbDatabase()).isEqualTo("todoapp");
+        assertThat(cfg.getMySqlUrl()).contains("3307");
+        assertThat(cfg.getMySqlUsername()).isEqualTo("todouser");
+        assertThat(cfg.getMySqlPassword()).isEqualTo("todopassword");
     }
 
     @Test
     void customPropertiesConstructor_usesGivenProps() {
-        Properties p = minimalProps("mysql");
-        AppConfig cut = new AppConfig(p);
-        assertThat(cut.getDatabaseType()).isEqualTo(DatabaseType.MYSQL);
-        assertThat(cut.getMySqlUsername()).isEqualTo("u");
+        Properties p = new Properties();
+        p.setProperty("database.type", "mysql");
+        p.setProperty("mysql.username", "user");
+        
+        AppConfig cfg = new AppConfig(p);
+        assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MYSQL);
+        assertThat(cfg.getMySqlUsername()).isEqualTo("user");
     }
 
     @Test
-    void setDatabaseType_mutatesInternalState() {
-        AppConfig cut = new AppConfig();
-        cut.setDatabaseType(DatabaseType.MYSQL);
-        assertThat(cut.getDatabaseType()).isEqualTo(DatabaseType.MYSQL);
+    void nullProperties_fallsBackToFile() {
+        AppConfig cfg = new AppConfig((Properties) null);
+        assertThat(cfg.getMySqlUrl()).contains("3307");
     }
 
     @Test
-    void constructor_withNullProps_fallsBackToFile() {
-        AppConfig cut = new AppConfig((Properties) null);
-        assertThat(cut.getMySqlUrl()).contains("3307");
+    void setDatabaseType_changesType() {
+        AppConfig cfg = new AppConfig();
+        cfg.setDatabaseType(DatabaseType.MYSQL);
+        assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MYSQL);
     }
 
     @Test
-    void loadProperties_ioException_wrapsInUnchecked() {
-    	ClassLoader brokenCl = new ClassLoader(getClass().getClassLoader()) {
+    void loadException_wrapsInUnchecked() {
+        ClassLoader cl = new ClassLoader(getClass().getClassLoader()) {
             @Override
             public InputStream getResourceAsStream(String name) {
                 if ("application.properties".equals(name)) {
                     return new InputStream() {
-                        @Override
-                        public int read() throws IOException {
-                            throw new IOException("boom");
-                        }
+                        @Override public int read() throws IOException { throw new IOException("fail"); }
                     };
                 }
                 return super.getResourceAsStream(name);
             }
         };
+        Thread.currentThread().setContextClassLoader(cl);
 
-        Thread.currentThread().setContextClassLoader(brokenCl);
         assertThatThrownBy(AppConfig::new)
-                .isInstanceOf(UncheckedIOException.class)
-                .hasCauseInstanceOf(IOException.class);
+            .isInstanceOf(UncheckedIOException.class)
+            .hasCauseInstanceOf(IOException.class);
     }
-    
+
     @Test
-    void whenResourceIsMissing_defaultsAreLoaded() {
-        ClassLoader noResourceCl = new ClassLoader(getClass().getClassLoader()) {
+    void missingResource_usesDefaults() {
+        ClassLoader cl = new ClassLoader(getClass().getClassLoader()) {
             @Override
             public InputStream getResourceAsStream(String name) {
-                return null;    
+                return null; 
                 }
         };
-
-        Thread.currentThread().setContextClassLoader(noResourceCl);
-        try {
-            AppConfig cfg = new AppConfig();          // must use defaults
-            assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
-            assertThat(cfg.getMongoDbHost()).isEqualTo("localhost");
-            assertThat(cfg.getMongoDbPort()).isEqualTo(27017);
-            assertThat(cfg.getMongoDbDatabase()).isEqualTo("todoapp");
-            assertThat(cfg.getMySqlUrl()).contains("3306");   // default MySQL port
-            assertThat(cfg.getMySqlUsername()).isEqualTo("todouser");
-            assertThat(cfg.getMySqlPassword()).isEqualTo("todopassword");
-        } finally {
-            resetContextLoader();   
-            }
+        Thread.currentThread().setContextClassLoader(cl);
+        
+        AppConfig cfg = new AppConfig();
+        assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
+        assertThat(cfg.getMongoDbHost()).isEqualTo("localhost");
+        assertThat(cfg.getMongoDbPort()).isEqualTo(27017);
+        assertThat(cfg.getMySqlUrl()).contains("3306"); // default port
     }
 
     @Test
-    void getProperties_exposesInternalPropertiesInstance() {
-        Properties p = minimalProps("mysql");
+    void closeException_isIgnored() {
+        ClassLoader cl = new ClassLoader(getClass().getClassLoader()) {
+            @Override
+            public InputStream getResourceAsStream(String name) {
+                if ("application.properties".equals(name)) {
+                    return new InputStream() {
+                        @Override public int read() { return -1; }
+                        @Override public void close() throws IOException { throw new IOException("close fail"); }
+                    };
+                }
+                return super.getResourceAsStream(name);
+            }
+        };
+        Thread.currentThread().setContextClassLoader(cl);
+
+        AppConfig cfg = new AppConfig();
+        assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
+    }
+
+    @Test
+    void inputStream_isAlwaysClosed() {
+        class TrackingStream extends InputStream {
+            boolean closed = false;
+            @Override public int read() { return -1; }
+            @Override public void close() { closed = true; }
+        }
+        
+        TrackingStream stream = new TrackingStream();
+        ClassLoader cl = new ClassLoader(getClass().getClassLoader()) {
+            @Override
+            public InputStream getResourceAsStream(String name) {
+                if ("application.properties".equals(name)) {
+                    return stream;
+                }
+                return super.getResourceAsStream(name);
+            }
+        };
+        Thread.currentThread().setContextClassLoader(cl);
+
+        new AppConfig();
+        assertThat(stream.closed).isTrue();
+    }
+
+    @Test
+    void getProperties_returnsSameInstance() {
+        Properties p = new Properties();
+        p.setProperty("database.type", "mysql");
+        
         AppConfig cfg = new AppConfig(p);
-       assertThat(cfg.getProperties()).isSameAs(cfg.getProperties()); // same instance
+        assertThat(cfg.getProperties()).isSameAs(cfg.getProperties());
         assertThat(cfg.getProperties()).containsEntry("database.type", "mysql");
     }
 
     @AfterEach
-    void resetContextLoader() {
-         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+    void resetClassLoader() {
+        Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
     }
 }

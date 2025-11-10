@@ -183,12 +183,10 @@ class MongoTodoRepositoryTest {
     
     @Test
     void testFindTodoWithoutTagIdsField() throws Exception {
-        // Covers: documentToTodo() when tagIds field is missing (returns null)
-        Field collectionField = MongoTodoRepository.class.getDeclaredField("collection");
+    	Field collectionField = MongoTodoRepository.class.getDeclaredField("collection");
         collectionField.setAccessible(true);
         MongoCollection<Document> collection = (MongoCollection<Document>) collectionField.get(todoRepository);
         
-        // Insert document directly without tagIds field
         Document doc = new Document("_id", 999L)
             .append("description", "Task without tags")
             .append("done", false);
@@ -203,7 +201,6 @@ class MongoTodoRepositoryTest {
 
     @Test
     void testCloseWithNullMongoClient() throws Exception {
-        // Covers: close() when mongoClient is null
         String tempDb = "temp_close_test_" + System.currentTimeMillis();
         MongoTagRepository tempTagRepo = new MongoTagRepository(
             mongoDBContainer.getReplicaSetUrl(), tempDb
