@@ -49,6 +49,8 @@ class MainFrameE2ETest {
         });
         window = new FrameFixture(robot, frame);
         window.show();
+        window.focus();
+        window.textBox("todoDescriptionField").focus();
     }
 
     @AfterEach
