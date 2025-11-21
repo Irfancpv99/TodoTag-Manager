@@ -105,20 +105,24 @@ class MainFrameTest {
     }
 
     @Test
-    void testDeleteTag() {
+    void testDeleteTag() throws Exception {
         Tag tag = new Tag("urgent");
         tag.setId(1L);
         when(controller.deleteTag(1L)).thenReturn(true);
         when(controller.getAllTags()).thenReturn(new ArrayList<>());
         when(controller.getAllTodos()).thenReturn(new ArrayList<>());
-        
+
         frame.availableTagsListModel.addElement(tag);
         frame.availableTagsList.setSelectedIndex(0);
+
         frame.deleteTag();
-        verify(controller).deleteTag(1L);
+        SwingUtilities.invokeAndWait(() -> {}); 
+
+        verify(controller, times(1)).deleteTag(1L);
+
         
-        // No selection (early return)
         frame.deleteTag();
+        SwingUtilities.invokeAndWait(() -> {}); 
         verify(controller, times(1)).deleteTag(anyLong());
     }
 
