@@ -50,8 +50,7 @@ class MainFrameE2ETest {
         window = new FrameFixture(robot, frame);
         window.show();
         window.focus();
-        window.textBox("todoDescriptionField").focus();
-    }
+        window.textBox("todoDescriptionField").click(); }
 
     @AfterEach
     void tearDown() {

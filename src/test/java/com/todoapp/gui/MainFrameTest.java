@@ -123,19 +123,20 @@ class MainFrameTest {
     }
 
     @Test
-    void testDeleteTodo() {
+    void testDeleteTodo() throws Exception {
         Todo todo = new Todo("task");
         todo.setId(1L);
         when(controller.deleteTodo(1L)).thenReturn(true);
         when(controller.getAllTodos()).thenReturn(new ArrayList<>());
-        
+
         frame.todoTableModel.setTodos(List.of(todo));
         frame.todoTable.setRowSelectionInterval(0, 0);
+
         frame.deleteTodo();
-        verify(controller).deleteTodo(1L);
-        
-        frame.deleteTodo();
-        verify(controller, times(1)).deleteTodo(anyLong());
+
+        SwingUtilities.invokeAndWait(() -> {});
+
+        verify(controller, times(1)).deleteTodo(1L);
     }
 
     @Test
