@@ -185,7 +185,8 @@ class MongoTodoRepositoryTest {
     void testFindTodoWithoutTagIdsField() throws Exception {
     	Field collectionField = MongoTodoRepository.class.getDeclaredField("collection");
         collectionField.setAccessible(true);
-        MongoCollection<Document> collection = (MongoCollection<Document>) collectionField.get(todoRepository);
+        @SuppressWarnings("unchecked")
+		MongoCollection<Document> collection = (MongoCollection<Document>) collectionField.get(todoRepository);
         
         Document doc = new Document("_id", 999L)
             .append("description", "Task without tags")

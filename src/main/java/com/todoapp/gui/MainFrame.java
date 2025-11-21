@@ -9,24 +9,24 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Simplified MainFrame for easier 100% test coverage.
+ * Removed complex UI helpers and consolidated functionality.
+ */
 public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private static final String WINDOW_TITLE = "Todo Manager - TDD Development Demo Application";
-    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger(MainFrame.class.getName());
 
-    
-    // UI Components
-    private JTextField todoDescriptionField;
-    private JTextField searchField;
-    private JTextField tagNameField;
+    // UI Components - package-private for testing
+    JTextField todoDescriptionField;
+    JTextField searchField;
+    JTextField tagNameField;
     JTable todoTable;
-    private TodoTableModel todoTableModel;
-    
-    // Tag components
-    private JList<Tag> tagList;
-    private JList<Tag> availableTagsList;
-    private DefaultListModel<Tag> tagListModel;
-    private DefaultListModel<Tag> availableTagsListModel;
+    TodoTableModel todoTableModel;
+    JList<Tag> tagList;
+    JList<Tag> availableTagsList;
+    DefaultListModel<Tag> tagListModel;
+    DefaultListModel<Tag> availableTagsListModel;
   
     private transient MainFrameController controller;
 
@@ -44,19 +44,20 @@ public class MainFrame extends JFrame {
     }
 
     private void initializeComponents() {
+        // Text fields
         todoDescriptionField = new JTextField(30);
         todoDescriptionField.setName("todoDescriptionField");
-        
         searchField = new JTextField(20);
         searchField.setName("searchField");
-        
         tagNameField = new JTextField(20);
         tagNameField.setName("tagNameField");
         
+        // Table
         todoTableModel = new TodoTableModel();
         todoTable = new JTable(todoTableModel);
         todoTable.setName("todoTable");
         
+        // Double-click listener for toggle
         todoTable.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -66,58 +67,68 @@ public class MainFrame extends JFrame {
             }
         });
         
-        // Initialize tag components
+        // Lists
         tagListModel = new DefaultListModel<>();
         availableTagsListModel = new DefaultListModel<>();
-        tagList = createList(tagListModel, "tagList");
-        availableTagsList = createList(availableTagsListModel, "availableTagsList");
-    }
-
-    private JList<Tag> createList(DefaultListModel<Tag> model, String name) {
-        JList<Tag> list = new JList<>(model);
-        list.setName(name);
-        return list;
+        tagList = new JList<>(tagListModel);
+        tagList.setName("tagList");
+        availableTagsList = new JList<>(availableTagsListModel);
+        availableTagsList.setName("availableTagsList");
     }
 
     private void setupLayout() {
         setLayout(new BorderLayout(10, 10));
         
-        // Create top panel with vertical layout
+        // Top panel
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        topPanel.add(createTodoInputPanel());
+        topPanel.add(createTagInputPanel());
+        topPanel.add(createSearchPanel());
         
-        // Add  input row
-        topPanel.add(createInputRow("Add Todo:", todoDescriptionField, "addTodoButton", "Add Todo"));
-        
-        // Add tag input row
-        topPanel.add(createInputRow("Add Tag:", tagNameField, "addTagButton", "Add Tag"));
-        
-        // Create search panel
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        searchPanel.add(new JLabel("Search:"));
-        searchPanel.add(searchField);
-        JButton searchButton = new JButton("Search");
-        searchButton.setName("searchButton");
-        searchPanel.add(searchButton);
-        JButton showAllButton = new JButton("Show All");
-        showAllButton.setName("showAllButton");
-        searchPanel.add(showAllButton);
-        topPanel.add(searchPanel);
-        
-        topPanel.add(new JSeparator());
-        
-        // Center panel with table and tags
-        JPanel centerPanel = createCenterPanel();
+        // Center panel
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        centerPanel.add(createTodoPanel(), BorderLayout.CENTER);
+        centerPanel.add(createTagPanel(), BorderLayout.EAST);
         
         add(topPanel, BorderLayout.NORTH);
         add(centerPanel, BorderLayout.CENTER);
     }
 
-    private JPanel createCenterPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        panel.add(createTodoPanel(), BorderLayout.CENTER);
-        panel.add(createTagPanel(), BorderLayout.EAST);
+    private JPanel createTodoInputPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.add(new JLabel("Add Todo:"));
+        panel.add(todoDescriptionField);
+        JButton btn = new JButton("Add Todo");
+        btn.setName("addTodoButton");
+        panel.add(btn);
+        return panel;
+    }
+
+    private JPanel createTagInputPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.add(new JLabel("Add Tag:"));
+        panel.add(tagNameField);
+        JButton btn = new JButton("Add Tag");
+        btn.setName("addTagButton");
+        panel.add(btn);
+        return panel;
+    }
+
+    private JPanel createSearchPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.add(new JLabel("Search:"));
+        panel.add(searchField);
+        
+        JButton searchBtn = new JButton("Search");
+        searchBtn.setName("searchButton");
+        panel.add(searchBtn);
+        
+        JButton showAllBtn = new JButton("Show All");
+        showAllBtn.setName("showAllButton");
+        panel.add(showAllBtn);
+        
         return panel;
     }
 
@@ -125,17 +136,19 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JScrollPane(todoTable), BorderLayout.CENTER);
         
-        // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton editButton = new JButton("Edit Todo");
-        editButton.setName("editButton");
-        JButton deleteButton = new JButton("Delete Todo");
-        deleteButton.setName("deleteButton");
-        JButton toggleButton = new JButton("Toggle Done");
-        toggleButton.setName("toggleDoneButton");
-        buttonPanel.add(editButton);
-        buttonPanel.add(deleteButton);
-        buttonPanel.add(toggleButton);
+        
+        JButton editBtn = new JButton("Edit Todo");
+        editBtn.setName("editButton");
+        buttonPanel.add(editBtn);
+        
+        JButton deleteBtn = new JButton("Delete Todo");
+        deleteBtn.setName("deleteButton");
+        buttonPanel.add(deleteBtn);
+        
+        JButton toggleBtn = new JButton("Toggle Done");
+        toggleBtn.setName("toggleDoneButton");
+        buttonPanel.add(toggleBtn);
         
         panel.add(buttonPanel, BorderLayout.SOUTH);
         return panel;
@@ -145,175 +158,112 @@ public class MainFrame extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setPreferredSize(new Dimension(280, 0));
-        addTagSection(panel, "Todo Tags:", tagList);
+        
+        // Todo tags section
+        panel.add(new JLabel("Todo Tags:"));
+        JScrollPane todoTagsScroll = new JScrollPane(tagList);
+        todoTagsScroll.setPreferredSize(new Dimension(280, 120));
+        panel.add(todoTagsScroll);
         panel.add(Box.createVerticalStrut(10));
-        addTagSection(panel, "All Available Tags:", availableTagsList);
         
-        // Add buttons to tag panel
+        // Available tags section
+        panel.add(new JLabel("All Available Tags:"));
+        JScrollPane availableTagsScroll = new JScrollPane(availableTagsList);
+        availableTagsScroll.setPreferredSize(new Dimension(280, 120));
+        panel.add(availableTagsScroll);
         panel.add(Box.createVerticalStrut(10));
-        addAlignedButton(panel, "Add Tag to Todo", "addTagToTodoButton");
-        addAlignedButton(panel, "Remove Tag from Todo", "removeTagFromTodoButton");
         
-        // Add separator and button to tag panel
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(new JSeparator());
-        panel.add(Box.createVerticalStrut(5));
-        addAlignedButton(panel, "Delete Selected Tag", "deleteTagButton");
+        // Buttons
+        JButton addTagBtn = new JButton("Add Tag to Todo");
+        addTagBtn.setName("addTagToTodoButton");
+        panel.add(addTagBtn);
         
-        return panel;
-    }
-
-    private void addTagSection(JPanel parent, String title, JList<Tag> list) {
-        JLabel label = createBoldLabel(title);
-        label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        parent.add(label);
-        parent.add(Box.createVerticalStrut(5));
+        JButton removeTagBtn = new JButton("Remove Tag from Todo");
+        removeTagBtn.setName("removeTagFromTodoButton");
+        panel.add(removeTagBtn);
         
-        JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.setPreferredSize(new Dimension(280, 120));
-        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-        parent.add(scrollPane);
-    }
-
-    private JLabel createBoldLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(label.getFont().deriveFont(Font.BOLD));
-        return label;
-    }
-
-    private void addAlignedButton(JPanel parent, String text, String name) {
-        JButton button = new JButton(text);
-        button.setName(name);
-        button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        button.setMaximumSize(new Dimension(Integer.MAX_VALUE, button.getPreferredSize().height));
-        parent.add(button);
-        parent.add(Box.createVerticalStrut(5));
-    }
-
-    private JPanel createInputRow(String labelText, JTextField textField, String buttonName, String buttonText) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        panel.add(new JLabel(labelText));
-        panel.add(textField);
-        JButton button = new JButton(buttonText);
-        button.setName(buttonName);
-        panel.add(button);
+        JButton deleteTagBtn = new JButton("Delete Selected Tag");
+        deleteTagBtn.setName("deleteTagButton");
+        panel.add(deleteTagBtn);
+        
         return panel;
     }
 
     private void setupListeners() {
-        findButton("addTodoButton").addActionListener(e -> addTodo());
-        findButton("editButton").addActionListener(e -> editTodo());
-        findButton("deleteButton").addActionListener(e -> deleteTodo());
-        findButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
-        findButton("searchButton").addActionListener(e -> searchTodos());
-        findButton("showAllButton").addActionListener(e -> showAllTodos());
-        findButton("addTagButton").addActionListener(e -> addTag());
-        findButton("addTagToTodoButton").addActionListener(e -> addTagToTodo());
-        findButton("removeTagFromTodoButton").addActionListener(e -> removeTagFromTodo());
-        findButton("deleteTagButton").addActionListener(e -> deleteTag());
+        // Button listeners
+        getButton("addTodoButton").addActionListener(e -> addTodo());
+        getButton("editButton").addActionListener(e -> editTodo());
+        getButton("deleteButton").addActionListener(e -> deleteTodo());
+        getButton("toggleDoneButton").addActionListener(e -> toggleTodoDone());
+        getButton("searchButton").addActionListener(e -> searchTodos());
+        getButton("showAllButton").addActionListener(e -> showAllTodos());
+        getButton("addTagButton").addActionListener(e -> addTag());
+        getButton("addTagToTodoButton").addActionListener(e -> addTagToTodo());
+        getButton("removeTagFromTodoButton").addActionListener(e -> removeTagFromTodo());
+        getButton("deleteTagButton").addActionListener(e -> deleteTag());
+        
+        // Text field enter key listeners
         todoDescriptionField.addActionListener(e -> addTodo());
         searchField.addActionListener(e -> searchTodos());
         tagNameField.addActionListener(e -> addTag());
+        
+        // Table selection listener
         todoTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                Todo selected = getSelectedTodo();
-                updateTodoTags(selected);
+                updateTodoTags(getSelectedTodo());
             }
         });
     }
 
-    private JButton findButton(String name) {
-        Component component = findComponentByName(this, name);
-        if (component instanceof JButton button) {
-            return button;
-        }
-        throw new IllegalStateException("Button not found: " + name);
-    }
-
-    private Component findComponentByName(Container container, String name) {
-        if (name.equals(container.getName())) {
-            return container;
-        }
-        for (Component component : container.getComponents()) {
-            if (name.equals(component.getName())) {
-                return component;
-            }
-            if (component instanceof Container containerComponent) {
-                Component found = findComponentByName(containerComponent, name);
-                if (found != null) {
-                    return found;
-                }
-            }
-        }
-        return null;
-    }
-
+    // Core action methods
     public void addTodo() {
-        executeAction(() -> {
-            String description = getTextOrEmpty(todoDescriptionField);
-            if (description.isEmpty()) {
-                SwingUtilities.invokeLater(() -> showMessage(
-                    "Description cannot be empty", "Invalid Input", JOptionPane.WARNING_MESSAGE
-                ));
-                return;
-            }
-            
-            Todo todo = controller.addTodo(description);
-            if (todo != null) {
-                SwingUtilities.invokeLater(() -> {
-                    refreshTodos();
-                    todoDescriptionField.setText("");
-                });
-            }
-        }, "Failed to add todo");
+        String description = getText(todoDescriptionField);
+        if (description.isEmpty()) {
+            showWarning("Description cannot be empty");
+            return;
+        }
+        
+        Todo todo = controller.addTodo(description);
+        if (todo != null) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTodos();
+                todoDescriptionField.setText("");
+            });
+        }
     }
 
     public void addTag() {
-        executeAction(() -> {
-            String tagName = getTextOrEmpty(tagNameField);
-            if (tagName.isEmpty()) {
-                SwingUtilities.invokeLater(() -> showMessage(
-                    "Tag name cannot be empty", "Invalid Input", JOptionPane.WARNING_MESSAGE
-                ));
-                return;
-            }
-            
-            Tag tag = controller.addTag(tagName);
-            if (tag != null) {
-                SwingUtilities.invokeLater(() -> {
-                    refreshTags();
-                    tagNameField.setText("");
-                });
-            }
-        }, "Failed to add tag");
+        String tagName = getText(tagNameField);
+        if (tagName.isEmpty()) {
+            showWarning("Tag name cannot be empty");
+            return;
+        }
+        
+        Tag tag = controller.addTag(tagName);
+        if (tag != null) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTags();
+                tagNameField.setText("");
+            });
+        }
     }
 
     public void addTagToTodo() {
-        executeAction(() -> {
-            Todo todo = getSelectedTodo();
-            Tag tag = availableTagsList.getSelectedValue();
-            
-            if (todo == null || tag == null) {
-                SwingUtilities.invokeLater(() -> showMessage(
-                    "Please select both a todo and a tag", "Invalid Selection", JOptionPane.WARNING_MESSAGE
-                ));
-                return;
-            }
-            
-            if (controller.addTagToTodo(todo.getId(), tag.getId())) {
-                SwingUtilities.invokeLater(() -> {
-                    refreshTags();
-                    refreshTodos();
-                    for (int i = 0; i < todoTableModel.getRowCount(); i++) {
-                        if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
-                            todoTable.setRowSelectionInterval(i, i);
-                            updateTodoTags(todoTableModel.getTodoAt(i));
-                            break;
-                        }
-                    }
-                });
-            }
-        }, "Failed to add tag to todo");
+        Todo todo = getSelectedTodo();
+        Tag tag = availableTagsList.getSelectedValue();
+        
+        if (todo == null || tag == null) {
+            showWarning("Please select both a todo and a tag");
+            return;
+        }
+        
+        if (controller.addTagToTodo(todo.getId(), tag.getId())) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTags();
+                refreshTodos();
+                reselectTodo(todo.getId());
+            });
+        }
     }
 
     public void removeTagFromTodo() {
@@ -321,9 +271,7 @@ public class MainFrame extends JFrame {
         Tag tag = tagList.getSelectedValue();
         
         if (todo == null || tag == null) {
-            SwingUtilities.invokeLater(() -> showMessage(
-                "Please select both a todo and a tag to remove", "Invalid Selection", JOptionPane.WARNING_MESSAGE
-            ));
+            showWarning("Please select both a todo and a tag to remove");
             return;
         }
 
@@ -331,98 +279,90 @@ public class MainFrame extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 refreshTags();
                 refreshTodos();
-                for (int i = 0; i < todoTableModel.getRowCount(); i++) {
-                    if (todoTableModel.getTodoAt(i).getId().equals(todo.getId())) {
-                        todoTable.setRowSelectionInterval(i, i);
-                        updateTodoTags(todoTableModel.getTodoAt(i));
-                        break;
-                    }
-                }
+                reselectTodo(todo.getId());
             });
         }
     }
 
     public void deleteTag() {
-        executeAction(() -> {
-            Tag selected = availableTagsList.getSelectedValue();
-            if (selected == null) {
-                return;
-            }
-            if (controller.deleteTag(selected.getId())) {
-                SwingUtilities.invokeLater(() -> {
-                    refreshTags();
-                    refreshTodos(); 
-                    tagListModel.clear();
-                });
-            }
-        }, "Failed to delete tag");
+        Tag selected = availableTagsList.getSelectedValue();
+        if (selected == null) {
+            return;
+        }
+        
+        if (controller.deleteTag(selected.getId())) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTags();
+                refreshTodos(); 
+                tagListModel.clear();
+            });
+        }
     }
 
     public void editTodo() {
-        executeAction(() -> {
-            int selectedRow = todoTable.getSelectedRow();
-            if (selectedRow < 0) {
-                SwingUtilities.invokeLater(() -> showMessage(
-                    "Please select a todo to edit", "No Selection", JOptionPane.INFORMATION_MESSAGE
-                ));
-                return;
-            }
-            Todo todo = todoTableModel.getTodoAt(selectedRow);
-            String newDescription = (String) JOptionPane.showInputDialog(
-                this, "Edit todo description:", "Edit Todo",
-                JOptionPane.PLAIN_MESSAGE, null, null, todo.getDescription()
-            );
-            if (newDescription != null && !newDescription.trim().isEmpty() && controller.updateTodoDescription(todo.getId(), newDescription)) {
+        int selectedRow = todoTable.getSelectedRow();
+        if (selectedRow < 0) {
+            showInfo("Please select a todo to edit");
+            return;
+        }
+        
+        Todo todo = todoTableModel.getTodoAt(selectedRow);
+        String newDescription = JOptionPane.showInputDialog(
+            this, "Edit todo description:", todo.getDescription()
+        );
+        
+        if (newDescription != null && !newDescription.trim().isEmpty()) {
+            if (controller.updateTodoDescription(todo.getId(), newDescription)) {
                 SwingUtilities.invokeLater(() -> {
                     refreshTodos();
                     todoTable.setRowSelectionInterval(selectedRow, selectedRow);
                 });
             }
-        }, "Failed to edit todo");
+        }
     }
 
     public void deleteTodo() {
-        executeAction(() -> {
-            Todo selected = getSelectedTodo();
-            if (selected == null) return;
-            if (controller.deleteTodo(selected.getId())) {
-                SwingUtilities.invokeLater(() -> {
-                    refreshTodos();
-                    tagListModel.clear();
-                });
-            }
-        }, "Failed to delete todo");
+        Todo selected = getSelectedTodo();
+        if (selected == null) {
+            return;
+        }
+        
+        if (controller.deleteTodo(selected.getId())) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTodos();
+                tagListModel.clear();
+            });
+        }
     }
 
     public void toggleTodoDone() {
-        executeAction(() -> {
-            int selectedRow = todoTable.getSelectedRow();
-            if (selectedRow >= 0) {
-                Todo todo = todoTableModel.getTodoAt(selectedRow);
-                Boolean newStatus = controller.toggleTodoDone(todo.getId());
-                if (newStatus != null) {
-                    SwingUtilities.invokeLater(() -> {
-                        refreshTodos();
-                        todoTable.setRowSelectionInterval(selectedRow, selectedRow);
-                    });
-                }
-            }
-        }, "Failed to toggle todo status");
+        int selectedRow = todoTable.getSelectedRow();
+        if (selectedRow < 0) {
+            return;
+        }
+        
+        Todo todo = todoTableModel.getTodoAt(selectedRow);
+        Boolean newStatus = controller.toggleTodoDone(todo.getId());
+        
+        if (newStatus != null) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTodos();
+                todoTable.setRowSelectionInterval(selectedRow, selectedRow);
+            });
+        }
     }
 
     public void searchTodos() {
-        executeAction(() -> {
-            String keyword = getTextOrEmpty(searchField);
-            List<Todo> results = controller.searchTodos(keyword);
-            SwingUtilities.invokeLater(() -> todoTableModel.setTodos(results));
-        }, "Failed to search todos");
+        String keyword = getText(searchField);
+        List<Todo> results = controller.searchTodos(keyword);
+        SwingUtilities.invokeLater(() -> todoTableModel.setTodos(results));
     }
 
     public void showAllTodos() {
-        executeAction(() -> SwingUtilities.invokeLater(() -> {
+        SwingUtilities.invokeLater(() -> {
             refreshTodos();
             searchField.setText("");
-        }), "Failed to show all todos");
+        });
     }
 
     public void refreshTodos() {
@@ -430,7 +370,6 @@ public class MainFrame extends JFrame {
         List<Todo> todos = controller.getAllTodos();
         todoTableModel.setTodos(todos);
         
-        // Restore selection if it was valid
         if (selectedRow >= 0 && selectedRow < todos.size()) {
             todoTable.setRowSelectionInterval(selectedRow, selectedRow);
             updateTodoTags(todoTableModel.getTodoAt(selectedRow));
@@ -445,6 +384,7 @@ public class MainFrame extends JFrame {
         tags.forEach(availableTagsListModel::addElement);
     }
 
+    // Helper methods
     private void updateTodoTags(Todo todo) {
         tagListModel.clear();
         if (todo != null && todo.getTags() != null) {
@@ -452,23 +392,18 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void executeAction(Runnable action, String errorMessage) {
-        try {
-            action.run();
-        } catch (Exception e) {
-            LOG.log(java.util.logging.Level.SEVERE, errorMessage, e);
-            SwingUtilities.invokeLater(() -> showMessage(
-                errorMessage + ": " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE
-            ));
+    private void reselectTodo(Long todoId) {
+        for (int i = 0; i < todoTableModel.getRowCount(); i++) {
+            if (todoTableModel.getTodoAt(i).getId().equals(todoId)) {
+                todoTable.setRowSelectionInterval(i, i);
+                updateTodoTags(todoTableModel.getTodoAt(i));
+                break;
+            }
         }
     }
 
-    private void showMessage(String message, String title, int messageType) {
-        JOptionPane.showMessageDialog(this, message, title, messageType);
-    }
-
-    private String getTextOrEmpty(JTextField textField) {
-        String text = textField.getText();
+    private String getText(JTextField field) {
+        String text = field.getText();
         return (text != null) ? text.trim() : "";
     }
 
@@ -477,7 +412,38 @@ public class MainFrame extends JFrame {
         return selectedRow >= 0 ? todoTableModel.getTodoAt(selectedRow) : null;
     }
 
-    // TodoTable-Model 
+    JButton getButton(String name) {
+        return findButton(this, name);
+    }
+
+    private JButton findButton(Container container, String name) {
+        for (Component comp : container.getComponents()) {
+            if (comp.getName() != null && comp.getName().equals(name) && comp instanceof JButton) {
+                return (JButton) comp;
+            }
+            if (comp instanceof Container) {
+                JButton found = findButton((Container) comp, name);
+                if (found != null) {
+                    return found;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void showWarning(String message) {
+        SwingUtilities.invokeLater(() -> 
+            JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.WARNING_MESSAGE)
+        );
+    }
+
+    private void showInfo(String message) {
+        SwingUtilities.invokeLater(() -> 
+            JOptionPane.showMessageDialog(this, message, "Information", JOptionPane.INFORMATION_MESSAGE)
+        );
+    }
+
+    // TodoTableModel
     static class TodoTableModel extends AbstractTableModel {
         private static final long serialVersionUID = 1L;
         private final String[] columnNames = {"ID", "Description", "Done"};

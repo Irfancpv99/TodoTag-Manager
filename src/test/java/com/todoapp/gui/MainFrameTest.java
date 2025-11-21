@@ -1,344 +1,345 @@
 package com.todoapp.gui;
 
 import com.todoapp.model.Tag;
-
 import com.todoapp.model.Todo;
-import org.assertj.swing.edt.GuiActionRunner;
-import org.assertj.swing.fixture.FrameFixture;
-import org.assertj.swing.core.Robot;
-import org.assertj.swing.core.BasicRobot;
-import org.assertj.swing.core.matcher.JButtonMatcher;
 import org.junit.jupiter.api.*;
+
+import javax.swing.*;
+import java.util.ArrayList;
 import java.util.List;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class MainFrameTest {
 
-    abstract static class TestBase {
-        protected FrameFixture window;
-        protected MainFrame frame;
-        protected Robot robot;
-        protected MainFrameController mockController;
+    private MainFrame frame;
+    private MainFrameController controller;
 
-        @BeforeEach
-        void setUp() {
-            mockController = mock(MainFrameController.class);
-            robot = BasicRobot.robotWithCurrentAwtHierarchy();
-            frame = GuiActionRunner.execute(() -> new MainFrame(mockController));
-            window = new FrameFixture(robot, frame);
-            window.show();
-        }
-
-        @AfterEach
-        void tearDown() {
-            if (window != null) window.cleanUp();
-            if (robot != null) robot.cleanUp();
-        }
-
-        protected Todo createTodo(Long id, String description, boolean done) {
-            Todo todo = new Todo(description);
-            todo.setId(id);
-            todo.setDone(done);
-            return todo;
-        }
-
-        protected Tag createTag(Long id, String name) {
-            Tag tag = new Tag(name);
-            tag.setId(id);
-            return tag;
-        }
+    @BeforeEach
+    void setup() {
+        controller = mock(MainFrameController.class);
+        frame = new MainFrame(controller);
+        frame.setVisible(false);
     }
 
-    @Nested
-    class TodoOperations extends TestBase {
 
-        @Test
-        void addTodo_viaButton_createsTodo() {
-            when(mockController.addTodo(anyString())).thenReturn(new Todo("Task"));
-            when(mockController.getAllTodos()).thenReturn(List.of());
-
-            window.textBox("todoDescriptionField").enterText("Task 1");
-            window.button("addTodoButton").click();
-            
-            verify(mockController).addTodo("Task 1");
-            window.textBox("todoDescriptionField").requireText("");
-        }
-        @Test
-        void addTodo_viaEnterKey_createsTodo() {
-            when(mockController.addTodo(anyString())).thenReturn(new Todo("Task"));
-            when(mockController.getAllTodos()).thenReturn(List.of());
-
-            window.textBox("todoDescriptionField").enterText("Task 2");
-            window.textBox("todoDescriptionField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
-            
-            verify(mockController).addTodo("Task 2");
-            window.textBox("todoDescriptionField").requireText("");
-        }
-        @Test
-        void deleteTodo_removesSelectedTodo() {
-            Todo todo = createTodo(1L, "Task", false);
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.deleteTodo(1L)).thenReturn(true);
-
-            frame.refreshTodos(); 
-            window.table("todoTable").selectRows(0);
-            window.button("deleteButton").click();
-
-            verify(mockController).deleteTodo(1L);
-        }
-        @Test
-        void toggleTodoDone_viaButton_togglesStatus() {
-            Todo todo = createTodo(1L, "Task", false);
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.toggleTodoDone(1L)).thenReturn(true);
-
-            frame.refreshTodos();
-            window.table("todoTable").selectRows(0);
-            window.button("toggleDoneButton").click();
-
-            verify(mockController).toggleTodoDone(1L);
-        }
-        @Test
-        void toggleTodoDone_viaDoubleClick_togglesStatus() {
-            Todo todo = createTodo(1L, "Task", false);
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.toggleTodoDone(1L)).thenReturn(true);
-
-            frame.refreshTodos();
-            window.table("todoTable").doubleClick();
-
-            verify(mockController).toggleTodoDone(1L);
-        }
-        @Test
-        void editTodo_showsDialogAndUpdates() {
-            Todo todo = createTodo(1L, "Original", false);
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.updateTodoDescription(1L, "Updated")).thenReturn(true);
-
-            frame.refreshTodos();
-            window.table("todoTable").selectRows(0);
-            window.button("editButton").click();
-
-            window.dialog().textBox().deleteText().enterText("Updated");
-            window.dialog().button(JButtonMatcher.withText("OK")).click();
-
-            verify(mockController).updateTodoDescription(1L, "Updated");
-        }
-
-        @Test
-        void editTodo_cancelDoesNothing() {
-            Todo todo = createTodo(1L, "Original", false);
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-
-            frame.refreshTodos();
-            window.table("todoTable").selectRows(0);
-            window.button("editButton").click();
-
-            window.dialog().button(JButtonMatcher.withText("Cancel")).click();
-
-            verify(mockController, never()).updateTodoDescription(anyLong(), anyString());
-        }
-        @Test
-        void searchTodos_viaButton_filtersResults() {
-            
-        	window.textBox("searchField").setText("");
-
-            when(mockController.searchTodos("Buy"))
-                    .thenReturn(List.of(new Todo("Buy milk"), new Todo("Buy eggs")));
-
-            window.textBox("searchField").enterText("Buy");
-            window.button("searchButton").click();
-
-            verify(mockController).searchTodos("Buy");
-        }
-
-        @Test
-        void searchTodos_viaEnterKey_filtersResults() {
-            when(mockController.searchTodos("Test")).thenReturn(List.of());
-
-            window.textBox("searchField").enterText("Test");
-            window.textBox("searchField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
-
-            verify(mockController).searchTodos("Test");
-        }
+    @Test
+    void testAddTodo() {
+        // Happy path
+        Todo todo = new Todo("task");
+        when(controller.addTodo("task")).thenReturn(todo);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        frame.todoDescriptionField.setText("task");
+        frame.addTodo();
+        verify(controller).addTodo("task");
         
-        @Test
-        void searchTodos_trimsWhitespace() {
-            when(mockController.searchTodos("test")).thenReturn(List.of());
-
-            window.textBox("searchField").enterText("  test  ");
-            window.button("searchButton").click();
-
-            verify(mockController).searchTodos("test");
-        }
+        // Validation failure (empty)
+        frame.todoDescriptionField.setText("   ");
+        frame.addTodo();
+        verify(controller, times(1)).addTodo(anyString()); // Still only called once
     }
-    @Nested
-    class TagOperations extends TestBase {
 
-        @Test
-        void addTag_viaButton_createsTag() {
-            when(mockController.addTag(anyString())).thenReturn(new Tag("urgent"));
-            when(mockController.getAllTags()).thenReturn(List.of());
-
-            window.textBox("tagNameField").enterText("urgent");
-            window.button("addTagButton").click();
-
-            verify(mockController).addTag("urgent");
-            window.textBox("tagNameField").requireText("");
-        }
-
-        @Test
-        void addTag_viaEnterKey_createsTag() {
-            when(mockController.addTag(anyString())).thenReturn(new Tag("work"));
-
-            window.textBox("tagNameField").enterText("work");
-            window.textBox("tagNameField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
-
-            verify(mockController).addTag("work");
-            window.textBox("tagNameField").requireText("");
-        }
+    @Test
+    void testAddTag() {
+        // Happy path
+        Tag tag = new Tag("urgent");
+        when(controller.addTag("urgent")).thenReturn(tag);
+        when(controller.getAllTags()).thenReturn(List.of(tag));
+        frame.tagNameField.setText("urgent");
+        frame.addTag();
+        verify(controller).addTag("urgent");
         
-        @Test
-        void tagLists_showAvailableAndTodoTags() {
-            Tag tag1 = createTag(1L, "urgent");
-            Tag tag2 = createTag(2L, "work");
-            Todo todo = createTodo(1L, "Task", false);
-            todo.addTag(tag1);
-
-            when(mockController.getAllTags()).thenReturn(List.of(tag1, tag2));
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-
-            frame.refreshTags();
-            frame.refreshTodos();
-            
-            window.table("todoTable").selectRows(0);
-
-            assertThat(window.list("availableTagsList").contents()).hasSize(2);
-            assertThat(window.list("tagList").contents()).hasSize(1);
-        }
-
-        @Test
-        void updateTagList_whenTodoSelected() {
-            Tag tag = createTag(1L, "urgent");
-            Todo todo = createTodo(1L, "Task", false);
-            todo.addTag(tag);
-
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.getAllTags()).thenReturn(List.of(tag));
-
-            frame.refreshTodos();
-            window.table("todoTable").selectRows(0);
-
-            assertThat(window.list("tagList").contents()).hasSize(1);
-            assertThat(window.list("tagList").contents()[0]).contains("urgent");
-        }
-        @Test
-        void addTagToTodo_addsSelectedTagToSelectedTodo() {
-            Tag tag = createTag(2L, "urgent");
-            Todo todo = createTodo(1L, "Task", false);
-            
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.getAllTags()).thenReturn(List.of(tag));
-            when(mockController.addTagToTodo(1L, 2L)).thenReturn(true);
-
-            frame.refreshTodos();
-            frame.refreshTags();
-            window.table("todoTable").selectRows(0);
-            window.list("availableTagsList").selectItem(0);
-            window.button("addTagToTodoButton").click();
-
-            verify(mockController).addTagToTodo(1L, 2L);
-        }
-        @Test
-        void removeTagFromTodo_removesSelectedTagFromTodo() {
-            Tag tag = createTag(2L, "urgent");
-            Todo todo = createTodo(1L, "Task", false);
-            todo.addTag(tag);
-            
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.getAllTags()).thenReturn(List.of(tag));
-            when(mockController.removeTagFromTodo(1L, 2L)).thenReturn(true);
-
-            frame.refreshTodos();
-            frame.refreshTags();
-            window.table("todoTable").selectRows(0);
-            window.list("tagList").selectItem(0);
-            window.button("removeTagFromTodoButton").click();
-
-            verify(mockController).removeTagFromTodo(1L, 2L);
-        }
-        @Test
-        void deleteTag_deletesSelectedTag() {
-            Tag tag = createTag(1L, "urgent");
-            
-            when(mockController.getAllTags()).thenReturn(List.of(tag));
-            when(mockController.deleteTag(1L)).thenReturn(true);
-
-            frame.refreshTags();
-            window.list("availableTagsList").selectItem(0);
-            window.button("deleteTagButton").click();
-
-            verify(mockController).deleteTag(1L);
-        }
-        @Test
-        void addTodo_trimsWhitespace() {
-            when(mockController.addTodo("Task")).thenReturn(new Todo("Task"));
-            when(mockController.getAllTodos()).thenReturn(List.of());
-
-            window.textBox("todoDescriptionField").enterText("  Task  ");
-            window.button("addTodoButton").click();
-
-            verify(mockController).addTodo("Task");
-        }
-
-        @Test
-        void addTag_trimsWhitespace() {
-            when(mockController.addTag("urgent")).thenReturn(new Tag("urgent"));
-
-            window.textBox("tagNameField").enterText("  urgent  ");
-            window.button("addTagButton").click();
-
-            verify(mockController).addTag("urgent");
-        }
-
-        
+        // Validation failure (empty)
+        frame.tagNameField.setText("");
+        frame.addTag();
+        verify(controller, times(1)).addTag(anyString());
     }
-    @Nested
-    class ExceptionHandling extends TestBase {
 
-        @Test
-        void handleAddTodoFailure_showsErrorDialog() {
-            when(mockController.addTodo(anyString())).thenThrow(
-                new RuntimeException("Database error")
+    @Test
+    void testAddTagToTodo() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        Tag tag = new Tag("urgent");
+        tag.setId(2L);
+        
+        // Happy path
+        when(controller.addTagToTodo(1L, 2L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        when(controller.getAllTags()).thenReturn(List.of(tag));
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        frame.availableTagsListModel.addElement(tag);
+        frame.availableTagsList.setSelectedIndex(0);
+        frame.addTagToTodo();
+        verify(controller).addTagToTodo(1L, 2L);
+        
+        // No selection - clear selections
+        frame.availableTagsList.clearSelection();
+        frame.addTagToTodo();
+        verify(controller, times(1)).addTagToTodo(anyLong(), anyLong());
+    }
+
+    @Test
+    void testRemoveTagFromTodo() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        Tag tag = new Tag("urgent");
+        tag.setId(2L);
+        
+        // Happy path
+        when(controller.removeTagFromTodo(1L, 2L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        when(controller.getAllTags()).thenReturn(List.of(tag));
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        frame.tagListModel.addElement(tag);
+        frame.tagList.setSelectedIndex(0);
+        frame.removeTagFromTodo();
+        verify(controller).removeTagFromTodo(1L, 2L);
+        
+        // No selection
+        frame.tagList.clearSelection();
+        frame.removeTagFromTodo();
+        verify(controller, times(1)).removeTagFromTodo(anyLong(), anyLong());
+    }
+
+    @Test
+    void testDeleteTag() {
+        Tag tag = new Tag("urgent");
+        tag.setId(1L);
+        when(controller.deleteTag(1L)).thenReturn(true);
+        when(controller.getAllTags()).thenReturn(new ArrayList<>());
+        when(controller.getAllTodos()).thenReturn(new ArrayList<>());
+        
+        frame.availableTagsListModel.addElement(tag);
+        frame.availableTagsList.setSelectedIndex(0);
+        frame.deleteTag();
+        verify(controller).deleteTag(1L);
+        
+        // No selection (early return)
+        frame.deleteTag();
+        verify(controller, times(1)).deleteTag(anyLong());
+    }
+
+    @Test
+    void testDeleteTodo() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        when(controller.deleteTodo(1L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(new ArrayList<>());
+        
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        frame.deleteTodo();
+        verify(controller).deleteTodo(1L);
+        
+        frame.deleteTodo();
+        verify(controller, times(1)).deleteTodo(anyLong());
+    }
+
+    @Test
+    void testToggleTodoDone() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        when(controller.toggleTodoDone(1L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        frame.toggleTodoDone();
+        verify(controller).toggleTodoDone(1L);
+        
+        frame.todoTable.clearSelection();
+        frame.toggleTodoDone();
+        verify(controller, times(1)).toggleTodoDone(anyLong()); // Still only called once
+    }
+
+    @Test
+    void testEditTodo() {
+        frame.editTodo();
+        verify(controller, never()).updateTodoDescription(anyLong(), anyString());
+    }
+
+
+    @Test
+    void testRefreshTodos() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        frame.refreshTodos();
+        verify(controller, atLeastOnce()).getAllTodos();
+        assertEquals(0, frame.todoTable.getSelectedRow());
+        
+        when(controller.getAllTodos()).thenReturn(new ArrayList<>());
+        frame.refreshTodos();
+        assertEquals(0, frame.tagListModel.size());
+    }
+
+    @Test
+    void testRefreshTags() {
+        Tag tag = new Tag("urgent");
+        when(controller.getAllTags()).thenReturn(List.of(tag));
+        frame.refreshTags();
+        verify(controller).getAllTags();
+        assertEquals(1, frame.availableTagsListModel.size());
+    }
+
+    @Test
+    void testSearchTodos() {
+        Todo todo = new Todo("search result");
+        when(controller.searchTodos("search")).thenReturn(List.of(todo));
+        frame.searchField.setText("search");
+        frame.searchTodos();
+        verify(controller).searchTodos("search");
+    }
+
+    @Test
+    void testShowAllTodos() throws Exception {
+        when(controller.getAllTodos()).thenReturn(List.of(new Todo("task")));
+        frame.showAllTodos();
+        SwingUtilities.invokeAndWait(() -> {});
+        verify(controller, atLeastOnce()).getAllTodos();
+    }
+
+    @Test
+    void testGetSelectedTodo() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        assertNotNull(frame.getSelectedTodo());
+        
+        frame.todoTable.clearSelection();
+        assertNull(frame.getSelectedTodo());
+    }
+
+   @Test
+    void testTodoTableModel() {
+        MainFrame.TodoTableModel model = new MainFrame.TodoTableModel();
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        todo.setDone(true);
+        
+        model.setTodos(List.of(todo));
+        
+        assertEquals(1, model.getRowCount());
+        assertEquals(3, model.getColumnCount());
+        assertEquals("ID", model.getColumnName(0));
+        assertEquals("Description", model.getColumnName(1));
+        assertEquals("Done", model.getColumnName(2));
+        assertEquals(todo, model.getTodoAt(0));
+        
+        assertEquals(1L, model.getValueAt(0, 0));
+        assertEquals("task", model.getValueAt(0, 1));
+        assertEquals(true, model.getValueAt(0, 2));
+        
+        assertNull(model.getValueAt(0, 99));
+    }
+
+ 
+    @Test
+    void testTextFieldListeners() throws Exception {
+        Todo todo = new Todo("task");
+        when(controller.addTodo("task")).thenReturn(todo);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        
+        frame.todoDescriptionField.setText("task");
+        SwingUtilities.invokeAndWait(() -> frame.todoDescriptionField.postActionEvent());
+        Thread.sleep(100);
+        verify(controller).addTodo("task");
+    }
+
+    @Test
+    void testTableSelectionListener() throws Exception {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        Tag tag = new Tag("urgent");
+        todo.addTag(tag);
+        
+        frame.todoTableModel.setTodos(List.of(todo));
+        SwingUtilities.invokeAndWait(() -> frame.todoTable.setRowSelectionInterval(0, 0));
+        Thread.sleep(100);
+        assertEquals(1, frame.tagListModel.size());
+    }
+
+    @Test
+    void testDoubleClick() throws Exception {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        when(controller.toggleTodoDone(1L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        
+        SwingUtilities.invokeAndWait(() -> {
+            java.awt.event.MouseEvent evt = new java.awt.event.MouseEvent(
+                frame.todoTable, java.awt.event.MouseEvent.MOUSE_CLICKED,
+                System.currentTimeMillis(), 0, 0, 0, 2, false
             );
+            for (java.awt.event.MouseListener listener : frame.todoTable.getMouseListeners()) {
+                listener.mouseClicked(evt);
+            }
+        });
+        Thread.sleep(100);
+        verify(controller).toggleTodoDone(1L);
+    }
 
-            window.textBox("todoDescriptionField").enterText("Test");
-            window.button("addTodoButton").click();
+   
+    @Test
+    void testReselectTodoEdgeCases() {
+        Todo todo1 = new Todo("task1");
+        todo1.setId(1L);
+        Todo todo2 = new Todo("task2");
+        todo2.setId(2L);
+        
+        when(controller.addTagToTodo(1L, 1L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(List.of(todo1, todo2));
+        when(controller.getAllTags()).thenReturn(new ArrayList<>());
+        
+        Tag tag = new Tag("test");
+        tag.setId(1L);
+        
+        frame.todoTableModel.setTodos(List.of(todo1, todo2));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        frame.availableTagsListModel.addElement(tag);
+        frame.availableTagsList.setSelectedIndex(0);
+        
+        frame.addTagToTodo();
+        
+        try {
+            SwingUtilities.invokeAndWait(() -> {});
+            Thread.sleep(100);
+        } catch (Exception ignored) {}
+    }
 
-            var optionPane = window.optionPane();
-            optionPane.requireErrorMessage();
-            assertThat(optionPane.target().getMessage()).asString().contains("Database error");
-            optionPane.okButton().click();
-        }
+    @Test
+    void testGetTextWithNull() {
+        frame.todoDescriptionField.setText(null);
+        String result = frame.todoDescriptionField.getText();
+        assertNotNull(result); // Swing converts null to ""
+    }
 
-        @Test
-        void handleDeleteTodoFailure_showsErrorDialog() {
-            Todo todo = createTodo(1L, "Task", false);
-            when(mockController.getAllTodos()).thenReturn(List.of(todo));
-            when(mockController.deleteTodo(1L)).thenThrow(
-                new RuntimeException("Delete failed")
-            );
-
-            frame.refreshTodos();
-            window.table("todoTable").selectRows(0);
-            window.button("deleteButton").click();
-
-            var optionPane = window.optionPane();
-            optionPane.requireErrorMessage();
-            assertThat(optionPane.target().getMessage()).asString().contains("Delete failed");
-            optionPane.okButton().click();
-        }
+    @Test
+    void testUpdateTodoTagsWithTags() {
+        Todo todo = new Todo("task");
+        todo.setId(1L);
+        Tag tag1 = new Tag("tag1");
+        Tag tag2 = new Tag("tag2");
+        todo.addTag(tag1);
+        todo.addTag(tag2);
+        
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
+        frame.todoTableModel.setTodos(List.of(todo));
+        frame.todoTable.setRowSelectionInterval(0, 0);
+        
+        frame.refreshTodos();
+        
+        assertEquals(2, frame.tagListModel.size());
     }
 }

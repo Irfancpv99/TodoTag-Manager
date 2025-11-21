@@ -93,8 +93,8 @@ class MainFrameE2ETest {
     @Order(2)
     @DisplayName("Complete tag workflow: create, assign, remove")
     void tagWorkflow() {
-        // Add with extra pause to ensure completion
-        window.textBox("todoDescriptionField").enterText("Complete project");
+      
+    	window.textBox("todoDescriptionField").enterText("Complete project");
         window.button("addTodoButton").click();
         Pause.pause(1500);
         waitForTableUpdate(1);
@@ -262,19 +262,16 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
-                    // Intentionally ignored - best effort cleanup
-                }
+                  }
             });
             service.getAllTags().forEach(tag -> {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                    // Intentionally ignored - best effort cleanup
-               }
+                    }
             });
         } catch (Exception ignored) {
-            // Intentionally ignored - cleanup failure should not fail test
-         }
+             }
     }
 
     private static void resetSingletons() {
@@ -296,7 +293,6 @@ class MainFrameE2ETest {
             field.setAccessible(true);
             field.set(null, null);
         } catch (Exception ignored) {
-            // Intentionally ignored - field may not exist or be accessible
              }
     }
 }
