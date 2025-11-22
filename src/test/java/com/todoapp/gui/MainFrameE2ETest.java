@@ -43,16 +43,19 @@ class MainFrameE2ETest {
         appConfig = createMongoDBConfig();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
+        robot.settings().delayBetweenEvents(100);
+        
         frame = GuiActionRunner.execute(() -> {
             TodoService service = new TodoService(appConfig);
             MainFrameController controller = new MainFrameController(service);
             return new MainFrame(controller);
         });
+        
         window = new FrameFixture(robot, frame);
         window.show();
+        window.moveToFront();
         
-        window.requireVisible();
-        Pause.pause(500); 
+        Pause.pause(1000);
     }
     
     @AfterEach
@@ -66,8 +69,7 @@ class MainFrameE2ETest {
     @Order(1)
     @DisplayName("Complete todo lifecycle: add, mark done, delete")
     void todoLifecycle() {
-        window.textBox("todoDescriptionField").deleteText();
-        window.textBox("todoDescriptionField").enterText("Buy groceries");
+        window.textBox("todoDescriptionField").setText("Buy groceries");
         window.button("addTodoButton").click();
         
         waitForTableUpdate(1);
@@ -99,14 +101,12 @@ class MainFrameE2ETest {
     @Order(2)
     @DisplayName("Complete tag workflow: create, assign, remove")
     void tagWorkflow() {
-      
-    	window.textBox("todoDescriptionField").enterText("Complete project");
+        window.textBox("todoDescriptionField").setText("Complete project");
         window.button("addTodoButton").click();
         Pause.pause(1500);
         waitForTableUpdate(1);
 
-        // Add tag with extra pause
-        window.textBox("tagNameField").enterText("urgent");
+        window.textBox("tagNameField").setText("urgent");
         window.button("addTagButton").click();
         Pause.pause(1000);
         waitForListUpdate("availableTagsList", 1);
@@ -114,7 +114,6 @@ class MainFrameE2ETest {
         assertThat(window.list("availableTagsList").contents()).hasSize(1);
         assertThat(window.list("availableTagsList").contents()[0]).contains("urgent");
 
-        // Add tag 
         window.table("todoTable").selectRows(0);
         Pause.pause(800);
         window.list("availableTagsList").selectItem(0);
@@ -126,7 +125,6 @@ class MainFrameE2ETest {
         assertThat(window.list("tagList").contents()).hasSize(1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
 
-        // Remove tag 
         window.list("tagList").selectItem(0);
         Pause.pause(500);
         window.button("removeTagFromTodoButton").click();
@@ -135,7 +133,6 @@ class MainFrameE2ETest {
 
         assertThat(window.list("tagList").contents()).isEmpty();
 
-        // Delete tag
         window.list("availableTagsList").selectItem(0);
         Pause.pause(500);
         window.button("deleteTagButton").click();
@@ -156,37 +153,35 @@ class MainFrameE2ETest {
         waitForTableUpdate(3);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        window.textBox("searchField").enterText("Buy");
+        window.textBox("searchField").setText("Buy");
         window.button("searchButton").click();
+        Pause.pause(1000);
         waitForTableUpdate(2);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
 
         window.button("showAllButton").click();
+        Pause.pause(1000);
         waitForTableUpdate(3);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        // Edit
         window.table("todoTable").selectRows(0);
+        Pause.pause(500);
         window.button("editButton").click();
         Pause.pause(800);
-        window.dialog().textBox().deleteText().enterText("Updated task");
+        window.dialog().textBox().setText("Updated task");
         window.dialog().button(withText("OK")).click();
         Pause.pause(1500);
     }
-
     
     @Test
     @Order(4)
     @DisplayName("Multiple tags on single todo")
     void multipleTagsWorkflow() {
-        // Add todo
-        window.textBox("todoDescriptionField").deleteText();
-        window.textBox("todoDescriptionField").enterText("Important meeting");
+        window.textBox("todoDescriptionField").setText("Important meeting");
         window.button("addTodoButton").click();
         Pause.pause(1500);
         waitForTableUpdate(1);
 
-        // Add multiple tags
         addTag("urgent");
         Pause.pause(800);
         addTag("work");
@@ -197,24 +192,19 @@ class MainFrameE2ETest {
         waitForListUpdate("availableTagsList", 3);
         assertThat(window.list("availableTagsList").contents()).hasSize(3);
 
-        // Select the todo FIRST before adding tags
         window.table("todoTable").selectRows(0);
-        Pause.pause(1000); // Give time for selection to register
+        Pause.pause(1000);
 
-        // Add first tag
         window.list("availableTagsList").selectItem(0);
         Pause.pause(500);
         window.button("addTagToTodoButton").click();
         Pause.pause(1500);
         
-        // Wait for tag to appear
         waitForListUpdate("tagList", 1);
 
-        // Reselect the todo (refresh might have cleared selection)
         window.table("todoTable").selectRows(0);
         Pause.pause(800);
         
-        // Add second tag
         window.list("availableTagsList").selectItem(1);
         Pause.pause(500);
         window.button("addTagToTodoButton").click();
@@ -226,13 +216,13 @@ class MainFrameE2ETest {
     }
     
     private void addTag(String name) {
-        window.textBox("tagNameField").enterText(name);
+        window.textBox("tagNameField").setText(name);
         window.button("addTagButton").click();
         Pause.pause(800);
     }
 
     private void addTodo(String description) {
-        window.textBox("todoDescriptionField").enterText(description);
+        window.textBox("todoDescriptionField").setText(description);
         window.button("addTodoButton").click();
         Pause.pause(800);
     }
@@ -284,16 +274,19 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
-                  }
+                    
+                }
             });
             service.getAllTags().forEach(tag -> {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                    }
+                   
+                }
             });
         } catch (Exception ignored) {
-             }
+            
+        }
     }
 
     private static void resetSingletons() {
@@ -315,6 +308,7 @@ class MainFrameE2ETest {
             field.setAccessible(true);
             field.set(null, null);
         } catch (Exception ignored) {
-             }
+           
+        }
     }
 }
