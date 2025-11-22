@@ -2,248 +2,278 @@ package com.todoapp.gui;
 
 import com.todoapp.config.AppConfig;
 import com.todoapp.service.TodoService;
+import org.assertj.swing.core.BasicRobot;
+import org.assertj.swing.core.GenericTypeMatcher;
+import org.assertj.swing.core.Robot;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
-import org.assertj.swing.core.Robot;
-import org.assertj.swing.core.BasicRobot;
+import org.assertj.swing.timing.Condition;
 import org.assertj.swing.timing.Pause;
+import org.assertj.swing.timing.Timeout;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
-import java.lang.reflect.Field;
+import javax.swing.*;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 @Testcontainers
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MainFrameE2ETest {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0"));
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0");
 
-    private FrameFixture window;
-    private MainFrame frame;
-    private Robot robot;
     private static AppConfig appConfig;
+    private FrameFixture window;
+    private Robot robot;
 
     @BeforeAll
-    static void setupDatabase() {
-        resetSingletons();
+    static void setupConfig() {
         appConfig = createMongoDBConfig();
     }
+
     @BeforeEach
     void setUp() {
         cleanDatabase();
-        appConfig = createMongoDBConfig();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
-        frame = GuiActionRunner.execute(() -> {
+        
+        MainFrame frame = GuiActionRunner.execute(() -> {
             TodoService service = new TodoService(appConfig);
             MainFrameController controller = new MainFrameController(service);
             return new MainFrame(controller);
         });
+        
         window = new FrameFixture(robot, frame);
         window.show();
-        window.focus();
-        window.textBox("todoDescriptionField").click(); }
+    }
 
     @AfterEach
     void tearDown() {
-        if (window != null) window.cleanUp();
-        if (robot != null) robot.cleanUp();
-        cleanDatabase();
+        if (window != null) {
+            window.cleanUp();
+        }
+        if (robot != null) {
+            robot.cleanUp();
+        }
     }
 
     @Test
-    @Order(1)
-    @DisplayName("Complete todo lifecycle: add, mark done, delete")
-    void todoLifecycle() {
+    @DisplayName("Add todo and verify it appears in table")
+    void testAddTodo() {
+        // Add a todo
         window.textBox("todoDescriptionField").enterText("Buy groceries");
         window.button("addTodoButton").click();
-        Pause.pause(2000);
-        waitForTableUpdate(1);
 
-        assertThat(window.table("todoTable").rowCount()).isEqualTo(1);
+        waitForRowCount(1);
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
-            .isEqualTo("Buy groceries");
+                .isEqualTo("Buy groceries");
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
-            .isEqualTo("false");
+                .isEqualTo("false");
+    }
 
+    @Test
+    @DisplayName("Toggle todo done status")
+    void testToggleTodoDone() {
+        // Add and select todo
+        addTodo("Complete assignment");
         window.table("todoTable").selectRows(0);
+
+        // Toggle done
         window.button("toggleDoneButton").click();
-        Pause.pause(1500);
 
+        // Verify status changed
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
-            .isEqualTo("true");
+                .isEqualTo("true");
+    }
 
-        // Delete
+    @Test
+    @DisplayName("Delete todo")
+    void testDeleteTodo() {
+        // Add todo
+        addTodo("Task to delete");
+        waitForRowCount(1);
+
+        // Delete it
         window.table("todoTable").selectRows(0);
         window.button("deleteButton").click();
-        Pause.pause(1500);
 
-        waitForTableUpdate(0);
-        assertThat(window.table("todoTable").rowCount()).isZero();
+        // Verify deleted
+        waitForRowCount(0);
     }
-    
+
     @Test
-    @Order(2)
-    @DisplayName("Complete tag workflow: create, assign, remove")
-    void tagWorkflow() {
-      
-    	window.textBox("todoDescriptionField").enterText("Complete project");
-        window.button("addTodoButton").click();
-        Pause.pause(1500);
-        waitForTableUpdate(1);
+    @DisplayName("Create tag and add to todo")
+    void testTagWorkflow() {
+        // Add 
+        addTodo("Tagged task");
+        waitForRowCount(1);
 
-        // Add tag with extra pause
-        window.textBox("tagNameField").enterText("urgent");
-        window.button("addTagButton").click();
-        Pause.pause(1000);
-        waitForListUpdate("availableTagsList", 1);
-
-        assertThat(window.list("availableTagsList").contents()).hasSize(1);
-        assertThat(window.list("availableTagsList").contents()[0]).contains("urgent");
+        // Add tag
+        addTag("urgent");
+        waitForListSize("availableTagsList", 1);
 
         // Add tag 
         window.table("todoTable").selectRows(0);
-        Pause.pause(800);
         window.list("availableTagsList").selectItem(0);
-        Pause.pause(500);
         window.button("addTagToTodoButton").click();
-        Pause.pause(1500);
-        waitForListUpdate("tagList", 1);
 
-        assertThat(window.list("tagList").contents()).hasSize(1);
+        // Verify tag appears 
+        waitForListSize("tagList", 1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
-
-        // Remove tag 
-        window.list("tagList").selectItem(0);
-        Pause.pause(500);
-        window.button("removeTagFromTodoButton").click();
-        Pause.pause(1500);
-        waitForListUpdate("tagList", 0);
-
-        assertThat(window.list("tagList").contents()).isEmpty();
-
-        // Delete tag
-        window.list("availableTagsList").selectItem(0);
-        Pause.pause(500);
-        window.button("deleteTagButton").click();
-        Pause.pause(1500);
-        waitForListUpdate("availableTagsList", 0);
-
-        assertThat(window.list("availableTagsList").contents()).isEmpty();
     }
-    
+
     @Test
-    @Order(3)
-    @DisplayName("Search and edit workflow")
-    void searchAndEdit() {
+    @DisplayName("Remove tag from todo")
+    void testRemoveTagFromTodo() {
+        // Setup: Add tag
+        addTodo("Task with tag");
+        addTag("removable");
+        
+        window.table("todoTable").selectRows(0);
+        window.list("availableTagsList").selectItem(0);
+        window.button("addTagToTodoButton").click();
+        waitForListSize("tagList", 1);
+
+        // Remove tag
+        window.list("tagList").selectItem(0);
+        window.button("removeTagFromTodoButton").click();
+
+        // Verify removed
+        waitForListSize("tagList", 0);
+    }
+
+    @Test
+    @DisplayName("Delete tag")
+    void testDeleteTag() {
+        // Add tag
+        addTag("deletable");
+        waitForListSize("availableTagsList", 1);
+
+        // Delete it
+        window.list("availableTagsList").selectItem(0);
+        window.button("deleteTagButton").click();
+
+        // Verify deleted
+        waitForListSize("availableTagsList", 0);
+    }
+
+    @Test
+    @DisplayName("Search todos")
+    void testSearchTodos() {
+        // Add multiple task 
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
+        waitForRowCount(3);
 
-        waitForTableUpdate(3);
-        assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
-
+        // Search for "Buy"
         window.textBox("searchField").enterText("Buy");
         window.button("searchButton").click();
-        waitForTableUpdate(2);
-        assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
+        waitForRowCount(2);
 
+        // Show all
         window.button("showAllButton").click();
-        waitForTableUpdate(3);
-        assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
-
-        // Edit
-        window.table("todoTable").selectRows(0);
-        window.button("editButton").click();
-        Pause.pause(800);
-        window.dialog().textBox().deleteText().enterText("Updated task");
-        window.dialog().button(withText("OK")).click();
-        Pause.pause(1500);
+        waitForRowCount(3);
     }
 
-    
     @Test
-    @Order(4)
-    @DisplayName("Multiple tags on single todo")
-    void multipleTagsWorkflow() {
+    @DisplayName("Edit todo description")
+    void testEditTodo() {
         // Add 
-        window.textBox("todoDescriptionField").enterText("Important meeting");
-        window.button("addTodoButton").click();
-        Pause.pause(1200);
+        addTodo("Original description");
+        window.table("todoTable").selectRows(0);
+
+        // Edit
+        window.button("editButton").click();
+
+        // Handle dialog
+        window.dialog().textBox().deleteText().enterText("Updated description");
+        window.dialog().button(buttonWithText("OK")).click();
+
+        // Verify updated
+        Pause.pause(500); 
+        assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
+                .isEqualTo("Updated description");
+    }
+
+    @Test
+    @DisplayName("Add multiple tags to single todo")
+    void testMultipleTags() {
+        // Add 
+        addTodo("Multi-tagged task");
 
         // Add multiple tags
         addTag("urgent");
         addTag("work");
-        addTag("meeting");
-        
-        Pause.pause(800);
-        assertThat(window.list("availableTagsList").contents()).hasSize(3);
+        addTag("important");
+        waitForListSize("availableTagsList", 3);
 
-        // Select 
+        // Add two tags
         window.table("todoTable").selectRows(0);
-        Pause.pause(800);
-
-        // Add first tag
+        
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
-        Pause.pause(1200);
+        waitForListSize("tagList", 1);
 
-        // Add second tag
         window.list("availableTagsList").selectItem(1);
         window.button("addTagToTodoButton").click();
-        Pause.pause(1200);
+        waitForListSize("tagList", 2);
 
+        // Verify both tags present
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
-    
-    private void addTag(String name) {
-        window.textBox("tagNameField").enterText(name);
-        window.button("addTagButton").click();
-        Pause.pause(800);
-    }
+
+    // Helper methods
 
     private void addTodo(String description) {
         window.textBox("todoDescriptionField").enterText(description);
         window.button("addTodoButton").click();
-        Pause.pause(800);
+        Pause.pause(200);
     }
 
-    private void waitForTableUpdate(int expectedRowCount) {
-        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(10000);
-        org.assertj.swing.timing.Condition condition = new org.assertj.swing.timing.Condition(
-            "Table row count to be " + expectedRowCount) {
+    private void addTag(String name) {
+        window.textBox("tagNameField").enterText(name);
+        window.button("addTagButton").click();
+        Pause.pause(200);
+    }
+
+    private void waitForRowCount(int expectedCount) {
+        Pause.pause(new Condition("Table row count = " + expectedCount) {
             @Override
             public boolean test() {
-                return window.table("todoTable").rowCount() == expectedRowCount;
+                return window.table("todoTable").rowCount() == expectedCount;
             }
-        };
-        Pause.pause(condition, timeout);
+        }, Timeout.timeout(5000));
     }
 
-    private void waitForListUpdate(String listName, int expectedSize) {
-        org.assertj.swing.timing.Timeout timeout = org.assertj.swing.timing.Timeout.timeout(10000);
-        org.assertj.swing.timing.Condition condition = new org.assertj.swing.timing.Condition(
-            "List '" + listName + "' size to be " + expectedSize) {
+    private void waitForListSize(String listName, int expectedSize) {
+        Pause.pause(new Condition("List '" + listName + "' size = " + expectedSize) {
             @Override
             public boolean test() {
                 return window.list(listName).contents().length == expectedSize;
             }
+        }, Timeout.timeout(5000));
+    }
+
+    private GenericTypeMatcher<JButton> buttonWithText(String text) {
+        return new GenericTypeMatcher<>(JButton.class) {
+            @Override
+            protected boolean isMatching(JButton button) {
+                return text.equals(button.getText());
+            }
         };
-        Pause.pause(condition, timeout);
     }
 
     private static AppConfig createMongoDBConfig() {
         Properties props = new Properties();
         props.setProperty("database.type", "MONGODB");
-        
+
         String connectionString = mongoDBContainer.getReplicaSetUrl();
         String[] parts = connectionString.replace("mongodb://", "").split(":");
         String host = parts[0];
@@ -252,48 +282,33 @@ class MainFrameE2ETest {
         props.setProperty("mongodb.host", host);
         props.setProperty("mongodb.port", port);
         props.setProperty("mongodb.database", "e2e_test");
-        
+
         return new AppConfig(props);
     }
 
     private void cleanDatabase() {
         try {
             TodoService service = new TodoService(appConfig);
+            
+            // Delete  
             service.getAllTodos().forEach(todo -> {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
-                  }
+                 
+                }
             });
+
+            // Delete all tags
             service.getAllTags().forEach(tag -> {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                    }
+                   
+                }
             });
         } catch (Exception ignored) {
-             }
-    }
-
-    private static void resetSingletons() {
-        resetField("com.todoapp.repository.RepositoryFactory", "instance");
-    }
-    
-    private org.assertj.swing.core.GenericTypeMatcher<javax.swing.JButton> withText(String text) {
-        return new org.assertj.swing.core.GenericTypeMatcher<>(javax.swing.JButton.class) {
-            @Override
-            protected boolean isMatching(javax.swing.JButton button) {
-                return text.equals(button.getText());
-            }
-        };
-    }
-
-    private static void resetField(String className, String fieldName) {
-        try {
-            Field field = Class.forName(className).getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(null, null);
-        } catch (Exception ignored) {
-             }
+            
+        }
     }
 }
