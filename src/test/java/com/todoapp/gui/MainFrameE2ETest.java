@@ -21,7 +21,6 @@ import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 @Testcontainers
 class MainFrameE2ETest {
 
@@ -66,10 +65,11 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Add todo and verify it appears in table")
     void testAddTodo() {
-        // Add a todo
+        // Add 
         window.textBox("todoDescriptionField").enterText("Buy groceries");
         window.button("addTodoButton").click();
 
+        // Verify it appears in table
         waitForRowCount(1);
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
                 .isEqualTo("Buy groceries");
@@ -80,7 +80,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Toggle todo done status")
     void testToggleTodoDone() {
-        // Add and select todo
+        // Add  
         addTodo("Complete assignment");
         window.table("todoTable").selectRows(0);
 
@@ -95,7 +95,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Delete todo")
     void testDeleteTodo() {
-        // Add todo
+        // Add 
         addTodo("Task to delete");
         waitForRowCount(1);
 
@@ -118,12 +118,12 @@ class MainFrameE2ETest {
         addTag("urgent");
         waitForListSize("availableTagsList", 1);
 
-        // Add tag 
+        // Add tag  
         window.table("todoTable").selectRows(0);
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
 
-        // Verify tag appears 
+        // Verify tag appears in todo's tags
         waitForListSize("tagList", 1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
     }
@@ -131,7 +131,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Remove tag from todo")
     void testRemoveTagFromTodo() {
-        // Setup: Add tag
+        // Setup: Add   tag
         addTodo("Task with tag");
         addTag("removable");
         
@@ -166,7 +166,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Search todos")
     void testSearchTodos() {
-        // Add multiple task 
+        // Add multiple 
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
@@ -187,17 +187,19 @@ class MainFrameE2ETest {
     void testEditTodo() {
         // Add 
         addTodo("Original description");
-        window.table("todoTable").selectRows(0);
+        waitForRowCount(1);
 
-        // Edit
+        // Select and edit
+        window.table("todoTable").selectRows(0);
         window.button("editButton").click();
 
-        // Handle dialog
+        // Handle dialog with proper wait
+        Pause.pause(300);
         window.dialog().textBox().deleteText().enterText("Updated description");
         window.dialog().button(buttonWithText("OK")).click();
 
         // Verify updated
-        Pause.pause(500); 
+        Pause.pause(500);
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
                 .isEqualTo("Updated description");
     }
@@ -214,7 +216,7 @@ class MainFrameE2ETest {
         addTag("important");
         waitForListSize("availableTagsList", 3);
 
-        // Add two tags
+        // Select  and add two tags
         window.table("todoTable").selectRows(0);
         
         window.list("availableTagsList").selectItem(0);
@@ -232,12 +234,16 @@ class MainFrameE2ETest {
     // Helper methods
 
     private void addTodo(String description) {
+        window.textBox("todoDescriptionField").click(); // Ensure focus
+        window.textBox("todoDescriptionField").deleteText(); // Clear any existing text
         window.textBox("todoDescriptionField").enterText(description);
         window.button("addTodoButton").click();
         Pause.pause(200);
     }
 
     private void addTag(String name) {
+        window.textBox("tagNameField").click(); // Ensure focus
+        window.textBox("tagNameField").deleteText(); // Clear any existing text
         window.textBox("tagNameField").enterText(name);
         window.button("addTagButton").click();
         Pause.pause(200);
@@ -290,12 +296,12 @@ class MainFrameE2ETest {
         try {
             TodoService service = new TodoService(appConfig);
             
-            // Delete  
+            // Delete all 
             service.getAllTodos().forEach(todo -> {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
-                 
+                    // Ignore deletion errors during cleanup
                 }
             });
 
@@ -304,11 +310,11 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                   
+                    // Ignore deletion errors during cleanup
                 }
             });
         } catch (Exception ignored) {
-            
+            // If cleanup fails, tests will still run with dirty data
         }
     }
 }
