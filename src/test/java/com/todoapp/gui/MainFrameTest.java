@@ -152,12 +152,18 @@ class MainFrameTest {
         
         frame.todoTableModel.setTodos(List.of(todo));
         frame.todoTable.setRowSelectionInterval(0, 0);
+        
+        clearInvocations(controller);
+        
         frame.toggleTodoDone();
-        verify(controller).toggleTodoDone(1L);
+        
+        verify(controller, times(1)).toggleTodoDone(1L);
         
         frame.todoTable.clearSelection();
+        clearInvocations(controller);
         frame.toggleTodoDone();
-        verify(controller, times(1)).toggleTodoDone(anyLong()); // Still only called once
+        
+        verify(controller, never()).toggleTodoDone(anyLong());
     }
 
     @Test

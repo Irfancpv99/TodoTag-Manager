@@ -36,6 +36,7 @@ class MainFrameE2ETest {
         resetSingletons();
         appConfig = createMongoDBConfig();
     }
+    
     @BeforeEach
     void setUp() {
         cleanDatabase();
@@ -49,23 +50,26 @@ class MainFrameE2ETest {
         });
         window = new FrameFixture(robot, frame);
         window.show();
-        window.focus();
-        window.textBox("todoDescriptionField").click(); }
-
+        
+        window.requireVisible();
+        Pause.pause(500); 
+    }
+    
     @AfterEach
     void tearDown() {
         if (window != null) window.cleanUp();
         if (robot != null) robot.cleanUp();
         cleanDatabase();
     }
-
+    
     @Test
     @Order(1)
     @DisplayName("Complete todo lifecycle: add, mark done, delete")
     void todoLifecycle() {
+        window.textBox("todoDescriptionField").deleteText();
         window.textBox("todoDescriptionField").enterText("Buy groceries");
         window.button("addTodoButton").click();
-        Pause.pause(2000);
+        
         waitForTableUpdate(1);
 
         assertThat(window.table("todoTable").rowCount()).isEqualTo(1);
@@ -75,14 +79,15 @@ class MainFrameE2ETest {
             .isEqualTo("false");
 
         window.table("todoTable").selectRows(0);
+        Pause.pause(500);
         window.button("toggleDoneButton").click();
         Pause.pause(1500);
 
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
             .isEqualTo("true");
 
-        // Delete
         window.table("todoTable").selectRows(0);
+        Pause.pause(500);
         window.button("deleteButton").click();
         Pause.pause(1500);
 
@@ -174,32 +179,48 @@ class MainFrameE2ETest {
     @Order(4)
     @DisplayName("Multiple tags on single todo")
     void multipleTagsWorkflow() {
-        // Add 
+        // Add todo
+        window.textBox("todoDescriptionField").deleteText();
         window.textBox("todoDescriptionField").enterText("Important meeting");
         window.button("addTodoButton").click();
-        Pause.pause(1200);
+        Pause.pause(1500);
+        waitForTableUpdate(1);
 
         // Add multiple tags
         addTag("urgent");
-        addTag("work");
-        addTag("meeting");
-        
         Pause.pause(800);
+        addTag("work");
+        Pause.pause(800);
+        addTag("meeting");
+        Pause.pause(1000);
+        
+        waitForListUpdate("availableTagsList", 3);
         assertThat(window.list("availableTagsList").contents()).hasSize(3);
 
-        // Select 
+        // Select the todo FIRST before adding tags
         window.table("todoTable").selectRows(0);
-        Pause.pause(800);
+        Pause.pause(1000); // Give time for selection to register
 
         // Add first tag
         window.list("availableTagsList").selectItem(0);
+        Pause.pause(500);
         window.button("addTagToTodoButton").click();
-        Pause.pause(1200);
+        Pause.pause(1500);
+        
+        // Wait for tag to appear
+        waitForListUpdate("tagList", 1);
 
+        // Reselect the todo (refresh might have cleared selection)
+        window.table("todoTable").selectRows(0);
+        Pause.pause(800);
+        
         // Add second tag
         window.list("availableTagsList").selectItem(1);
+        Pause.pause(500);
         window.button("addTagToTodoButton").click();
-        Pause.pause(1200);
+        Pause.pause(1500);
+        
+        waitForListUpdate("tagList", 2);
 
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
