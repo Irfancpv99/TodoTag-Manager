@@ -143,6 +143,14 @@ class MainFrameTest {
         verify(controller, times(1)).deleteTodo(1L);
     }
 
+   
+
+    @Test
+    void testEditTodo() {
+        frame.editTodo();
+        verify(controller, never()).updateTodoDescription(anyLong(), anyString());
+    }
+    
     @Test
     void testToggleTodoDone() {
         Todo todo = new Todo("task");
@@ -153,23 +161,23 @@ class MainFrameTest {
         frame.todoTableModel.setTodos(List.of(todo));
         frame.todoTable.setRowSelectionInterval(0, 0);
         
+        // Clear any invocations from setup
         clearInvocations(controller);
         
-        frame.toggleTodoDone();
+        // Re-stub after clearing
+        when(controller.toggleTodoDone(1L)).thenReturn(true);
+        when(controller.getAllTodos()).thenReturn(List.of(todo));
         
+        frame.toggleTodoDone();
         verify(controller, times(1)).toggleTodoDone(1L);
         
-        frame.todoTable.clearSelection();
+        // Test with no selection
         clearInvocations(controller);
+        frame.todoTable.clearSelection();
         frame.toggleTodoDone();
         
+        // Should not be called when no selection
         verify(controller, never()).toggleTodoDone(anyLong());
-    }
-
-    @Test
-    void testEditTodo() {
-        frame.editTodo();
-        verify(controller, never()).updateTodoDescription(anyLong(), anyString());
     }
 
 

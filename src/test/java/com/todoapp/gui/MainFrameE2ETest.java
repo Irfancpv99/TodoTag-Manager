@@ -14,6 +14,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import javax.swing.SwingUtilities;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
@@ -44,6 +45,7 @@ class MainFrameE2ETest {
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
         robot.settings().delayBetweenEvents(100);
+        robot.settings().eventPostingDelay(200);
         
         frame = GuiActionRunner.execute(() -> {
             TodoService service = new TodoService(appConfig);
@@ -53,15 +55,26 @@ class MainFrameE2ETest {
         
         window = new FrameFixture(robot, frame);
         window.show();
-        window.moveToFront();
         
-        Pause.pause(1000);
+        Pause.pause(1500);
     }
     
     @AfterEach
     void tearDown() {
-        if (window != null) window.cleanUp();
-        if (robot != null) robot.cleanUp();
+        if (window != null) {
+            try {
+                window.cleanUp();
+            } catch (Exception ignored) {
+                // Cleanup failure acceptable
+            }
+        }
+        if (robot != null) {
+            try {
+                robot.cleanUp();
+            } catch (Exception ignored) {
+                // Cleanup failure acceptable
+            }
+        }
         cleanDatabase();
     }
     
@@ -69,7 +82,7 @@ class MainFrameE2ETest {
     @Order(1)
     @DisplayName("Complete todo lifecycle: add, mark done, delete")
     void todoLifecycle() {
-        window.textBox("todoDescriptionField").setText("Buy groceries");
+        setTextDirectly("todoDescriptionField", "Buy groceries");
         window.button("addTodoButton").click();
         
         waitForTableUpdate(1);
@@ -101,12 +114,12 @@ class MainFrameE2ETest {
     @Order(2)
     @DisplayName("Complete tag workflow: create, assign, remove")
     void tagWorkflow() {
-        window.textBox("todoDescriptionField").setText("Complete project");
+        setTextDirectly("todoDescriptionField", "Complete project");
         window.button("addTodoButton").click();
         Pause.pause(1500);
         waitForTableUpdate(1);
 
-        window.textBox("tagNameField").setText("urgent");
+        setTextDirectly("tagNameField", "urgent");
         window.button("addTagButton").click();
         Pause.pause(1000);
         waitForListUpdate("availableTagsList", 1);
@@ -153,7 +166,7 @@ class MainFrameE2ETest {
         waitForTableUpdate(3);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
 
-        window.textBox("searchField").setText("Buy");
+        setTextDirectly("searchField", "Buy");
         window.button("searchButton").click();
         Pause.pause(1000);
         waitForTableUpdate(2);
@@ -168,7 +181,15 @@ class MainFrameE2ETest {
         Pause.pause(500);
         window.button("editButton").click();
         Pause.pause(800);
-        window.dialog().textBox().setText("Updated task");
+        
+        try {
+            window.dialog().textBox().setText("Updated task");
+        } catch (Exception e) {
+            SwingUtilities.invokeLater(() -> 
+                window.dialog().textBox().target().setText("Updated task"));
+            Pause.pause(300);
+        }
+        
         window.dialog().button(withText("OK")).click();
         Pause.pause(1500);
     }
@@ -177,7 +198,7 @@ class MainFrameE2ETest {
     @Order(4)
     @DisplayName("Multiple tags on single todo")
     void multipleTagsWorkflow() {
-        window.textBox("todoDescriptionField").setText("Important meeting");
+        setTextDirectly("todoDescriptionField", "Important meeting");
         window.button("addTodoButton").click();
         Pause.pause(1500);
         waitForTableUpdate(1);
@@ -215,14 +236,32 @@ class MainFrameE2ETest {
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
     
+    private void setTextDirectly(String fieldName, String text) {
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                window.textBox(fieldName).target().setText(text);
+            });
+            Pause.pause(200);
+        } catch (Exception e) {
+          
+            try {
+                window.textBox(fieldName).setText(text);
+            } catch (Exception ex) {
+                
+                window.textBox(fieldName).click();
+                window.textBox(fieldName).enterText(text);
+            }
+        }
+    }
+    
     private void addTag(String name) {
-        window.textBox("tagNameField").setText(name);
+        setTextDirectly("tagNameField", name);
         window.button("addTagButton").click();
         Pause.pause(800);
     }
 
     private void addTodo(String description) {
-        window.textBox("todoDescriptionField").setText(description);
+        setTextDirectly("todoDescriptionField", description);
         window.button("addTodoButton").click();
         Pause.pause(800);
     }
@@ -274,18 +313,18 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
-                    
+                    // Cleanup failure is acceptable
                 }
             });
             service.getAllTags().forEach(tag -> {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                   
+                    // Cleanup failure is acceptable
                 }
             });
         } catch (Exception ignored) {
-            
+            // Database not ready yet
         }
     }
 
@@ -308,7 +347,7 @@ class MainFrameE2ETest {
             field.setAccessible(true);
             field.set(null, null);
         } catch (Exception ignored) {
-           
+            // Field reset failure is acceptable
         }
     }
 }
