@@ -41,13 +41,13 @@ class MainFrameE2ETest {
         cleanDatabase();
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
-        
+
         MainFrame frame = GuiActionRunner.execute(() -> {
             TodoService service = new TodoService(appConfig);
             MainFrameController controller = new MainFrameController(service);
             return new MainFrame(controller);
         });
-        
+
         window = new FrameFixture(robot, frame);
         window.show();
     }
@@ -65,7 +65,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Add todo and verify it appears in table")
     void testAddTodo() {
-        // Add 
+        // Add
         GuiActionRunner.execute(() -> {
             JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
             field.setText("Buy groceries");
@@ -83,7 +83,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Toggle todo done status")
     void testToggleTodoDone() {
-        // Add  
+        // Add
         addTodo("Complete assignment");
         window.table("todoTable").selectRows(0);
 
@@ -98,7 +98,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Delete todo")
     void testDeleteTodo() {
-        // Add 
+        // Add
         addTodo("Task to delete");
         waitForRowCount(1);
 
@@ -113,7 +113,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Create tag and add to todo")
     void testTagWorkflow() {
-        // Add 
+        // Add
         addTodo("Tagged task");
         waitForRowCount(1);
 
@@ -121,12 +121,12 @@ class MainFrameE2ETest {
         addTag("urgent");
         waitForListSize("availableTagsList", 1);
 
-        // Add tag  
+        // Add tag
         window.table("todoTable").selectRows(0);
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
 
-        // Verify tag appears in todo's tags
+        // Verify
         waitForListSize("tagList", 1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
     }
@@ -134,10 +134,10 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Remove tag from todo")
     void testRemoveTagFromTodo() {
-        // Setup: Add   tag
+        // Setup: Add tag
         addTodo("Task with tag");
         addTag("removable");
-        
+
         window.table("todoTable").selectRows(0);
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
@@ -169,7 +169,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Search todos")
     void testSearchTodos() {
-        // Add multiple 
+        // Add multiple
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
@@ -191,7 +191,7 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Edit todo description")
     void testEditTodo() {
-        // Add 
+        // Add
         addTodo("Original description");
         waitForRowCount(1);
 
@@ -199,24 +199,28 @@ class MainFrameE2ETest {
         window.table("todoTable").selectRows(0);
         window.button("editButton").click();
 
-        // Handle dialog with proper wait
-        Pause.pause(300);
-        GuiActionRunner.execute(() -> {
-            JTextField field = (JTextField) window.dialog().textBox().target();
-            field.setText("Updated description");
-        });
+        Pause.pause(500);
+        
+        robot.waitForIdle();
+        window.dialog().textBox().selectAll();
+        window.dialog().textBox().enterText("Updated description");
         window.dialog().button(buttonWithText("OK")).click();
 
         // Verify updated
-        Pause.pause(500);
-        assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
-                .isEqualTo("Updated description");
+        waitForCondition("Description updated", () -> {
+            try {
+                String cellValue = window.table("todoTable").cell(TableCell.row(0).column(1)).value();
+                return "Updated description".equals(cellValue);
+            } catch (Exception e) {
+                return false;
+            }
+        }, 3000);
     }
 
     @Test
     @DisplayName("Add multiple tags to single todo")
     void testMultipleTags() {
-        // Add 
+        // Add
         addTodo("Multi-tagged task");
 
         // Add multiple tags
@@ -225,9 +229,9 @@ class MainFrameE2ETest {
         addTag("important");
         waitForListSize("availableTagsList", 3);
 
-        // Select  and add two tags
+        // Select and add two tags
         window.table("todoTable").selectRows(0);
-        
+
         window.list("availableTagsList").selectItem(0);
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 1);
@@ -236,7 +240,7 @@ class MainFrameE2ETest {
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 2);
 
-        // Verify both tags present
+        // Verify both tags added
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
 
@@ -248,7 +252,14 @@ class MainFrameE2ETest {
             field.setText(description);
         });
         window.button("addTodoButton").click();
-        Pause.pause(200);
+
+       
+        Pause.pause(new Condition("Todo added") {
+            @Override
+            public boolean test() {
+                return window.table("todoTable").rowCount() > 0;
+            }
+        }, Timeout.timeout(3000));
     }
 
     private void addTag(String name) {
@@ -257,9 +268,25 @@ class MainFrameE2ETest {
             field.setText(name);
         });
         window.button("addTagButton").click();
-        Pause.pause(200);
+
+       
+        Pause.pause(new Condition("Tag added") {
+            @Override
+            public boolean test() {
+                return window.list("availableTagsList").contents().length > 0;
+            }
+        }, Timeout.timeout(3000));
     }
-    
+
+    private void waitForCondition(String description, java.util.function.Supplier<Boolean> condition, int timeoutMs) {
+        Pause.pause(new Condition(description) {
+            @Override
+            public boolean test() {
+                return condition.get();
+            }
+        }, Timeout.timeout(timeoutMs));
+    }
+
     private void waitForRowCount(int expectedCount) {
         Pause.pause(new Condition("Table row count = " + expectedCount) {
             @Override
@@ -306,8 +333,8 @@ class MainFrameE2ETest {
     private void cleanDatabase() {
         try {
             TodoService service = new TodoService(appConfig);
-            
-            // Delete all 
+
+            // Delete all
             service.getAllTodos().forEach(todo -> {
                 try {
                     service.deleteTodo(todo.getId());
@@ -325,7 +352,6 @@ class MainFrameE2ETest {
                 }
             });
         } catch (Exception ignored) {
-            // If cleanup fails, tests will still run
         }
     }
 }
