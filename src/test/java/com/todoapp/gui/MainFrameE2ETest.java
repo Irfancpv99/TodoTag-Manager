@@ -50,6 +50,7 @@ class MainFrameE2ETest {
 
         window = new FrameFixture(robot, frame);
         window.show();
+        robot.waitForIdle();
     }
 
     @AfterEach
@@ -70,6 +71,7 @@ class MainFrameE2ETest {
             JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
             field.setText("Buy groceries");
         });
+        robot.waitForIdle();
         window.button("addTodoButton").click();
 
         // Verify it appears in table
@@ -91,6 +93,7 @@ class MainFrameE2ETest {
         window.button("toggleDoneButton").click();
 
         // Verify status changed
+        waitForCellValue(0, 2, "true");
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
                 .isEqualTo("true");
     }
@@ -123,10 +126,12 @@ class MainFrameE2ETest {
 
         // Add tag
         window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
         window.list("availableTagsList").selectItem(0);
+        robot.waitForIdle();
         window.button("addTagToTodoButton").click();
 
-        // Verify
+        // Verify 
         waitForListSize("tagList", 1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
     }
@@ -139,12 +144,15 @@ class MainFrameE2ETest {
         addTag("removable");
 
         window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
         window.list("availableTagsList").selectItem(0);
+        robot.waitForIdle();
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 1);
 
         // Remove tag
         window.list("tagList").selectItem(0);
+        robot.waitForIdle();
         window.button("removeTagFromTodoButton").click();
 
         // Verify removed
@@ -160,6 +168,7 @@ class MainFrameE2ETest {
 
         // Delete it
         window.list("availableTagsList").selectItem(0);
+        robot.waitForIdle();
         window.button("deleteTagButton").click();
 
         // Verify deleted
@@ -180,6 +189,7 @@ class MainFrameE2ETest {
             JTextField field = (JTextField) window.textBox("searchField").target();
             field.setText("Buy");
         });
+        robot.waitForIdle();
         window.button("searchButton").click();
         waitForRowCount(2);
 
@@ -197,24 +207,27 @@ class MainFrameE2ETest {
 
         // Select and edit
         window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
         window.button("editButton").click();
 
-        Pause.pause(500);
+        // Wait for dialog and interact with it
+        Pause.pause(1000);
         
         robot.waitForIdle();
         window.dialog().textBox().selectAll();
         window.dialog().textBox().enterText("Updated description");
         window.dialog().button(buttonWithText("OK")).click();
 
-        // Verify updated
+        // Verify updated with more robust waiting
         waitForCondition("Description updated", () -> {
             try {
+                robot.waitForIdle();
                 String cellValue = window.table("todoTable").cell(TableCell.row(0).column(1)).value();
                 return "Updated description".equals(cellValue);
             } catch (Exception e) {
                 return false;
             }
-        }, 3000);
+        }, 10000);
     }
 
     @Test
@@ -231,51 +244,52 @@ class MainFrameE2ETest {
 
         // Select and add two tags
         window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
 
         window.list("availableTagsList").selectItem(0);
+        robot.waitForIdle();
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 1);
 
         window.list("availableTagsList").selectItem(1);
+        robot.waitForIdle();
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 2);
 
-        // Verify both tags added
+        // Verify both tags present
         assertThat(window.list("tagList").contents()).hasSize(2);
     }
 
     // Helper methods
 
     private void addTodo(String description) {
+        int currentCount = window.table("todoTable").rowCount();
+        int expectedCount = currentCount + 1;
+        
         GuiActionRunner.execute(() -> {
             JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
             field.setText(description);
         });
+        robot.waitForIdle();
         window.button("addTodoButton").click();
 
-       
-        Pause.pause(new Condition("Todo added") {
-            @Override
-            public boolean test() {
-                return window.table("todoTable").rowCount() > 0;
-            }
-        }, Timeout.timeout(3000));
+        // Wait for the row count to increase
+        waitForRowCount(expectedCount);
     }
 
     private void addTag(String name) {
+        int currentCount = window.list("availableTagsList").contents().length;
+        int expectedCount = currentCount + 1;
+        
         GuiActionRunner.execute(() -> {
             JTextField field = (JTextField) window.textBox("tagNameField").target();
             field.setText(name);
         });
+        robot.waitForIdle();
         window.button("addTagButton").click();
 
-       
-        Pause.pause(new Condition("Tag added") {
-            @Override
-            public boolean test() {
-                return window.list("availableTagsList").contents().length > 0;
-            }
-        }, Timeout.timeout(3000));
+        // Wait for the list size to increase
+        waitForListSize("availableTagsList", expectedCount);
     }
 
     private void waitForCondition(String description, java.util.function.Supplier<Boolean> condition, int timeoutMs) {
@@ -291,18 +305,43 @@ class MainFrameE2ETest {
         Pause.pause(new Condition("Table row count = " + expectedCount) {
             @Override
             public boolean test() {
-                return window.table("todoTable").rowCount() == expectedCount;
+                try {
+                    robot.waitForIdle();
+                    return window.table("todoTable").rowCount() == expectedCount;
+                } catch (Exception e) {
+                    return false;
+                }
             }
-        }, Timeout.timeout(5000));
+        }, Timeout.timeout(10000));
+    }
+
+    private void waitForCellValue(int row, int column, String expectedValue) {
+        Pause.pause(new Condition("Cell (" + row + "," + column + ") = " + expectedValue) {
+            @Override
+            public boolean test() {
+                try {
+                    robot.waitForIdle();
+                    String value = window.table("todoTable").cell(TableCell.row(row).column(column)).value();
+                    return expectedValue.equals(value);
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }, Timeout.timeout(10000));
     }
 
     private void waitForListSize(String listName, int expectedSize) {
         Pause.pause(new Condition("List '" + listName + "' size = " + expectedSize) {
             @Override
             public boolean test() {
-                return window.list(listName).contents().length == expectedSize;
+                try {
+                    robot.waitForIdle();
+                    return window.list(listName).contents().length == expectedSize;
+                } catch (Exception e) {
+                    return false;
+                }
             }
-        }, Timeout.timeout(5000));
+        }, Timeout.timeout(10000));
     }
 
     private GenericTypeMatcher<JButton> buttonWithText(String text) {
@@ -352,6 +391,7 @@ class MainFrameE2ETest {
                 }
             });
         } catch (Exception ignored) {
+            // If cleanup fails, tests will still run
         }
     }
 }
