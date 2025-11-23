@@ -66,7 +66,7 @@ class MainFrameE2ETest {
     @DisplayName("Add todo and verify it appears in table")
     void testAddTodo() {
         // Add 
-        window.textBox("todoDescriptionField").enterText("Buy groceries");
+        window.textBox("todoDescriptionField").setText("Buy groceries");
         window.button("addTodoButton").click();
 
         // Verify it appears in table
@@ -173,7 +173,7 @@ class MainFrameE2ETest {
         waitForRowCount(3);
 
         // Search for "Buy"
-        window.textBox("searchField").enterText("Buy");
+        window.textBox("searchField").setText("Buy");
         window.button("searchButton").click();
         waitForRowCount(2);
 
@@ -195,7 +195,7 @@ class MainFrameE2ETest {
 
         // Handle dialog with proper wait
         Pause.pause(300);
-        window.dialog().textBox().deleteText().enterText("Updated description");
+        window.dialog().textBox().setText("Updated description");
         window.dialog().button(buttonWithText("OK")).click();
 
         // Verify updated
@@ -234,15 +234,15 @@ class MainFrameE2ETest {
     // Helper methods
 
     private void addTodo(String description) {
-        window.textBox("todoDescriptionField").deleteText(); 
-        window.textBox("todoDescriptionField").enterText(description);
+        
+    	window.textBox("todoDescriptionField").setText(description);
         window.button("addTodoButton").click();
         Pause.pause(200);
     }
 
     private void addTag(String name) {
-        window.textBox("tagNameField").deleteText();
-        window.textBox("tagNameField").enterText(name);
+        
+    	window.textBox("tagNameField").setText(name);
         window.button("addTagButton").click();
         Pause.pause(200);
     }
