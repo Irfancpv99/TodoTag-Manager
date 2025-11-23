@@ -234,21 +234,19 @@ class MainFrameE2ETest {
     // Helper methods
 
     private void addTodo(String description) {
-        window.textBox("todoDescriptionField").click(); // Ensure focus
-        window.textBox("todoDescriptionField").deleteText(); // Clear any existing text
+        window.textBox("todoDescriptionField").deleteText(); 
         window.textBox("todoDescriptionField").enterText(description);
         window.button("addTodoButton").click();
         Pause.pause(200);
     }
 
     private void addTag(String name) {
-        window.textBox("tagNameField").click(); // Ensure focus
-        window.textBox("tagNameField").deleteText(); // Clear any existing text
+        window.textBox("tagNameField").deleteText();
         window.textBox("tagNameField").enterText(name);
         window.button("addTagButton").click();
         Pause.pause(200);
     }
-
+    
     private void waitForRowCount(int expectedCount) {
         Pause.pause(new Condition("Table row count = " + expectedCount) {
             @Override
