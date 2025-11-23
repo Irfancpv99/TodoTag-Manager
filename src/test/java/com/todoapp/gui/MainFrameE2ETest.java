@@ -66,7 +66,10 @@ class MainFrameE2ETest {
     @DisplayName("Add todo and verify it appears in table")
     void testAddTodo() {
         // Add 
-        window.textBox("todoDescriptionField").setText("Buy groceries");
+        GuiActionRunner.execute(() -> {
+            JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
+            field.setText("Buy groceries");
+        });
         window.button("addTodoButton").click();
 
         // Verify it appears in table
@@ -173,7 +176,10 @@ class MainFrameE2ETest {
         waitForRowCount(3);
 
         // Search for "Buy"
-        window.textBox("searchField").setText("Buy");
+        GuiActionRunner.execute(() -> {
+            JTextField field = (JTextField) window.textBox("searchField").target();
+            field.setText("Buy");
+        });
         window.button("searchButton").click();
         waitForRowCount(2);
 
@@ -195,7 +201,10 @@ class MainFrameE2ETest {
 
         // Handle dialog with proper wait
         Pause.pause(300);
-        window.dialog().textBox().setText("Updated description");
+        GuiActionRunner.execute(() -> {
+            JTextField field = (JTextField) window.dialog().textBox().target();
+            field.setText("Updated description");
+        });
         window.dialog().button(buttonWithText("OK")).click();
 
         // Verify updated
@@ -234,15 +243,19 @@ class MainFrameE2ETest {
     // Helper methods
 
     private void addTodo(String description) {
-        
-    	window.textBox("todoDescriptionField").setText(description);
+        GuiActionRunner.execute(() -> {
+            JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
+            field.setText(description);
+        });
         window.button("addTodoButton").click();
         Pause.pause(200);
     }
 
     private void addTag(String name) {
-        
-    	window.textBox("tagNameField").setText(name);
+        GuiActionRunner.execute(() -> {
+            JTextField field = (JTextField) window.textBox("tagNameField").target();
+            field.setText(name);
+        });
         window.button("addTagButton").click();
         Pause.pause(200);
     }
@@ -312,7 +325,7 @@ class MainFrameE2ETest {
                 }
             });
         } catch (Exception ignored) {
-            // If cleanup fails, tests will still run with dirty data
+            // If cleanup fails, tests will still run
         }
     }
 }
