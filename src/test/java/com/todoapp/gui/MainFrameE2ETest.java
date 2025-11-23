@@ -64,127 +64,111 @@ class MainFrameE2ETest {
     }
 
     @Test
-    @DisplayName("Add todo and verify it appears in table")
-    void testAddTodo() {
-        // Add
+    @DisplayName("Complete Todo CRUD Workflow")
+    void testTodoCRUDWorkflow() {
+        // CREATE: Add 
         GuiActionRunner.execute(() -> {
             JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
             field.setText("Buy groceries");
         });
         robot.waitForIdle();
         window.button("addTodoButton").click();
-
-        // Verify it appears in table
         waitForRowCount(1);
+        
+        // VERIFY:  appears in table
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
                 .isEqualTo("Buy groceries");
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
                 .isEqualTo("false");
-    }
 
-    @Test
-    @DisplayName("Toggle todo done status")
-    void testToggleTodoDone() {
-        // Add
-        addTodo("Complete assignment");
+        // UPDATE: Toggle done status
         window.table("todoTable").selectRows(0);
-
-        // Toggle done
+        robot.waitForIdle();
         window.button("toggleDoneButton").click();
-
-        // Verify status changed
         waitForCellValue(0, 2, "true");
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
                 .isEqualTo("true");
-    }
 
-    @Test
-    @DisplayName("Delete todo")
-    void testDeleteTodo() {
-        // Add
-        addTodo("Task to delete");
-        waitForRowCount(1);
-
-        // Delete it
+        // UPDATE: Edit description
         window.table("todoTable").selectRows(0);
-        window.button("deleteButton").click();
+        robot.waitForIdle();
+        window.button("editButton").click();
+        Pause.pause(1000);
+        
+        robot.waitForIdle();
+        window.dialog().textBox().selectAll();
+        window.dialog().textBox().enterText("Buy milk");
+        window.dialog().button(buttonWithText("OK")).click();
+        
+        waitForCondition("Description updated", () -> {
+            try {
+                robot.waitForIdle();
+                String cellValue = window.table("todoTable").cell(TableCell.row(0).column(1)).value();
+                return "Buy milk".equals(cellValue);
+            } catch (Exception e) {
+                return false;
+            }
+        }, 10000);
 
-        // Verify deleted
+        // DELETE: Remove 
+        window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
+        window.button("deleteButton").click();
         waitForRowCount(0);
     }
 
     @Test
-    @DisplayName("Create tag and add to todo")
-    void testTagWorkflow() {
-        // Add
-        addTodo("Tagged task");
+    @DisplayName("Tag Management and Todo-Tag Relationships")
+    void testTagManagementWorkflow() {
+        // Create 
+        addTodo("Important task");
         waitForRowCount(1);
 
-        // Add tag
+        // CREATE: Add multiple tags
         addTag("urgent");
-        waitForListSize("availableTagsList", 1);
+        addTag("work");
+        addTag("important");
+        waitForListSize("availableTagsList", 3);
 
-        // Add tag
+        // ASSIGN: Add tags 
         window.table("todoTable").selectRows(0);
         robot.waitForIdle();
-        window.list("availableTagsList").selectItem(0);
+        
+        window.list("availableTagsList").selectItem(0); // urgent
         robot.waitForIdle();
         window.button("addTagToTodoButton").click();
-
-        // Verify 
         waitForListSize("tagList", 1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
-    }
 
-    @Test
-    @DisplayName("Remove tag from todo")
-    void testRemoveTagFromTodo() {
-        // Setup: Add tag
-        addTodo("Task with tag");
-        addTag("removable");
-
-        window.table("todoTable").selectRows(0);
-        robot.waitForIdle();
-        window.list("availableTagsList").selectItem(0);
+        window.list("availableTagsList").selectItem(1); // work
         robot.waitForIdle();
         window.button("addTagToTodoButton").click();
-        waitForListSize("tagList", 1);
+        waitForListSize("tagList", 2);
+        assertThat(window.list("tagList").contents()).hasSize(2);
 
-        // Remove tag
+     
         window.list("tagList").selectItem(0);
         robot.waitForIdle();
         window.button("removeTagFromTodoButton").click();
+        waitForListSize("tagList", 1);
 
-        // Verify removed
-        waitForListSize("tagList", 0);
-    }
-
-    @Test
-    @DisplayName("Delete tag")
-    void testDeleteTag() {
-        // Add tag
-        addTag("deletable");
-        waitForListSize("availableTagsList", 1);
-
-        // Delete it
-        window.list("availableTagsList").selectItem(0);
+        // Delete tag from system
+        window.list("availableTagsList").selectItem(2); // important
         robot.waitForIdle();
         window.button("deleteTagButton").click();
-
-        // Verify deleted
-        waitForListSize("availableTagsList", 0);
+        waitForListSize("availableTagsList", 2);
     }
 
     @Test
-    @DisplayName("Search todos")
-    void testSearchTodos() {
-        // Add multiple
+    @DisplayName("Search and Filter Functionality")
+    void testSearchAndFilterWorkflow() {
+       
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
         waitForRowCount(3);
 
-        // Search for "Buy"
+        // SEARCH: Filter by keyword
         GuiActionRunner.execute(() -> {
             JTextField field = (JTextField) window.textBox("searchField").target();
             field.setText("Buy");
@@ -192,72 +176,14 @@ class MainFrameE2ETest {
         robot.waitForIdle();
         window.button("searchButton").click();
         waitForRowCount(2);
+        
+        // Verify search results
+        assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
 
-        // Show all
+        // CLEAR
         window.button("showAllButton").click();
         waitForRowCount(3);
-    }
-
-    @Test
-    @DisplayName("Edit todo description")
-    void testEditTodo() {
-        // Add
-        addTodo("Original description");
-        waitForRowCount(1);
-
-        // Select and edit
-        window.table("todoTable").selectRows(0);
-        robot.waitForIdle();
-        window.button("editButton").click();
-
-        // Wait for dialog and interact with it
-        Pause.pause(1000);
-        
-        robot.waitForIdle();
-        window.dialog().textBox().selectAll();
-        window.dialog().textBox().enterText("Updated description");
-        window.dialog().button(buttonWithText("OK")).click();
-
-        // Verify updated with more robust waiting
-        waitForCondition("Description updated", () -> {
-            try {
-                robot.waitForIdle();
-                String cellValue = window.table("todoTable").cell(TableCell.row(0).column(1)).value();
-                return "Updated description".equals(cellValue);
-            } catch (Exception e) {
-                return false;
-            }
-        }, 10000);
-    }
-
-    @Test
-    @DisplayName("Add multiple tags to single todo")
-    void testMultipleTags() {
-        // Add
-        addTodo("Multi-tagged task");
-
-        // Add multiple tags
-        addTag("urgent");
-        addTag("work");
-        addTag("important");
-        waitForListSize("availableTagsList", 3);
-
-        // Select and add two tags
-        window.table("todoTable").selectRows(0);
-        robot.waitForIdle();
-
-        window.list("availableTagsList").selectItem(0);
-        robot.waitForIdle();
-        window.button("addTagToTodoButton").click();
-        waitForListSize("tagList", 1);
-
-        window.list("availableTagsList").selectItem(1);
-        robot.waitForIdle();
-        window.button("addTagToTodoButton").click();
-        waitForListSize("tagList", 2);
-
-        // Verify both tags present
-        assertThat(window.list("tagList").contents()).hasSize(2);
+        assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
     }
 
     // Helper methods
@@ -272,8 +198,6 @@ class MainFrameE2ETest {
         });
         robot.waitForIdle();
         window.button("addTodoButton").click();
-
-        // Wait for the row count to increase
         waitForRowCount(expectedCount);
     }
 
@@ -287,8 +211,6 @@ class MainFrameE2ETest {
         });
         robot.waitForIdle();
         window.button("addTagButton").click();
-
-        // Wait for the list size to increase
         waitForListSize("availableTagsList", expectedCount);
     }
 
@@ -373,25 +295,20 @@ class MainFrameE2ETest {
         try {
             TodoService service = new TodoService(appConfig);
 
-            // Delete all
             service.getAllTodos().forEach(todo -> {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
-                    // Ignore deletion errors during cleanup
                 }
             });
 
-            // Delete all tags
             service.getAllTags().forEach(tag -> {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
-                    // Ignore deletion errors during cleanup
                 }
             });
         } catch (Exception ignored) {
-            // If cleanup fails, tests will still run
         }
     }
 }
