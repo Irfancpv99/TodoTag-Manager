@@ -193,18 +193,18 @@
                         <param>com.todoapp.service.*</param>
                         <param>com.todoapp.config.*</param>
                         <param>com.todoapp.gui.MainFrameController</param>
-                      </targetClasses>
+                    </targetClasses>
 
-                    <!-- Run all tests except GUI E2E and Integration tests -->
+                    <!-- Run all tests except GUI tests -->
                     <targetTests>
                         <param>com.todoapp.*</param>
                     </targetTests>
 
-                    <!-- Exclude GUI E2E and Integration tests -->
+                    <!-- Exclude GUI E2E and GUI Unit tests from mutation testing -->
                     <excludedTestClasses>
                         <param>com.todoapp.gui.MainFrameE2ETest</param>
                         <param>com.todoapp.gui.MainFrameTest</param>
-                     </excludedTestClasses>
+                    </excludedTestClasses>
 
                     <outputFormats>
                         <outputFormat>HTML</outputFormat>
