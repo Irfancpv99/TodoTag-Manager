@@ -57,21 +57,18 @@ jobs:
       - name: Generate Coverage Reports
         run: mvn jacoco:report
 
-      - name: Configure Coveralls Exclusions
+      - name: Filter Coverage for Coveralls
         run: |
-          cat > .coveralls.yml << 'EOF'
-          service_name: github-actions
-          skip_files:
-            - "src/main/java/com/todoapp/gui/MainFrame.java"
-            - "src/main/java/com/todoapp/TodoApplication.java"
-          EOF
+          # Remove excluded classes from jacoco.xml before uploading to Coveralls
+          sed -i '/<class name="com\/todoapp\/gui\/MainFrame"/,/<\/class>/d' target/site/jacoco/jacoco.xml
+          sed -i '/<class name="com\/todoapp\/TodoApplication"/,/<\/class>/d' target/site/jacoco/jacoco.xml
+          sed -i '/<sourcefile name="MainFrame.java"/,/<\/sourcefile>/d' target/site/jacoco/jacoco.xml
+          sed -i '/<sourcefile name="TodoApplication.java"/,/<\/sourcefile>/d' target/site/jacoco/jacoco.xml
 
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: target/site/jacoco/jacoco.xml
-          format: jacoco
 
       - name: SonarCloud Analysis
         env:
