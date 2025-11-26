@@ -57,10 +57,21 @@ jobs:
       - name: Generate Coverage Reports
         run: mvn jacoco:report
 
+      - name: Configure Coveralls Exclusions
+        run: |
+          cat > .coveralls.yml << 'EOF'
+          service_name: github-actions
+          skip_files:
+            - "src/main/java/com/todoapp/gui/MainFrame.java"
+            - "src/main/java/com/todoapp/TodoApplication.java"
+          EOF
+
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: target/site/jacoco/jacoco.xml
+          format: jacoco
 
       - name: SonarCloud Analysis
         env:
