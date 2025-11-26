@@ -38,6 +38,7 @@ class TagTest {
     void shouldTestEquality() {
         Tag tag1 = new Tag("a");
         Tag tag2 = new Tag("b");
+        Tag tag3 = new Tag("c");
 
         // Same instance
         assertEquals(tag1, tag1);
@@ -48,26 +49,36 @@ class TagTest {
         // Different class
         assertNotEquals(tag1, new Object());
         
-        // Both ids null - different tags
+        // Both ID's null - different tags
         assertNotEquals(tag1, tag2);
         assertNotEquals(tag2, tag1);
+        assertNotEquals(tag1, tag3);
         
         // One id null, one not
         tag1.setId(1L);
         assertNotEquals(tag1, tag2);
+        assertNotEquals(tag2, tag1);
         
         tag1.setId(null);
         tag2.setId(2L);
         assertNotEquals(tag1, tag2);
+        assertNotEquals(tag2, tag1);
         
-        // Different ids
+        // Different ID's
         tag1.setId(1L);
         tag2.setId(2L);
         assertNotEquals(tag1, tag2);
+        assertNotEquals(tag2, tag1);
         
         // Same id
         tag2.setId(1L);
         assertEquals(tag1, tag2);
+        assertEquals(tag2, tag1);
+        
+        // Same id with third tag
+        tag3.setId(1L);
+        assertEquals(tag1, tag3);
+        assertEquals(tag2, tag3);
     }
         
     @Test
