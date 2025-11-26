@@ -17,7 +17,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -228,7 +227,7 @@ class MainFrameE2ETest {
             JTextField field = frame.todoDescriptionField;
             field.setText(null);
             String result = frame.getText(field);
-            assertThat(result).isEqualTo("");
+            assertThat(result).isEmpty();
         });
     }
 
@@ -272,7 +271,7 @@ class MainFrameE2ETest {
         robot.waitForIdle();
         Pause.pause(500);
         
-        assertThat(window.list("tagList").contents()).hasSize(0);
+        assertThat(window.list("tagList").contents()).isEmpty();
         
         window.table("todoTable").selectRows(0);
         robot.waitForIdle();
@@ -467,6 +466,7 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTodo(todo.getId());
                 } catch (Exception ignored) {
+                	// Ignore failures during cleanup to continue with remaining items
                 }
             });
 
@@ -474,9 +474,11 @@ class MainFrameE2ETest {
                 try {
                     service.deleteTag(tag.getId());
                 } catch (Exception ignored) {
+                	// Ignore failures during cleanup to continue with remaining items
                 }
             });
         } catch (Exception ignored) {
+        	 // Ignore failures during test cleanup
         }
     }
 }
