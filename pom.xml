@@ -169,13 +169,6 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
-                        <configuration>
-                            <excludes>
-                                <!-- Exclude GUI implementation files (not controller) -->
-                                <exclude>com/todoapp/gui/MainFrame.class</exclude>
-                                <exclude>com/todoapp/gui/MainFrame$*.class</exclude>
-                            </excludes>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -210,13 +203,12 @@
 			        <param>com.todoapp.gui.*E2ETest</param>
 			    </excludedTestClasses>
 			
-			    <!-- EXCLUDE GUI IMPLEMENTATION CLASSES -->
+			    <!-- EXCLUDE ALL GUI IMPLEMENTATION CLASSES EXCEPT CONTROLLER -->
 			    <excludedClasses>
-			        <param>com.todoapp.gui.MainFrame</param>
-				        <param>com.todoapp.gui.MainFrame$*</param>
+			        <param>com.todoapp.gui.*</param>
 			    </excludedClasses>
 			
-			    <!-- Force headless mode  -->
+			    <!-- Force headless mode so Swing doesn't crash PIT -->
 			    <jvmArgs>
 			        <param>-Djava.awt.headless=true</param>
 			    </jvmArgs>
