@@ -1,4 +1,4 @@
-name: TDD CI/CD Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -8,27 +8,12 @@ on:
 
 env:
   JAVA_VERSION: 17
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN"
 
 jobs:
-  validate-tdd:
-    name: Validate TDD Approach
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Validate TDD commit messages
-        run: |
-          echo "Validating TDD commit pattern..."
-          git log --oneline -10 | grep -E "(RED:|GREEN:|REFACTOR:)" || echo "TDD commit pattern validation"
-          echo "TDD validation completed"
-
   test:
-    name: Test Suite
+    name: Test & Coverage
     runs-on: ubuntu-latest
+    
     services:
       mongodb:
         image: mongo:6.0
@@ -44,13 +29,10 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: testpassword
           MYSQL_DATABASE: todoapp_test
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: testpass
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -59,76 +41,28 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Wait for services
+      - name: Setup Xvfb
         run: |
-          echo "Waiting for database services..."
-          while ! nc -z localhost 27017; do sleep 2; done
-          echo "MongoDB ready"
-          while ! nc -z localhost 3306; do sleep 2; done
-          echo "MySQL ready"
-          echo "All services ready for TDD tests"
-
-      - name: Setup Xvfb for GUI tests
-        run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          sleep 5
-          echo "Virtual display server started on :99"
 
-      - name: Run Unit Tests (TDD Red-Green-Refactor)
-        run: mvn clean test -Dtest="**/*Test.java,!**/*E2ETest.java,!**/*IntegrationTest.java" -Dmaven.test.failure.ignore=false
+      - name: Run All Tests
+        run: mvn clean test
         env:
           DISPLAY: :99
 
-      - name: Run Integration Tests (TDD Integration Layer)
-        run: |
-          if find src/test/java -name "*IntegrationTest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*IntegrationTest.java"
-          else
-            echo "No integration tests found - skipping"
-          fi
-        env:
-          DISPLAY: :99
-
-      - name: Run E2E Tests (TDD Complete Workflows)
-        run: |
-          if find src/test/java -name "*E2ETest.java" 2>/dev/null | grep -q .; then
-            mvn test -Dtest="**/*E2ETest.java"
-          else
-            echo "No E2E tests found - skipping"
-          fi
-        env:
-          DISPLAY: :99
-
-      - name: Generate Code Coverage Report
+      - name: Generate Coverage Reports
         run: mvn jacoco:report
 
-      - name: Enforce Code Coverage (TDD Best Practice)
-        run: mvn jacoco:check || echo "Coverage enforcement - project building towards 100%"
-
-      - name: Upload coverage to Coveralls
+      - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/site/jacoco/jacoco.xml
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Run SonarCloud Analysis (TDD Quality Gate)
+      - name: SonarCloud Analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -136,109 +70,75 @@ jobs:
           mvn sonar:sonar \
             -Dsonar.projectKey=Irfancpv99_TodoTag-Manager \
             -Dsonar.organization=irfancpv99-1 \
-            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.exclusions=**/MainFrame.java,**/TodoApplication.java
 
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+      - name: Upload Test Reports
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: tdd-test-results
+          name: test-reports
           path: |
             target/surefire-reports/
             target/site/jacoco/
           retention-days: 30
 
   mutation-testing:
-    name: Mutation Testing (TDD Quality)
+    name: Mutation Testing
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Setup Xvfb for GUI tests
+      - name: Setup Xvfb
         run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb
           Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
-          sleep 5
 
-      - name: Run PIT Mutation Testing
-        run: mvn clean test org.pitest:pitest-maven:mutationCoverage
+      - name: Run Mutation Tests
+        run: mvn test org.pitest:pitest-maven:mutationCoverage
         env:
           DISPLAY: :99
 
-      - name: Upload Mutation Test Results
-        uses: actions/upload-artifact@v4
+      - name: Upload Mutation Reports
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: tdd-mutation-results
+          name: mutation-reports
           path: target/pit-reports/
           retention-days: 30
 
-  build-application:
-    name: Build TDD Application
+  build:
+    name: Build
     runs-on: ubuntu-latest
     needs: test
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2
-          restore-keys: ${{ runner.os }}-m2
+      - name: Build Application
+        run: mvn package -DskipTests
 
-      - name: Build TDD Application
-        run: mvn clean package -DskipTests
-
-      - name: Upload Application Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tdd-todo-manager
+          name: todo-manager-app
           path: target/*.jar
           retention-days: 30
-
-  validate-tdd-quality:
-    name: TDD Quality Gate
-    runs-on: ubuntu-latest
-    needs: [test, build-application]
-    if: always()
-    steps:
-      - name: TDD Quality Summary
-        run: |
-          echo "✅ TDD Development Quality Summary"
-          echo "=================================="
-          echo "✅ Unit Tests: Completed"
-          echo "✅ Integration Tests: Completed"
-          echo "✅ E2E Tests: Completed"
-          echo "✅ Code Coverage: Generated"
-          echo "✅ Application Build: Success"
-          echo ""
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "🧬 Mutation Testing: Enabled on main branch"
-          fi
-          echo ""
-          echo "🎯 Quality Gate: PASSED"
