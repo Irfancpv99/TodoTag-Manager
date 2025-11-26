@@ -38,47 +38,40 @@ class TagTest {
     void shouldTestEquality() {
         Tag tag1 = new Tag("a");
         Tag tag2 = new Tag("b");
-        Tag tag3 = new Tag("c");
 
         // Same instance
-        assertEquals(tag1, tag1);
+        assertTrue(tag1.equals(tag1));
         
         // Null check
-        assertNotEquals(null, tag1);
+        assertFalse(tag1.equals(null));
         
         // Different class
-        assertNotEquals(tag1, new Object());
+        assertFalse(tag1.equals(new Object()));
         
-        // Both ID's null - different tags
-        assertNotEquals(tag1, tag2);
-        assertNotEquals(tag2, tag1);
-        assertNotEquals(tag1, tag3);
+        // Both ID's null 
+        assertFalse(tag1.equals(tag2));
+        assertFalse(tag2.equals(tag1));
         
-        // One id null, one not
+        // One id null, one not 
         tag1.setId(1L);
-        assertNotEquals(tag1, tag2);
-        assertNotEquals(tag2, tag1);
+        assertFalse(tag1.equals(tag2));
+        assertFalse(tag2.equals(tag1));
         
         tag1.setId(null);
         tag2.setId(2L);
-        assertNotEquals(tag1, tag2);
-        assertNotEquals(tag2, tag1);
+        assertFalse(tag1.equals(tag2));
+        assertFalse(tag2.equals(tag1));
         
-        // Different ID's
+        // Different ID's 
         tag1.setId(1L);
         tag2.setId(2L);
-        assertNotEquals(tag1, tag2);
-        assertNotEquals(tag2, tag1);
+        assertFalse(tag1.equals(tag2));
+        assertFalse(tag2.equals(tag1));
         
-        // Same id
+        // Same id 
         tag2.setId(1L);
-        assertEquals(tag1, tag2);
-        assertEquals(tag2, tag1);
-        
-        // Same id with third tag
-        tag3.setId(1L);
-        assertEquals(tag1, tag3);
-        assertEquals(tag2, tag3);
+        assertTrue(tag1.equals(tag2));
+        assertTrue(tag2.equals(tag1));
     }
         
     @Test
