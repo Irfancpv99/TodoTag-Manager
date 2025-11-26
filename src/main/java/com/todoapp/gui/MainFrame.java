@@ -9,10 +9,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Simplified MainFrame for easier 100% test coverage.
- * Removed complex UI helpers and consolidated functionality.
- */
+
 public class MainFrame extends JFrame {
     private static final long serialVersionUID = 1L;
     private static final String WINDOW_TITLE = "Todo Manager - TDD Development Demo Application";
@@ -207,12 +204,10 @@ public class MainFrame extends JFrame {
         searchField.addActionListener(e -> searchTodos());
         tagNameField.addActionListener(e -> addTag());
         
-        // Table selection listener
-        todoTable.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                updateTodoTags(getSelectedTodo());
-            }
-        });
+        // Table selection listener - FIXED: removed getValueIsAdjusting check
+        todoTable.getSelectionModel().addListSelectionListener(e -> 
+            updateTodoTags(getSelectedTodo())
+        );
     }
 
     // Core action methods
@@ -245,6 +240,8 @@ public class MainFrame extends JFrame {
                 refreshTags();
                 tagNameField.setText("");
             });
+        } else {
+            showWarning("Tag already exists or could not be created");
         }
     }
 
@@ -385,14 +382,14 @@ public class MainFrame extends JFrame {
     }
 
     // Helper methods
-    private void updateTodoTags(Todo todo) {
+    void updateTodoTags(Todo todo) {
         tagListModel.clear();
         if (todo != null && todo.getTags() != null) {
             todo.getTags().forEach(tagListModel::addElement);
         }
     }
 
-    private void reselectTodo(Long todoId) {
+    void reselectTodo(Long todoId) {
         for (int i = 0; i < todoTableModel.getRowCount(); i++) {
             if (todoTableModel.getTodoAt(i).getId().equals(todoId)) {
                 todoTable.setRowSelectionInterval(i, i);
@@ -402,7 +399,7 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private String getText(JTextField field) {
+    String getText(JTextField field) {
         String text = field.getText();
         return (text != null) ? text.trim() : "";
     }
@@ -416,7 +413,7 @@ public class MainFrame extends JFrame {
         return findButton(this, name);
     }
 
-    private JButton findButton(Container container, String name) {
+    JButton findButton(Container container, String name) {
         for (Component comp : container.getComponents()) {
             if (comp.getName() != null && comp.getName().equals(name) && comp instanceof JButton) {
                 return (JButton) comp;

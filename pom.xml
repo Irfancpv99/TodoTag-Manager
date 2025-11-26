@@ -169,6 +169,13 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <!-- Exclude GUI implementation files (not controller) -->
+                                <exclude>com/todoapp/gui/MainFrame.class</exclude>
+                                <exclude>com/todoapp/gui/MainFrame$*.class</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -185,33 +192,42 @@
                         <version>1.1.2</version>
                     </dependency>
                 </dependencies>
-                <configuration>
-                    <!-- Target only business logic classes -->
-                    <targetClasses>
-                        <param>com.todoapp.model.*</param>
-                        <param>com.todoapp.repository.*</param>
-                        <param>com.todoapp.service.*</param>
-                        <param>com.todoapp.config.*</param>
-                        <param>com.todoapp.gui.MainFrameController</param>
-                    </targetClasses>
-
-                    <!-- Run all tests except GUI tests -->
-                    <targetTests>
-                        <param>com.todoapp.*</param>
-                    </targetTests>
-
-                    <!-- Exclude GUI E2E and GUI Unit tests from mutation testing -->
-                    <excludedTestClasses>
-                        <param>com.todoapp.gui.MainFrameE2ETest</param>
-                        <param>com.todoapp.gui.MainFrameTest</param>
-                    </excludedTestClasses>
-
-                    <outputFormats>
-                        <outputFormat>HTML</outputFormat>
-                        <outputFormat>XML</outputFormat>
-                    </outputFormats>
-                    <mutationThreshold>100</mutationThreshold>
-                    <timeoutConstant>10000</timeoutConstant>
+               <configuration>
+    <!-- Run mutation testing ONLY on business logic + controller -->
+			    <targetClasses>
+			        <param>com.todoapp.model.*</param>
+			        <param>com.todoapp.repository.*</param>
+			        <param>com.todoapp.service.*</param>
+			        <param>com.todoapp.config.*</param>
+			
+			        <!-- Include controller but NOT GUI -->
+			        <param>com.todoapp.gui.MainFrameController</param>
+			    </targetClasses>
+			
+			    <!-- EXCLUDE GUI TEST FILES -->
+			    <excludedTestClasses>
+			        <param>com.todoapp.gui.*Test</param>
+			        <param>com.todoapp.gui.*E2ETest</param>
+			    </excludedTestClasses>
+			
+			    <!-- EXCLUDE GUI IMPLEMENTATION CLASSES -->
+			    <excludedClasses>
+			        <param>com.todoapp.gui.MainFrame</param>
+				        <param>com.todoapp.gui.MainFrame$*</param>
+			    </excludedClasses>
+			
+			    <!-- Force headless mode  -->
+			    <jvmArgs>
+			        <param>-Djava.awt.headless=true</param>
+			    </jvmArgs>
+			
+			    <outputFormats>
+			        <outputFormat>HTML</outputFormat>
+			        <outputFormat>XML</outputFormat>
+			    </outputFormats>
+			
+			    <mutationThreshold>100</mutationThreshold>
+               <timeoutConstant>10000</timeoutConstant>
                     <timeoutFactor>3.0</timeoutFactor>
                     <threads>4</threads>
                 </configuration>

@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,6 +31,7 @@ class MainFrameE2ETest {
     private static AppConfig appConfig;
     private FrameFixture window;
     private Robot robot;
+    private MainFrame frame;
 
     @BeforeAll
     static void setupConfig() {
@@ -42,7 +44,7 @@ class MainFrameE2ETest {
 
         robot = BasicRobot.robotWithCurrentAwtHierarchy();
 
-        MainFrame frame = GuiActionRunner.execute(() -> {
+        frame = GuiActionRunner.execute(() -> {
             TodoService service = new TodoService(appConfig);
             MainFrameController controller = new MainFrameController(service);
             return new MainFrame(controller);
@@ -66,22 +68,14 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Complete Todo CRUD Workflow")
     void testTodoCRUDWorkflow() {
-        // CREATE: Add 
-        GuiActionRunner.execute(() -> {
-            JTextField field = (JTextField) window.textBox("todoDescriptionField").target();
-            field.setText("Buy groceries");
-        });
-        robot.waitForIdle();
-        window.button("addTodoButton").click();
+        addTodo("Buy groceries");
         waitForRowCount(1);
         
-        // VERIFY:  appears in table
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
                 .isEqualTo("Buy groceries");
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
                 .isEqualTo("false");
 
-        // UPDATE: Toggle done status
         window.table("todoTable").selectRows(0);
         robot.waitForIdle();
         window.button("toggleDoneButton").click();
@@ -89,7 +83,6 @@ class MainFrameE2ETest {
         assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
                 .isEqualTo("true");
 
-        // UPDATE: Edit description
         window.table("todoTable").selectRows(0);
         robot.waitForIdle();
         window.button("editButton").click();
@@ -110,7 +103,6 @@ class MainFrameE2ETest {
             }
         }, 10000);
 
-        // DELETE: Remove 
         window.table("todoTable").selectRows(0);
         robot.waitForIdle();
         window.button("deleteButton").click();
@@ -120,40 +112,35 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Tag Management and Todo-Tag Relationships")
     void testTagManagementWorkflow() {
-        // Create 
         addTodo("Important task");
         waitForRowCount(1);
 
-        // CREATE: Add multiple tags
         addTag("urgent");
         addTag("work");
         addTag("important");
         waitForListSize("availableTagsList", 3);
 
-        // ASSIGN: Add tags 
         window.table("todoTable").selectRows(0);
         robot.waitForIdle();
         
-        window.list("availableTagsList").selectItem(0); // urgent
+        window.list("availableTagsList").selectItem(0);
         robot.waitForIdle();
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 1);
         assertThat(window.list("tagList").contents()[0]).contains("urgent");
 
-        window.list("availableTagsList").selectItem(1); // work
+        window.list("availableTagsList").selectItem(1);
         robot.waitForIdle();
         window.button("addTagToTodoButton").click();
         waitForListSize("tagList", 2);
         assertThat(window.list("tagList").contents()).hasSize(2);
 
-     
         window.list("tagList").selectItem(0);
         robot.waitForIdle();
         window.button("removeTagFromTodoButton").click();
         waitForListSize("tagList", 1);
 
-        // Delete tag from system
-        window.list("availableTagsList").selectItem(2); // important
+        window.list("availableTagsList").selectItem(2);
         robot.waitForIdle();
         window.button("deleteTagButton").click();
         waitForListSize("availableTagsList", 2);
@@ -162,13 +149,11 @@ class MainFrameE2ETest {
     @Test
     @DisplayName("Search and Filter Functionality")
     void testSearchAndFilterWorkflow() {
-       
         addTodo("Buy groceries");
         addTodo("Buy tickets");
         addTodo("Clean house");
         waitForRowCount(3);
 
-        // SEARCH: Filter by keyword
         GuiActionRunner.execute(() -> {
             JTextField field = (JTextField) window.textBox("searchField").target();
             field.setText("Buy");
@@ -177,16 +162,199 @@ class MainFrameE2ETest {
         window.button("searchButton").click();
         waitForRowCount(2);
         
-        // Verify search results
         assertThat(window.table("todoTable").rowCount()).isEqualTo(2);
 
-        // CLEAR
         window.button("showAllButton").click();
         waitForRowCount(3);
         assertThat(window.table("todoTable").rowCount()).isEqualTo(3);
     }
 
-    // Helper methods
+    @Test
+    @DisplayName("Double-click toggles todo done status")
+    void testDoubleClickToggleTodo() {
+        addTodo("Test double-click");
+        waitForRowCount(1);
+        
+        assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
+                .isEqualTo("false");
+        
+        window.table("todoTable").cell(TableCell.row(0).column(1)).doubleClick();
+        waitForCellValue(0, 2, "true");
+        
+        assertThat(window.table("todoTable").cell(TableCell.row(0).column(2)).value())
+                .isEqualTo("true");
+    }
+
+    @Test
+    @DisplayName("Enter key on text fields triggers appropriate actions")
+    void testEnterKeyActions() {
+        GuiActionRunner.execute(() -> {
+            JTextField todoField = (JTextField) window.textBox("todoDescriptionField").target();
+            todoField.setText("Enter key todo");
+        });
+        robot.waitForIdle();
+        window.textBox("todoDescriptionField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
+        waitForRowCount(1);
+        assertThat(window.table("todoTable").cell(TableCell.row(0).column(1)).value())
+                .isEqualTo("Enter key todo");
+
+        GuiActionRunner.execute(() -> {
+            JTextField tagField = (JTextField) window.textBox("tagNameField").target();
+            tagField.setText("enter-tag");
+        });
+        robot.waitForIdle();
+        window.textBox("tagNameField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
+        waitForListSize("availableTagsList", 1);
+        
+        String tagName = window.list("availableTagsList").contents()[0];
+        assertThat(tagName).contains("enter-tag");
+
+        addTodo("Search test todo");
+        waitForRowCount(2);
+        
+        GuiActionRunner.execute(() -> {
+            JTextField searchField = (JTextField) window.textBox("searchField").target();
+            searchField.setText("Search test");
+        });
+        robot.waitForIdle();
+        window.textBox("searchField").pressAndReleaseKeys(java.awt.event.KeyEvent.VK_ENTER);
+        waitForRowCount(1);
+    }
+
+    @Test
+    @DisplayName("Test getText with null handling - coverage for line 407")
+    void testGetTextWithNullField() {
+        GuiActionRunner.execute(() -> {
+            JTextField field = frame.todoDescriptionField;
+            field.setText(null);
+            String result = frame.getText(field);
+            assertThat(result).isEqualTo("");
+        });
+    }
+
+    @Test
+    @DisplayName("Test findButton with non-container components - coverage for line 424")
+    void testFindButtonWithNonContainerComponents() {
+        GuiActionRunner.execute(() -> {
+            JPanel testPanel = new JPanel();
+            JLabel label = new JLabel("Test Label");
+            testPanel.add(label);
+            
+            JButton testButton = new JButton("Test");
+            testButton.setName("testButton");
+            testPanel.add(testButton);
+            
+            JButton found = frame.findButton(testPanel, "testButton");
+            assertThat(found).isNotNull();
+            assertThat(found.getText()).isEqualTo("Test");
+        });
+    }
+
+    @Test
+    @DisplayName("Table selection updates todo tags display")
+    void testTableSelectionUpdatesTagDisplay() {
+        addTodo("Task with tags");
+        waitForRowCount(1);
+        
+        addTag("tag1");
+        addTag("tag2");
+        waitForListSize("availableTagsList", 2);
+        
+        window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
+        
+        window.list("availableTagsList").selectItem(0);
+        robot.waitForIdle();
+        window.button("addTagToTodoButton").click();
+        waitForListSize("tagList", 1);
+        
+        window.table("todoTable").target().clearSelection();
+        robot.waitForIdle();
+        Pause.pause(500);
+        
+        assertThat(window.list("tagList").contents()).hasSize(0);
+        
+        window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
+        Pause.pause(500);
+        
+        assertThat(window.list("tagList").contents()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Refresh todos preserves selection when possible")
+    void testRefreshTodosPreservesSelection() {
+        addTodo("Todo 1");
+        addTodo("Todo 2");
+        addTodo("Todo 3");
+        waitForRowCount(3);
+        
+        window.table("todoTable").selectRows(1);
+        robot.waitForIdle();
+        
+        GuiActionRunner.execute(() -> {
+            frame.refreshTodos();
+        });
+        Pause.pause(1000);
+        
+        assertThat(window.table("todoTable").target().getSelectedRow()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Refresh todos clears tags when selection out of bounds")
+    void testRefreshTodosClearsTagsWhenSelectionOutOfBounds() {
+        addTodo("Single todo");
+        waitForRowCount(1);
+        
+        addTag("test-tag");
+        waitForListSize("availableTagsList", 1);
+        
+        window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
+        
+        window.list("availableTagsList").selectItem(0);
+        robot.waitForIdle();
+        window.button("addTagToTodoButton").click();
+        waitForListSize("tagList", 1);
+        
+        window.table("todoTable").selectRows(0);
+        robot.waitForIdle();
+        window.button("deleteButton").click();
+        waitForRowCount(0);
+        
+        Pause.pause(500);
+        assertThat(window.list("tagList").contents()).hasSize(0);
+    }
+
+    @Test
+    @DisplayName("Column names are correctly set in table model")
+    void testTableModelColumnNames() {
+        GuiActionRunner.execute(() -> {
+            assertThat(frame.todoTableModel.getColumnName(0)).isEqualTo("ID");
+            assertThat(frame.todoTableModel.getColumnName(1)).isEqualTo("Description");
+            assertThat(frame.todoTableModel.getColumnName(2)).isEqualTo("Done");
+            assertThat(frame.todoTableModel.getColumnCount()).isEqualTo(3);
+        });
+    }
+
+    @Test
+    @DisplayName("Table model returns correct values for all columns including default case")
+    void testTableModelGetValueAt() {
+        addTodo("Test todo for columns");
+        waitForRowCount(1);
+        
+        GuiActionRunner.execute(() -> {
+            Object idValue = frame.todoTableModel.getValueAt(0, 0);
+            Object descValue = frame.todoTableModel.getValueAt(0, 1);
+            Object doneValue = frame.todoTableModel.getValueAt(0, 2);
+            Object defaultValue = frame.todoTableModel.getValueAt(0, 999);
+            
+            assertThat(idValue).isNotNull();
+            assertThat(descValue).isEqualTo("Test todo for columns");
+            assertThat(doneValue).isEqualTo(false);
+            assertThat(defaultValue).isNull();
+        });
+    }
 
     private void addTodo(String description) {
         int currentCount = window.table("todoTable").rowCount();
