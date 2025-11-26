@@ -65,7 +65,7 @@ class TodoTest {
         assertEquals(todo1, todo1);
 
         // Null and different class
-        assertNotEquals(todo1, null);
+        assertNotEquals(null, todo1 );
         assertNotEquals(todo1, new Object());
 
         // Both ids null - both directions

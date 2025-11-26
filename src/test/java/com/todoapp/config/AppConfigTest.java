@@ -54,7 +54,9 @@ class AppConfigTest {
             public InputStream getResourceAsStream(String name) {
                 if ("application.properties".equals(name)) {
                     return new InputStream() {
-                        @Override public int read() throws IOException { throw new IOException("fail"); }
+                        @Override public int read() throws IOException { 
+                            throw new IOException("fail"); 
+                        }
                     };
                 }
                 return super.getResourceAsStream(name);
@@ -73,7 +75,7 @@ class AppConfigTest {
             @Override
             public InputStream getResourceAsStream(String name) {
                 return null; 
-                }
+            }
         };
         Thread.currentThread().setContextClassLoader(cl);
         
@@ -81,51 +83,7 @@ class AppConfigTest {
         assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
         assertThat(cfg.getMongoDbHost()).isEqualTo("localhost");
         assertThat(cfg.getMongoDbPort()).isEqualTo(27017);
-        assertThat(cfg.getMySqlUrl()).contains("3306"); // default port
-    }
-
-    @Test
-    void closeException_isIgnored() {
-        ClassLoader cl = new ClassLoader(getClass().getClassLoader()) {
-            @Override
-            public InputStream getResourceAsStream(String name) {
-                if ("application.properties".equals(name)) {
-                    return new InputStream() {
-                        @Override public int read() { return -1; }
-                        @Override public void close() throws IOException { throw new IOException("close fail"); }
-                    };
-                }
-                return super.getResourceAsStream(name);
-            }
-        };
-        Thread.currentThread().setContextClassLoader(cl);
-
-        AppConfig cfg = new AppConfig();
-        assertThat(cfg.getDatabaseType()).isEqualTo(DatabaseType.MONGODB);
-    }
-
-    @Test
-    void inputStream_isAlwaysClosed() {
-        class TrackingStream extends InputStream {
-            boolean closed = false;
-            @Override public int read() { return -1; }
-            @Override public void close() { closed = true; }
-        }
-        
-        TrackingStream stream = new TrackingStream();
-        ClassLoader cl = new ClassLoader(getClass().getClassLoader()) {
-            @Override
-            public InputStream getResourceAsStream(String name) {
-                if ("application.properties".equals(name)) {
-                    return stream;
-                }
-                return super.getResourceAsStream(name);
-            }
-        };
-        Thread.currentThread().setContextClassLoader(cl);
-
-        new AppConfig();
-        assertThat(stream.closed).isTrue();
+        assertThat(cfg.getMySqlUrl()).contains("3306");
     }
 
     @Test

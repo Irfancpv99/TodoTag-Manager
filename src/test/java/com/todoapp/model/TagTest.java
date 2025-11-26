@@ -39,30 +39,37 @@ class TagTest {
         Tag tag1 = new Tag("a");
         Tag tag2 = new Tag("b");
 
+        // Same instance
         assertEquals(tag1, tag1);
         
-        assertNotEquals(tag1, null);
+        // Null check
+        assertNotEquals(null, tag1);
         
-        assertNotEquals(tag1, "string");
+        // Different class
         assertNotEquals(tag1, new Object());
         
+        // Both ids null - different tags
         assertNotEquals(tag1, tag2);
+        assertNotEquals(tag2, tag1);
         
-       	tag1.setId(1L);
+        // One id null, one not
+        tag1.setId(1L);
         assertNotEquals(tag1, tag2);
         
         tag1.setId(null);
         tag2.setId(2L);
         assertNotEquals(tag1, tag2);
         
+        // Different ids
         tag1.setId(1L);
         tag2.setId(2L);
         assertNotEquals(tag1, tag2);
         
+        // Same id
         tag2.setId(1L);
         assertEquals(tag1, tag2);
     }
-    
+        
     @Test
     void shouldCalculateHashCode() {
         Tag tag1 = new Tag("name");

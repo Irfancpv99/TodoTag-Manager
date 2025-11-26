@@ -50,15 +50,10 @@ public class AppConfig {
             return;
         }
 
-        try {
+        try (in) {
             properties.load(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        } finally {
-            try {
-                in.close();
-            } catch (IOException ignored) {
-                  }
         }
     }
 
