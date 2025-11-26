@@ -57,13 +57,18 @@ jobs:
       - name: Generate Coverage Reports
         run: mvn jacoco:report
 
-      - name: Filter Coverage for Coveralls
+      - name: Filter Jacoco XML for Coveralls
         run: |
-          # Remove excluded classes from jacoco.xml before uploading to Coveralls
-          sed -i '/<class name="com\/todoapp\/gui\/MainFrame"/,/<\/class>/d' target/site/jacoco/jacoco.xml
-          sed -i '/<class name="com\/todoapp\/TodoApplication"/,/<\/class>/d' target/site/jacoco/jacoco.xml
-          sed -i '/<sourcefile name="MainFrame.java"/,/<\/sourcefile>/d' target/site/jacoco/jacoco.xml
-          sed -i '/<sourcefile name="TodoApplication.java"/,/<\/sourcefile>/d' target/site/jacoco/jacoco.xml
+          # Install xmlstarlet for proper XML manipulation
+          sudo apt-get install -y xmlstarlet
+          
+          # Remove excluded classes from jacoco.xml
+          xmlstarlet ed -L \
+            -d "//class[@name='com/todoapp/gui/MainFrame']" \
+            -d "//class[@name='com/todoapp/TodoApplication']" \
+            -d "//sourcefile[@name='MainFrame.java']" \
+            -d "//sourcefile[@name='TodoApplication.java']" \
+            target/site/jacoco/jacoco.xml
 
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2
