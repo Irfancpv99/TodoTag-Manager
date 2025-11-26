@@ -322,7 +322,7 @@ class MainFrameE2ETest {
         waitForRowCount(0);
         
         Pause.pause(500);
-        assertThat(window.list("tagList").contents()).hasSize(0);
+        assertThat(window.list("tagList").contents()).isEmpty();
     }
 
     @Test

@@ -156,7 +156,7 @@ public class MainFrame extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setPreferredSize(new Dimension(280, 0));
         
-        // Todo tags section
+        // Main section
         panel.add(new JLabel("Todo Tags:"));
         JScrollPane todoTagsScroll = new JScrollPane(tagList);
         todoTagsScroll.setPreferredSize(new Dimension(280, 120));
@@ -307,16 +307,15 @@ public class MainFrame extends JFrame {
         String newDescription = JOptionPane.showInputDialog(
             this, "Edit todo description:", todo.getDescription()
         );
-        
-        if (newDescription != null && !newDescription.trim().isEmpty()) {
-            if (controller.updateTodoDescription(todo.getId(), newDescription)) {
-                SwingUtilities.invokeLater(() -> {
-                    refreshTodos();
-                    todoTable.setRowSelectionInterval(selectedRow, selectedRow);
-                });
-            }
+        if (newDescription != null && !newDescription.trim().isEmpty() 
+                && controller.updateTodoDescription(todo.getId(), newDescription)) {
+            SwingUtilities.invokeLater(() -> {
+                refreshTodos();
+                todoTable.setRowSelectionInterval(selectedRow, selectedRow);
+            });
         }
     }
+        
 
     public void deleteTodo() {
         Todo selected = getSelectedTodo();
@@ -415,11 +414,11 @@ public class MainFrame extends JFrame {
 
     JButton findButton(Container container, String name) {
         for (Component comp : container.getComponents()) {
-            if (comp.getName() != null && comp.getName().equals(name) && comp instanceof JButton) {
-                return (JButton) comp;
+            if (comp.getName() != null && comp.getName().equals(name) && comp instanceof JButton jbutton) {
+                return jbutton; 
             }
-            if (comp instanceof Container) {
-                JButton found = findButton((Container) comp, name);
+            if (comp instanceof Container subContainer) {
+                JButton found = findButton(subContainer, name);
                 if (found != null) {
                     return found;
                 }
