@@ -13,7 +13,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
-class MongoTagRepositoryTest {
+class MongoTagRepositoryIT {
 
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:6.0"));
@@ -175,20 +175,17 @@ class MongoTagRepositoryTest {
     
     @Test
     void testDeleteTagWithNullId() {
-        // Covers: delete() when tag.getId() == null
         Tag tag = new Tag("NoId"); // ID is null
         assertDoesNotThrow(() -> repository.delete(tag));
     }
 
     @Test
     void testCloseWithNullMongoClient() throws Exception {
-        // Covers: close() when mongoClient is null
-        String tempDb = "temp_close_test_" + System.currentTimeMillis();
+       String tempDb = "temp_close_test_" + System.currentTimeMillis();
         MongoTagRepository testRepo = new MongoTagRepository(
             mongoDBContainer.getReplicaSetUrl(), tempDb
         );
         
-        // Use reflection to set private field to null
         Field field = MongoTagRepository.class.getDeclaredField("mongoClient");
         field.setAccessible(true);
         field.set(testRepo, null);

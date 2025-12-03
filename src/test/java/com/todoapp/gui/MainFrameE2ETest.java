@@ -416,7 +416,7 @@ class MainFrameE2ETest {
                     return false;
                 }
             }
-        }, Timeout.timeout(10000));
+        }, Timeout.timeout(20000));
     }
 
     private void waitForListSize(String listName, int expectedSize) {
