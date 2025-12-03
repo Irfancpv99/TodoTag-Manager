@@ -145,7 +145,7 @@
                     <argLine>${argLine} -Djava.awt.headless=true -Dapple.awt.UIElement=true</argLine>
                     <!-- Exclude E2E GUI tests from Surefire - they cause headless failures -->
                     <excludes>
-                        <exclude>**/*E2ETest.java</exclude>
+                        <exclude>**/*E2EIT.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -168,6 +168,9 @@
                         <java.awt.headless>true</java.awt.headless>
                     </systemPropertyVariables>
                     <argLine>${argLine} -Djava.awt.headless=true -Dapple.awt.UIElement=true</argLine>
+                    <excludes>
+            			<exclude>**/*E2EIT.java</exclude>
+        			</excludes>
                 </configuration>
             </plugin>
 
@@ -311,7 +314,7 @@
                         <param>com.todoapp.gui.MainFrameController</param>
                     </targetClasses>
                     <excludedTestClasses>
-                        <param>com.todoapp.gui.*E2ETest</param>
+                        <param>com.todoapp.gui.*E2EIT</param>
                         
                     </excludedTestClasses>
                     <excludedClasses>
