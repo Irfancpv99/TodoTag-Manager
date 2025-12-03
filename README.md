@@ -366,27 +366,15 @@ TodoTag-Manager/
 │   │   ├── java/com/todoapp/
 │   │   │   ├── TodoApplication.java          # Application entry point
 │   │   │   ├── config/                       # Configuration classes
-│   │   │   │   ├── AppConfig.java           # Application configuration
-│   │   │   │   ├── DatabaseManager.java     # Database connection management
-│   │   │   │   └── DatabaseType.java        # Database type enum
+│   │   │   │   
 │   │   │   ├── gui/                          # GUI layer
-│   │   │   │   ├── MainFrame.java           # Main application window
-│   │   │   │   └── MainFrameController.java # GUI controller
+│   │   │   │   
 │   │   │   ├── model/                        # Domain models
-│   │   │   │   ├── Todo.java                # Todo entity
-│   │   │   │   └── Tag.java                 # Tag entity
+│   │   │   │   
 │   │   │   ├── repository/                   # Data access layer
-│   │   │   │   ├── RepositoryFactory.java   # Repository factory
-│   │   │   │   ├── TodoRepository.java      # Todo repository interface
-│   │   │   │   ├── TagRepository.java       # Tag repository interface
 │   │   │   │   ├── mongo/                   # MongoDB implementations
-│   │   │   │   │   ├── MongoTodoRepository.java
-│   │   │   │   │   └── MongoTagRepository.java
 │   │   │   │   └── mysql/                   # MySQL implementations
-│   │   │   │       ├── MySqlTodoRepository.java
-│   │   │   │       └── MySqlTagRepository.java
 │   │   │   └── service/                      # Business logic layer
-│   │   │       └── TodoService.java         # Todo service
 │   │   └── resources/
 │   │       ├── application.properties       # Application configuration
 │   │       └── META-INF/
