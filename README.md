@@ -51,7 +51,7 @@ This project was built following strict Test-Driven Development (TDD) methodolog
 - **MongoDB 6.0**: NoSQL document database for flexible schema
 - **MySQL 8.0**: Relational database with JPA/Hibernate integration
 
-### Persistence Layer
+### Database Layer
 - **Hibernate 6.2.2**: ORM framework for MySQL
 - **Jakarta Persistence API 3.1**: JPA specification
 - **MongoDB Java Driver 4.9.1**: Native MongoDB support
@@ -78,7 +78,7 @@ The application follows a layered architecture pattern:
 
 ```
 ┌─────────────────────────────────────┐
-│         Presentation Layer          │
+│         GUI Layer          │
 │  (MainFrame, MainFrameController)   │
 ├─────────────────────────────────────┤
 │          Service Layer              │
@@ -87,7 +87,7 @@ The application follows a layered architecture pattern:
 │        Repository Layer             │
 │  (TodoRepository, TagRepository)    │
 ├─────────────────────────────────────┤
-│       Persistence Layer             │
+│       Database Layer             │
 │    (MongoDB / MySQL with JPA)       │
 └─────────────────────────────────────┘
 ```
@@ -356,44 +356,6 @@ database.type=MONGODB
 # For MySQL
 database.type=MYSQL
 ```
-
-##  Project Structure
-
-```
-TodoTag-Manager/
-├── src/
-│   ├── main/
-│   │   ├── java/com/todoapp/
-│   │   │   ├── TodoApplication.java          # Application entry point
-│   │   │   ├── config/                       # Configuration classes
-│   │   │   │   
-│   │   │   ├── gui/                          # GUI layer
-│   │   │   │   
-│   │   │   ├── model/                        # Domain models
-│   │   │   │   
-│   │   │   ├── repository/                   # Data access layer
-│   │   │   │   ├── mongo/                   # MongoDB implementations
-│   │   │   │   └── mysql/                   # MySQL implementations
-│   │   │   └── service/                      # Business logic layer
-│   │   └── resources/
-│   │       ├── application.properties       # Application configuration
-│   │       └── META-INF/
-│   │           └── persistence.xml          # JPA configuration
-│   └── test/
-│       └── java/com/todoapp/               # Test classes mirror main structure
-│           ├── config/                     # Configuration tests
-│           ├── gui/                        # GUI tests (unit + E2E)
-│           ├── model/                      # Model tests
-│           ├── repository/                 # Repository tests
-│           └── service/                    # Service tests
-├── .github/
-│   └── workflows/
-│       └── ci.yml                          # CI/CD pipeline configuration
-├── docker-compose.yml                       # Local development databases
-├── pom.xml                                  # Maven configuration
-└── README.md                                # This file
-```
-
 ##  Development Practices
 
 ### Test-Driven Development (TDD)
