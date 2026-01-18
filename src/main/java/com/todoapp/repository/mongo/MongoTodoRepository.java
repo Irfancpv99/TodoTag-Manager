@@ -16,12 +16,14 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.in;
 import static com.mongodb.client.model.Filters.regex;
 
 
 public class MongoTodoRepository implements TodoRepository {
     
     private static final String FIELD_DESCRIPTION = "description";
+    private static final String FIELD_TITLE = "title";
     
     private final MongoCollection<Document> collection;
     private final MongoClient mongoClient;
@@ -103,6 +105,17 @@ public class MongoTodoRepository implements TodoRepository {
         }
         return todos;
     }
+    
+    @Override
+    public List<Todo> findByTag(Tag tag) {
+        List<Todo> todos = new ArrayList<>();
+        if (tag.getId() != null) {
+            for (Document doc : collection.find(in("tagIds", tag.getId()))) {
+                todos.add(documentToTodo(doc));
+            }
+        }
+        return todos;
+    }
 
     // Helper method for testing
     public void deleteAll() {
@@ -113,6 +126,7 @@ public class MongoTodoRepository implements TodoRepository {
     private Document todoToDocument(Todo todo) {
         Document doc = new Document()
             .append("_id", todo.getId())
+            .append(FIELD_TITLE, todo.getTitle())
             .append(FIELD_DESCRIPTION, todo.getDescription())
             .append("done", todo.isDone());
 
@@ -127,7 +141,16 @@ public class MongoTodoRepository implements TodoRepository {
     }
 
     private Todo documentToTodo(Document doc) {
-        Todo todo = new Todo(doc.getString(FIELD_DESCRIPTION));
+        String title = doc.getString(FIELD_TITLE);
+        String description = doc.getString(FIELD_DESCRIPTION);
+        
+        Todo todo;
+        if (title != null && !title.isEmpty()) {
+            todo = new Todo(title, description);
+        } else {
+            todo = new Todo(description);
+        }
+        
         todo.setId(doc.getLong("_id"));
         todo.setDone(doc.getBoolean("done", false));
 

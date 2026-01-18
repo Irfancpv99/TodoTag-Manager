@@ -1,5 +1,6 @@
 package com.todoapp.repository.mysql;
 
+import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -163,5 +164,24 @@ class MySqlTodoRepositoryTest {
         List<Todo> result = repository.findByDescriptionContaining("important");
         
         assertEquals(todos, result);
+    }
+    
+    @Test
+    void shouldFindByTag() {
+        Tag tag = new Tag("work");
+        tag.setId(1L);
+        Todo todo1 = new Todo("Work task 1");
+        Todo todo2 = new Todo("Work task 2");
+        List<Todo> todos = Arrays.asList(todo1, todo2);
+        
+        when(entityManager.createQuery("SELECT t FROM Todo t JOIN t.tags tag WHERE tag = :tag", Todo.class)).thenReturn(query);
+        when(query.setParameter("tag", tag)).thenReturn(query);
+        when(query.getResultList()).thenReturn(todos);
+        
+        List<Todo> result = repository.findByTag(tag);
+        
+        assertEquals(2, result.size());
+        assertEquals(todos, result);
+        verify(query).setParameter("tag", tag);
     }
 }

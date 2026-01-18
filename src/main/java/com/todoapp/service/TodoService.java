@@ -122,6 +122,12 @@ public class TodoService {
             throw new IllegalArgumentException("Tag name cannot be empty");
         }
         
+        // Check for duplicate tag name
+        Optional<Tag> existingTag = tagRepository.findByName(name.trim());
+        if (existingTag.isPresent()) {
+            throw new IllegalArgumentException("Tag with name '" + name.trim() + "' already exists");
+        }
+        
         Tag tag = new Tag(name.trim());
         return saveTag(tag);
     }
@@ -175,6 +181,22 @@ public class TodoService {
             throw new IllegalArgumentException("Todo or Tag not found");
         });
     }
+    
+    public List<Todo> findTodosByTag(Tag tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("Tag cannot be null");
+        }
+        return todoRepository.findByTag(tag);
+    }
+    
+    public List<Todo> findTodosByTagId(Long tagId) {
+        Optional<Tag> tagOpt = tagRepository.findById(tagId);
+        if (tagOpt.isEmpty()) {
+            throw new IllegalArgumentException("Tag not found with id: " + tagId);
+        }
+        return todoRepository.findByTag(tagOpt.get());
+    }
+    
     /**
      * Execute an operation within a transaction (for MySQL) or directly (for MongoDB)
      */

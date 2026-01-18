@@ -1,5 +1,6 @@
 package com.todoapp.repository.mysql;
 
+import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 import com.todoapp.repository.TodoRepository;
 import jakarta.persistence.EntityManager;
@@ -73,6 +74,14 @@ public class MySqlTodoRepository implements TodoRepository {
         TypedQuery<Todo> query = entityManager.createQuery(
             "SELECT t FROM Todo t WHERE t.description LIKE :keyword", Todo.class);
         query.setParameter("keyword", "%" + keyword + "%");
+        return query.getResultList();
+    }
+    
+    @Override
+    public List<Todo> findByTag(Tag tag) {
+        TypedQuery<Todo> query = entityManager.createQuery(
+            "SELECT t FROM Todo t JOIN t.tags tag WHERE tag = :tag", Todo.class);
+        query.setParameter("tag", tag);
         return query.getResultList();
     }
 }
