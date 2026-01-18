@@ -23,6 +23,8 @@ public class Todo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    private String title;
+    
     private String description;
     
     private boolean done;
@@ -47,6 +49,18 @@ public class Todo {
         this.done = false;
     }
     
+    public Todo(String title, String description) {
+        if (title == null) {
+            throw new IllegalArgumentException("Title cannot be null");
+        }
+        if (description == null) {
+            throw new IllegalArgumentException("Description cannot be null");
+        }
+        this.title = title;
+        this.description = description;
+        this.done = false;
+    }
+    
     public Todo(String description, boolean done) {
         if (description == null) {
             throw new IllegalArgumentException("Description cannot be null");
@@ -61,6 +75,17 @@ public class Todo {
     
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public String getTitle() {
+        return title;
+    }
+    
+    public void setTitle(String title) {
+        if (title == null) {
+            throw new IllegalArgumentException("Title cannot be null");
+        }
+        this.title = title;
     }
     
     public String getDescription() {
@@ -126,6 +151,7 @@ public class Todo {
     public String toString() {
         return "Todo{" +
                 "id=" + id +
+                ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", done=" + done +
                 '}';

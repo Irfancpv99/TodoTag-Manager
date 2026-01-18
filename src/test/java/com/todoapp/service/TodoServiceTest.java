@@ -71,15 +71,38 @@ class TodoServiceTest {
         assertNotNull(result);
         verify(todoRepository).save(any(Todo.class));
     }
+    
+    @Test
+    void shouldCreateTodoWithTitle() {
+        Todo todo = new Todo("Title 1", "Task 1");
+        when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+
+        Todo result = todoService.createTodo("  Title 1  ", "  Task 1  ");
+
+        assertNotNull(result);
+        verify(todoRepository).save(any(Todo.class));
+    }
 
     @Test
     void shouldThrowExceptionWhenCreatingTodoWithNullDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null));
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("Title", null));
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithNullTitle() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null, "Description"));
     }
 
     @Test
     void shouldThrowExceptionWhenCreatingTodoWithEmptyDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   "));
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("Title", "   "));
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithEmptyTitle() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   ", "Description"));
     }
 
     @Test
@@ -363,5 +386,65 @@ class TodoServiceTest {
             verify(factory).rollbackTransaction();
             verify(factory, never()).commitTransaction();
         }
+    }
+    
+    @Test
+    void shouldFindTodosByTag() {
+        Tag tag = new Tag("work");
+        tag.setId(1L);
+        Todo todo1 = new Todo("Task 1");
+        Todo todo2 = new Todo("Task 2");
+        
+        when(todoRepository.findByTag(tag)).thenReturn(List.of(todo1, todo2));
+        
+        List<Todo> result = todoService.findTodosByTag(tag);
+        
+        assertEquals(2, result.size());
+        assertTrue(result.contains(todo1));
+        assertTrue(result.contains(todo2));
+    }
+    
+    @Test
+    void shouldFindTodosByTagId() {
+        Tag tag = new Tag("work");
+        tag.setId(1L);
+        Todo todo1 = new Todo("Task 1");
+        Todo todo2 = new Todo("Task 2");
+        
+        when(tagRepository.findById(1L)).thenReturn(Optional.of(tag));
+        when(todoRepository.findByTag(tag)).thenReturn(List.of(todo1, todo2));
+        
+        List<Todo> result = todoService.findTodosByTagId(1L);
+        
+        assertEquals(2, result.size());
+        verify(tagRepository).findById(1L);
+        verify(todoRepository).findByTag(tag);
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenFindingTodosByNonExistentTagId() {
+        when(tagRepository.findById(1L)).thenReturn(Optional.empty());
+        
+        assertThrows(IllegalArgumentException.class, () -> todoService.findTodosByTagId(1L));
+    }
+    
+    @Test
+    void shouldPreventDuplicateTagNames() {
+        Tag existingTag = new Tag("work");
+        when(tagRepository.findByName("work")).thenReturn(Optional.of(existingTag));
+        
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTag("work"));
+    }
+    
+    @Test
+    void shouldCreateTagWhenNameNotDuplicate() {
+        when(tagRepository.findByName("work")).thenReturn(Optional.empty());
+        when(tagRepository.save(any(Tag.class))).thenReturn(new Tag("work"));
+        
+        Tag result = todoService.createTag("work");
+        
+        assertNotNull(result);
+        verify(tagRepository).findByName("work");
+        verify(tagRepository).save(any(Tag.class));
     }
 }

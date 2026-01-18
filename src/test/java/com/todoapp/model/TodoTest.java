@@ -6,6 +6,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class TodoTest {
 
     @Test
+    void shouldCreateTodoWithTitleAndDescription() {
+        Todo todo = new Todo("Task Title", "Learn TDD");
+        
+        assertEquals("Task Title", todo.getTitle());
+        assertEquals("Learn TDD", todo.getDescription());
+        assertFalse(todo.isDone());
+        assertNull(todo.getId());
+    }
+    
+    @Test
     void shouldCreateTodoWithDescription() {
         Todo todo = new Todo("Learn TDD");
         
@@ -32,9 +42,18 @@ class TodoTest {
     }
     
     @Test
+    void shouldRejectNullTitle() {
+        assertThrows(IllegalArgumentException.class, () -> new Todo(null, "Description"));
+        
+        Todo todo = new Todo("Title", "Description");
+        assertThrows(IllegalArgumentException.class, () -> todo.setTitle(null));
+    }
+    
+    @Test
     void shouldRejectNullDescription() {
         assertThrows(IllegalArgumentException.class, () -> new Todo(null));
         assertThrows(IllegalArgumentException.class, () -> new Todo(null, true));
+        assertThrows(IllegalArgumentException.class, () -> new Todo("Title", null));
         
         Todo todo = new Todo("Test");
         assertThrows(IllegalArgumentException.class, () -> todo.setDescription(null));
@@ -45,10 +64,12 @@ class TodoTest {
         Todo todo = new Todo("Test");
         
         todo.setId(1L);
+        todo.setTitle("New Title");
         todo.setDescription("Updated");
         todo.setDone(true);
         
         assertEquals(1L, todo.getId());
+        assertEquals("New Title", todo.getTitle());
         assertEquals("Updated", todo.getDescription());
         assertTrue(todo.isDone());
         
@@ -153,13 +174,14 @@ class TodoTest {
     
     @Test
     void shouldGenerateToString() {
-        Todo todo = new Todo("Test task");
+        Todo todo = new Todo("Test Title", "Test task");
         todo.setId(42L);
         todo.setDone(true);
         
         String result = todo.toString();
         
         assertTrue(result.contains("id=42"));
+        assertTrue(result.contains("title='Test Title'"));
         assertTrue(result.contains("description='Test task'"));
         assertTrue(result.contains("done=true"));
     }

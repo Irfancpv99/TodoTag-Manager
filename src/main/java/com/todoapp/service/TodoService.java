@@ -53,6 +53,24 @@ public class TodoService {
         Todo todo = new Todo(description.trim());
         return saveTodo(todo);
     }
+    
+    public Todo createTodo(String title, String description) {
+        if (title == null) {
+            throw new IllegalArgumentException("Todo title cannot be null");
+        }
+        if (title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Todo title cannot be empty");
+        }
+        if (description == null) {
+            throw new IllegalArgumentException("Todo description cannot be null");
+        }
+        if (description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Todo description cannot be empty");
+        }
+        
+        Todo todo = new Todo(title.trim(), description.trim());
+        return saveTodo(todo);
+    }
 
     public void deleteTodo(Long id) {
         executeWithTransaction(() -> {
@@ -122,6 +140,12 @@ public class TodoService {
             throw new IllegalArgumentException("Tag name cannot be empty");
         }
         
+        // Check for duplicate tag name
+        Optional<Tag> existingTag = tagRepository.findByName(name.trim());
+        if (existingTag.isPresent()) {
+            throw new IllegalArgumentException("Tag with name '" + name.trim() + "' already exists");
+        }
+        
         Tag tag = new Tag(name.trim());
         return saveTag(tag);
     }
@@ -175,6 +199,22 @@ public class TodoService {
             throw new IllegalArgumentException("Todo or Tag not found");
         });
     }
+    
+    public List<Todo> findTodosByTag(Tag tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("Tag cannot be null");
+        }
+        return todoRepository.findByTag(tag);
+    }
+    
+    public List<Todo> findTodosByTagId(Long tagId) {
+        Optional<Tag> tagOpt = tagRepository.findById(tagId);
+        if (tagOpt.isEmpty()) {
+            throw new IllegalArgumentException("Tag not found with id: " + tagId);
+        }
+        return todoRepository.findByTag(tagOpt.get());
+    }
+    
     /**
      * Execute an operation within a transaction (for MySQL) or directly (for MongoDB)
      */

@@ -1,5 +1,6 @@
 package com.todoapp.repository;
 
+import com.todoapp.model.Tag;
 import com.todoapp.model.Todo;
 
 import java.util.List;
@@ -20,4 +21,6 @@ public interface TodoRepository {
     List<Todo> findByDone(boolean done);
     
     List<Todo> findByDescriptionContaining(String keyword);
+    
+    List<Todo> findByTag(Tag tag);
 }

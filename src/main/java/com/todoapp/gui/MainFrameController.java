@@ -27,12 +27,12 @@ public class MainFrameController {
             return null;
         }
         
-        Optional<Tag> existing = todoService.findTagByName(tagName.trim());
-        if (existing.isPresent()) {
+        try {
+            return todoService.createTag(tagName.trim());
+        } catch (IllegalArgumentException e) {
+            // Tag already exists or other validation error
             return null;
         }
-        
-        return todoService.createTag(tagName.trim());
     }
     
     public boolean deleteTodo(Long todoId) {
