@@ -27,6 +27,13 @@ public class MongoTagRepository implements TagRepository {
         this.collection = database.getCollection("tags");
         initializeNextId();
     }
+    
+    // Package-private constructor for testing
+    MongoTagRepository(MongoCollection<Document> collection, MongoClient mongoClient) {
+        this.collection = collection;
+        this.mongoClient = mongoClient;
+        this.nextId = 1L;
+    }
 
     private void initializeNextId() {
         // Find the highest ID in existing documents

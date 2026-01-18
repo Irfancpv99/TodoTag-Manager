@@ -225,9 +225,14 @@ The project maintains **100% code coverage** with zero surviving mutants in muta
 mvn clean test
 ```
 
+**Run all tests including integration tests:**
+```bash
+mvn clean verify
+```
+
 **Run with coverage report:**
 ```bash
-mvn clean test jacoco:report
+mvn clean verify jacoco:report
 ```
 Coverage report: `target/site/jacoco/index.html`
 
@@ -239,14 +244,14 @@ Mutation report: `target/pit-reports/index.html`
 
 ### Test Categories
 
-#### Unit Tests
+#### Unit Tests (162 tests)
 - **Model Tests**: `Todo` and `Tag` entity validation
-- **Repository Tests**: Database operations with mocks
+- **Repository Tests**: Database operations with mocks (MySQL and MongoDB)
 - **Service Tests**: Business logic validation
 - **Controller Tests**: GUI controller behavior
 - **Configuration Tests**: Application configuration handling
 
-#### Integration Tests
+#### Integration Tests (31 tests)
 - **Repository Integration**: Real database operations using Testcontainers
 - **Service Integration**: End-to-end service flows with both databases
 
@@ -256,10 +261,22 @@ Mutation report: `target/pit-reports/index.html`
 
 ### Test Coverage Requirements
 
-Per project requirements:
-- Line Coverage: **100%**
-- Branch Coverage: **100%**
+Per project requirements (automatically enforced by JaCoCo):
+- Line Coverage: **100%** ✅
+- Branch Coverage: **100%** ✅  
+- Instruction Coverage: **100%** ✅
 - Mutation Coverage: **100%** (0 surviving mutants)
+
+**Note**: `MainFrame` and `TodoApplication` classes are excluded from coverage requirements as they are UI entry points tested via E2E tests.
+
+### Maintaining 100% Coverage
+
+To maintain 100% test coverage:
+1. Write tests for all new business logic before implementation (TDD approach)
+2. Ensure all branches and edge cases are covered
+3. Run `mvn clean verify` locally before committing - build will fail if coverage drops below 100%
+4. Use Mockito for unit tests to isolate dependencies
+5. Add integration tests for database-specific functionality
 
 ##  CI/CD Pipeline
 

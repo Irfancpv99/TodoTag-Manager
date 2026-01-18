@@ -36,6 +36,15 @@ public class MongoTodoRepository implements TodoRepository {
         this.tagRepository = tagRepository;
         initializeNextId();
     }
+    
+    // Package-private constructor for testing
+    MongoTodoRepository(MongoCollection<Document> collection, MongoClient mongoClient, 
+                       MongoTagRepository tagRepository) {
+        this.collection = collection;
+        this.mongoClient = mongoClient;
+        this.tagRepository = tagRepository;
+        this.nextId = 1L;
+    }
 
     private void initializeNextId() {
        Document lastDoc = collection.find()
