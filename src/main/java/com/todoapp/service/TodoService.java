@@ -53,6 +53,24 @@ public class TodoService {
         Todo todo = new Todo(description.trim());
         return saveTodo(todo);
     }
+    
+    public Todo createTodo(String title, String description) {
+        if (title == null) {
+            throw new IllegalArgumentException("Todo title cannot be null");
+        }
+        if (title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Todo title cannot be empty");
+        }
+        if (description == null) {
+            throw new IllegalArgumentException("Todo description cannot be null");
+        }
+        if (description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Todo description cannot be empty");
+        }
+        
+        Todo todo = new Todo(title.trim(), description.trim());
+        return saveTodo(todo);
+    }
 
     public void deleteTodo(Long id) {
         executeWithTransaction(() -> {

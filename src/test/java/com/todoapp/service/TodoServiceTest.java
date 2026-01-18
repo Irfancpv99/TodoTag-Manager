@@ -71,15 +71,38 @@ class TodoServiceTest {
         assertNotNull(result);
         verify(todoRepository).save(any(Todo.class));
     }
+    
+    @Test
+    void shouldCreateTodoWithTitle() {
+        Todo todo = new Todo("Title 1", "Task 1");
+        when(todoRepository.save(any(Todo.class))).thenReturn(todo);
+
+        Todo result = todoService.createTodo("  Title 1  ", "  Task 1  ");
+
+        assertNotNull(result);
+        verify(todoRepository).save(any(Todo.class));
+    }
 
     @Test
     void shouldThrowExceptionWhenCreatingTodoWithNullDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null));
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("Title", null));
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithNullTitle() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo(null, "Description"));
     }
 
     @Test
     void shouldThrowExceptionWhenCreatingTodoWithEmptyDescription() {
         assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   "));
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("Title", "   "));
+    }
+    
+    @Test
+    void shouldThrowExceptionWhenCreatingTodoWithEmptyTitle() {
+        assertThrows(IllegalArgumentException.class, () -> todoService.createTodo("   ", "Description"));
     }
 
     @Test
